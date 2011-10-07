@@ -9,8 +9,9 @@
 #import <UIKit/UIKit.h>
 #import "SeeTheAppAppDelegate.h"
 
-@interface SeeTheAppAppDelegate_iPhone : SeeTheAppAppDelegate {
-    
+@interface SeeTheAppAppDelegate_iPhone : SeeTheAppAppDelegate <UIAlertViewDelegate>
+{
+
 }
 
 @end

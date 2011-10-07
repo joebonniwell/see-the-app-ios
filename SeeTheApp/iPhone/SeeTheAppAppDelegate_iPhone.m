@@ -10,9 +10,4 @@
 
 @implementation SeeTheAppAppDelegate_iPhone
 
-- (void)dealloc
-{
-	[super dealloc];
-}
-
 @end

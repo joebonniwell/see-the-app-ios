@@ -10,7 +10,6 @@
 
 @implementation SeeTheAppAppDelegate
 
-
 @synthesize window=_window;
 
 @synthesize managedObjectContext=__managedObjectContext;
@@ -19,51 +18,132 @@
 
 @synthesize persistentStoreCoordinator=__persistentStoreCoordinator;
 
++ (void)initialize
+{
+    NSDictionary *defaultDefaults = [NSDictionary dictionaryWithObjectsAndKeys:
+                                        [NSNumber numberWithInteger:0],     STADefaultsLastDisplayedIndexKey,
+                                        [NSNumber numberWithInteger:0],     STADefaultsHighestDisplayedIndexKey,
+                                        [NSNumber numberWithInteger:8],     STADefaultsAverageSessionViewsKey,
+                                        [NSNumber numberWithInteger:0],     STADefaultsSessionViewsKey,
+                                        [NSNumber numberWithInteger:0],     STADefaultsSessionReviewsKey,
+                                        [NSNumber numberWithInteger:120],   STADefaultsCacheSizeKey,
+                                        [NSNumber numberWithBool:YES],      STADefaultsCanAskToRateKey,
+                                        [NSNumber numberWithInteger:0],     STADefaultsNumberOfOpensKey,
+                                        [NSDate distantPast],               STADefaultsOpenValidationDateKey,
+                                        [NSNumber numberWithBool:NO],       STADefaultsDatabaseHasCopiedKey,
+                                        nil];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:defaultDefaults];
+}
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    // Override point for customization after application launch.
+    // View Controller
+    SeeTheAppViewController *tempViewController = [[SeeTheAppViewController alloc] initWithDelegate:self];
+    [self setViewController:tempViewController];
+    [tempViewController release];
+    
+    [[self window] addSubview:[[self viewController] view]];
+    
     [self.window makeKeyAndVisible];
+            
+    // Start Localytics
+    [[LocalyticsSession sharedLocalyticsSession] startSession:AnaylticsID];
+        
+    // Reachability
+    Reachability *tempReachability = [Reachability reachabilityForInternetConnection];
+    [self setReachability:tempReachability];
+    
+    NetworkStatus status = [[self reachability] currentReachabilityStatus];
+    if (status == ReachableViaWiFi || status == ReachableViaWWAN)
+        [self setHasNetworkConnection:YES];
+    else
+        [self setHasNetworkConnection:NO];
+        
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kReachabilityChangedNotification object:nil];
+    [tempReachability startNotifier];
+    
+    // Screenshots Directory
+    if ([[self fileManager] fileExistsAtPath:[self pathForScreenshotsDirectory]] == NO)
+    {
+        NSString *screenshotsDirectoryPath = [self pathForScreenshotsDirectory];
+        [[self fileManager] createDirectoryAtPath:screenshotsDirectoryPath withIntermediateDirectories:NO attributes:nil error:nil];
+    }
+        
+    // Database
+    if ([self databaseExists] == YES)
+        [self startSessionAndDownloads];
+        
     return YES;
-}
-
-- (void)applicationWillResignActive:(UIApplication *)application
-{
-    /*
-     Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-     Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
-     */
-}
-
-- (void)applicationDidEnterBackground:(UIApplication *)application
-{
-    /*
-     Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later. 
-     If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
-     */
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
 {
-    /*
-     Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
-     */
+    #ifdef LOG_ApplicationLifecycle
+        NSLog(@"WILL ENTER FOREGROUND **************************************");
+    #endif
+    
+    [[LocalyticsSession sharedLocalyticsSession] resume];
+    [[LocalyticsSession sharedLocalyticsSession] upload];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kReachabilityChangedNotification object:nil];
+    [[self reachability] startNotifier];
+    
+    NetworkStatus status = [[self reachability] currentReachabilityStatus];
+    if (status == ReachableViaWiFi || status == ReachableViaWWAN)
+        [self setHasNetworkConnection:YES];
+    else
+        [self setHasNetworkConnection:NO];
+    
+    if ([self databaseExists] == YES)
+        [self resumeSessionAndDownloads];
 }
 
-- (void)applicationDidBecomeActive:(UIApplication *)application
+- (void)applicationDidEnterBackground:(UIApplication *)application
 {
-    /*
-     Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-     */
+    #ifdef LOG_ApplicationLifecycle
+        NSLog(@"DID ENTER BACKGROUND *************************************");
+    #endif
+    
+    [[LocalyticsSession sharedLocalyticsSession] close];
+    [[LocalyticsSession sharedLocalyticsSession] upload];
+    
+    [[self operationQueue] cancelAllOperations];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kReachabilityChangedNotification object:nil];
+    [[self reachability] stopNotifier];
+    
+    [self stopTimer];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
 {
+    #ifdef LOG_ApplicationLifecycle
+        NSLog(@"WILL TERMINATE **************************************");
+    #endif
+    
     // Saves changes in the application's managed object context before the application terminates.
     [self saveContext];
+    
+    [[LocalyticsSession sharedLocalyticsSession] close];
+    [[LocalyticsSession sharedLocalyticsSession] upload];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kReachabilityChangedNotification object:nil];
+    [[self reachability] stopNotifier];
+    
+    [[self operationQueue] cancelAllOperations];
+    
+    [self stopTimer];
 }
 
 - (void)dealloc
 {
+    [fileManager_gv release];
+    [pathForScreenshotsDirectory_gv release];
+    [operationQueue_gv release];
+    [self setViewController:nil];
+    
+    [self setReachability:nil];
+    
     [_window release];
     [__managedObjectContext release];
     [__managedObjectModel release];
@@ -71,16 +151,9 @@
     [super dealloc];
 }
 
-- (void)awakeFromNib
-{
-    /*
-     Typically you should set up the Core Data stack here, usually by passing the managed object context to the first view controller.
-     self.<#View controller#>.managedObjectContext = self.managedObjectContext;
-    */
-}
-
 - (void)saveContext
 {
+    //NSLog(@"Saving Context");
     NSError *error = nil;
     NSManagedObjectContext *managedObjectContext = self.managedObjectContext;
     if (managedObjectContext != nil)
@@ -96,6 +169,387 @@
             abort();
         } 
     }
+}
+
+#pragma mark - Session Management
+
+- (void)startSessionAndDownloads
+{
+#ifdef LOG_SessionNotifications
+    NSLog(@"Session Starting");
+#endif
+    
+    // Session Views    
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:0] forKey:STADefaultsSessionViewsKey];
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:0] forKey:STADefaultsSessionReviewsKey];
+    
+    // Session Start Time
+    
+    // Session End Time
+    
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    
+    // Start a session -> report the previous session
+    
+    NSInteger lastDisplayedRow = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastDisplayedIndexKey] integerValue];
+    
+    if (lastDisplayedRow > 0)
+        [[[self viewController] galleryView] setContentOffset:CGPointMake(lastDisplayedRow * [[[self viewController] galleryView] frame].size.width, 0.0f)];
+        
+    if ([self shouldPresentRateAlert])
+        [self presentRateAndFeedbackAlert];
+    
+    NSInteger highestDisplayIndex = [[[[[[self viewController] resultsController] fetchedObjects] lastObject] valueForKey:@"displayIndex"] integerValue];
+    [self cleanCacheWithHighestDisplayIndex:highestDisplayIndex];
+    
+    [self updateUnorderedAppsArray];
+        
+    SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
+    [[self operationQueue] addOperation:newEvalOp];
+    [newEvalOp release];
+    
+    [self startTimer];
+    
+    #ifdef LOG_SessionNotifications
+        NSLog(@"Session Started");
+    #endif
+}
+
+- (void)resumeSessionAndDownloads
+{
+#ifdef LOG_SessionNotifications
+    NSLog(@"Session resuming - operation count: %d", [[self operationQueue] operationCount]);
+#endif
+    
+    NSInteger lastDisplayedRow = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastDisplayedIndexKey] integerValue];
+    
+    if (lastDisplayedRow > 0)
+        [[[self viewController] galleryView] setContentOffset:CGPointMake(lastDisplayedRow * [[[self viewController] galleryView] frame].size.width, 0.0f)];
+    
+    if ([self shouldPresentRateAlert])
+        [self presentRateAndFeedbackAlert];
+    
+    if ([[self unorderedAppsArray] count] == 0)
+        [self updateUnorderedAppsArray];
+    
+    if ([[self operationQueue] operationCount] == 0)
+    {
+        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
+        [[self operationQueue] addOperation:newEvalOp];
+        [newEvalOp release]; 
+    }
+    
+    [self startTimer];
+}
+
+#pragma mark - Rate Dialog
+
+- (BOOL)shouldPresentRateAlert
+{
+    BOOL canAskToRate = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsCanAskToRateKey] boolValue];
+    if (canAskToRate == YES)
+    {
+        NSDate *validationDate = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsOpenValidationDateKey];
+        NSDate *currentDate = [NSDate date];
+        if ([currentDate timeIntervalSinceDate:validationDate] > 0)
+        {
+            NSInteger numberOfOpens = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsNumberOfOpensKey] integerValue];
+            numberOfOpens++;
+            [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:numberOfOpens] forKey:STADefaultsNumberOfOpensKey];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+            if (numberOfOpens >= 5)
+                return YES;
+        }
+    }
+    return NO;
+}
+
+- (void)presentRateAndFeedbackAlert
+{
+    if ([MFMailComposeViewController canSendMail] == YES)
+    {
+        UIAlertView *rateAndFeedbackAlertView = [[UIAlertView alloc] initWithTitle:@"Enjoying See the App?" message:@"Please consider rating it in the AppStore, or contacting us if there is something we can improve." delegate:self cancelButtonTitle:@"No Thanks" otherButtonTitles:@"Rate See the App", @"Contact the Developer", @"Maybe Later", nil];
+        [rateAndFeedbackAlertView setTag:4];
+        [rateAndFeedbackAlertView show];
+        [rateAndFeedbackAlertView release];
+    }
+    else
+    {
+        UIAlertView *rateAlertView = [[UIAlertView alloc] initWithTitle:@"Enjoying See the App?" message:@"Please consider rating it in the AppStore, or contacting us at contact@xyzapps.com if there is something we can improve." delegate:self cancelButtonTitle:@"No Thanks" otherButtonTitles:@"Rate See the App", @"Maybe Later", nil];
+        [rateAlertView setTag:5];
+        [rateAlertView show];
+        [rateAlertView release];
+    }
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex == [alertView cancelButtonIndex])
+    {
+        #ifdef LOG_AlertViewResponse
+            NSLog(@"AlertView: No Thanks");
+        #endif
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsCanAskToRateKey];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    }
+    else if (buttonIndex == 1)
+    {
+        #ifdef LOG_AlertViewResponse
+            NSLog(@"AlertView: Rate App");
+        #endif
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsCanAskToRateKey];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        // Open Rate URL
+        NSURL *rateURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=470079430&pageNumber=0&sortOrdering=1&type=Purple+Software&mt=8"]];
+        [[UIApplication sharedApplication] openURL:rateURL];
+    }
+    else if (buttonIndex == 2)
+    {
+        if ([alertView tag] == 4)
+        {
+            #ifdef LOG_AlertViewResponse
+                NSLog(@"AlertView: Email Developer");
+            #endif
+            [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsCanAskToRateKey];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+            // Launch Email View Controller
+            MFMailComposeViewController *mailViewController = [[MFMailComposeViewController alloc] init];
+            [mailViewController setMailComposeDelegate:self];
+            [mailViewController setToRecipients:[NSArray arrayWithObject:[NSString stringWithFormat:@"contact@xyzapps.com"]]];
+            [mailViewController setSubject:[NSString stringWithFormat:@"See the App"]];
+            [[self viewController] presentModalViewController:mailViewController animated:YES];
+            [mailViewController release];
+        }
+        else
+        {
+            #ifdef LOG_AlertViewResponse
+                NSLog(@"AlertView: Maybe Later");
+            #endif
+            [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:0] forKey:STADefaultsNumberOfOpensKey];
+            [[NSUserDefaults standardUserDefaults] setValue:[NSDate dateWithTimeIntervalSinceNow:259200] forKey:STADefaultsOpenValidationDateKey];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+        }
+    }
+    else if (buttonIndex == 3)
+    {
+        #ifdef LOG_AlertViewResponse
+            NSLog(@"AlertView: Don't Show Again");
+        #endif
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:0] forKey:STADefaultsNumberOfOpensKey];
+        [[NSUserDefaults standardUserDefaults] setValue:[NSDate dateWithTimeIntervalSinceNow:259200] forKey:STADefaultsOpenValidationDateKey];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    }
+    
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+#pragma mark - Timed Evaluation
+
+- (void)startTimer
+{
+    NSTimer *evalTimer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(timedEvaluation) userInfo:nil repeats:YES];
+    [self setEvaluationTimer:evalTimer];
+}
+
+- (void)stopTimer
+{
+    [[self evaluationTimer] invalidate];
+    [self setEvaluationTimer:nil];
+}
+
+- (void)timedEvaluation
+{
+    if ([[self operationQueue] operationCount] == 0)
+    {
+        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
+        [[self operationQueue] addOperation:newEvalOp];
+        [newEvalOp release];
+    }
+}
+
+#pragma mark - Reachability
+
+- (void)reachabilityChanged:(NSNotification*)reachabilityNotification
+{
+    BOOL databaseHasCopied = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsDatabaseHasCopiedKey] boolValue];
+    NetworkStatus status = [[self reachability] currentReachabilityStatus];
+    if (status == ReachableViaWiFi || status == ReachableViaWWAN)
+    {
+        #ifdef LOG_ReachabilityChangeNotifications
+            NSLog(@"Reachability changed to reachable");
+        #endif
+        BOOL previousHasNetworkConnectionValue = [self hasNetworkConnection];
+        [self setHasNetworkConnection:YES];
+        if (previousHasNetworkConnectionValue == NO && databaseHasCopied == YES)
+            [[[self viewController] galleryView] reloadData];
+    }
+    else
+    {
+        #ifdef LOG_ReachabilityChangeNotifications
+            NSLog(@"Reachability changed to unreachable");
+        #endif
+        BOOL previousHasNetworkConnectionValue = [self hasNetworkConnection];
+        [self setHasNetworkConnection:NO];
+        if (previousHasNetworkConnectionValue == YES && databaseHasCopied == YES)
+            [[[self viewController] galleryView] reloadData];
+    }
+}
+#pragma mark - MailComposeViewController Delegate Methods
+
+- (void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError *)error
+{
+    [[self viewController] dismissModalViewControllerAnimated:YES];
+    [[[self viewController] view] setCenter:CGPointMake(0.5f * [[[self viewController] view] frame].size.width, 0.5f * [[[self viewController] view] frame].size.height)];
+}
+
+#pragma mark - ViewController Delegate Methods
+
+- (void)rowChanged
+{
+    if ([[self operationQueue] operationCount] == 0)
+    {
+        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
+        [[self operationQueue] addOperation:newEvalOp];
+        [newEvalOp release];
+    }
+    
+    NSInteger newCurrentRow = [self currentRow];
+    
+    [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:newCurrentRow] forKey:STADefaultsLastDisplayedIndexKey];
+    
+    if (newCurrentRow > [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsHighestDisplayedIndexKey] integerValue])
+    {
+        // Count as a new view for this session
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:newCurrentRow] forKey:STADefaultsHighestDisplayedIndexKey];
+    }
+    
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    // Should do actual view tracking here
+}
+
+#pragma mark - Download Delegate Methods
+
+- (NSInteger)currentRow
+{
+    return [[[self viewController] galleryView] currentRow];
+}
+
+- (void)imageDownloadedForApp:(NSDictionary*)appInfo
+{
+#ifdef LOG_DownloadNotifications
+    NSLog(@"Finished Downloading AppID: %d", [[appInfo valueForKey:STAAppInfoAppID] integerValue]);
+#endif
+    
+    NSManagedObject *app = [[self managedObjectContext] objectWithID:[appInfo objectForKey:STAAppInfoObjectID]];
+    [app setValue:[appInfo objectForKey:STAAppInfoAppURL] forKey:STAAppPropertyAppURL];
+    [app setValue:[appInfo objectForKey:STAAppInfoImagePath] forKey:STAAppPropertyImagePath];
+    [app setValue:[appInfo objectForKey:STAAppInfoDisplayIndex] forKey:STAAppPropertyDisplayIndex];
+    
+    [[self managedObjectContext] save:NULL];
+    
+    // If this app is one of the visible cells in the gallery view, reload
+    NSInteger rowOfDownloadedApp = [[appInfo objectForKey:STAAppInfoDisplayIndex] integerValue] + 1;
+    if (rowOfDownloadedApp >= [self currentRow] - 1 && rowOfDownloadedApp <= [self currentRow] + 1)
+        [[[self viewController] galleryView] reloadData];
+    
+    SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
+    [[self operationQueue] addOperation:newEvalOp];
+    [newEvalOp release];
+}
+
+- (void)downloadFailed
+{
+#ifdef LOG_DownloadNotifications
+    NSLog(@"Download Failed");
+#endif
+    
+    SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
+    [[self operationQueue] addOperation:newEvalOp];
+    [newEvalOp release];
+}
+
+- (void)evaluateOperationFinishedWithRowAndIndex:(NSDictionary*)argEvaluationResult
+{
+#ifdef LOG_EvaluationNotifications
+    NSLog(@"Evaluation Finished");
+#endif
+    
+    NSInteger evaluatedRow = [[argEvaluationResult objectForKey:@"Row"] integerValue];
+    BOOL canTrimCache = [[argEvaluationResult objectForKey:@"CanTrimCache"] boolValue];
+    
+    if (evaluatedRow != [[[self viewController] galleryView] currentRow])
+    {
+        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
+        [[self operationQueue] addOperation:newEvalOp];
+        [newEvalOp release];
+    }
+    else
+    {
+        NSInteger indexToDownload = [[argEvaluationResult objectForKey:@"Index"] integerValue];
+        
+        NSInteger highestDisplayIndex = 0;
+        if ([[[[self viewController] resultsController] fetchedObjects] count] > 0)   
+            highestDisplayIndex = [[[[[[self viewController] resultsController] fetchedObjects] lastObject] valueForKey:@"displayIndex"] integerValue];
+        
+        if (indexToDownload > highestDisplayIndex || highestDisplayIndex == 0)
+        {            
+            // Get a random App
+            NSInteger randomAppIndex = arc4random() % [[self unorderedAppsArray] count];
+                        
+            NSManagedObject *app = [[self unorderedAppsArray] objectAtIndex:randomAppIndex];
+            
+            if ([self hasNetworkConnection])
+            {
+                SeeTheAppDownloadOperation *newDLOp = [[SeeTheAppDownloadOperation alloc] initWithAppID:[[app valueForKey:@"appID"] integerValue] appObjectID:[app objectID] delegate:self displayIndex:(highestDisplayIndex + 1) canTrimCache:canTrimCache];
+                [[self operationQueue] addOperation:newDLOp];
+                [newDLOp release];
+                
+                [[self unorderedAppsArray] removeObjectAtIndex:randomAppIndex];
+            }
+        }
+        else if (indexToDownload >= 0)
+        {            
+            //NSLog(@"Evaluation caused redownload for displayIndex: %d", indexToDownload);
+            
+            NSManagedObject *app = [[[[self viewController] resultsController] fetchedObjects] objectAtIndex:indexToDownload];
+            
+            if ([self hasNetworkConnection])
+            {
+                SeeTheAppDownloadOperation *newDLOp = [[SeeTheAppDownloadOperation alloc] initWithAppID:[[app valueForKey:@"appID"] integerValue] appObjectID:[app objectID] delegate:self displayIndex:indexToDownload canTrimCache:canTrimCache];
+                [[self operationQueue] addOperation:newDLOp];
+                [newDLOp release];
+            }
+        }
+    }
+}
+
+#pragma mark - Data Methods
+
+- (void)updateUnorderedAppsArray
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    
+    NSEntityDescription *appEntity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:[self managedObjectContext]];
+    
+    NSPredicate *negativeDisplayIndexPredicate;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        negativeDisplayIndexPredicate = [NSPredicate predicateWithFormat:@"(iPadOnlyApp == YES OR universalApp == YES) AND displayIndex == -1"];
+    else
+        negativeDisplayIndexPredicate = [NSPredicate predicateWithFormat:@"iPadOnlyApp == NO AND displayIndex == -1"];
+     
+    NSFetchRequest *allUnorderedAppsFetchRequest = [[NSFetchRequest alloc] init];
+    [allUnorderedAppsFetchRequest setEntity:appEntity];
+    [allUnorderedAppsFetchRequest setPredicate:negativeDisplayIndexPredicate];
+    //[allUnorderedAppsFetchRequest setIncludesPropertyValues:NO];
+    
+    NSArray *unorderedApps = [[self managedObjectContext] executeFetchRequest:allUnorderedAppsFetchRequest error:nil];
+    [allUnorderedAppsFetchRequest release];
+        
+    NSMutableArray *unorderedAppsCopy = [unorderedApps mutableCopy];
+    [self setUnorderedAppsArray:unorderedAppsCopy];
+    [unorderedAppsCopy release];
+    
+    [pool drain];
 }
 
 #pragma mark - Core Data stack
@@ -116,6 +570,7 @@
     {
         __managedObjectContext = [[NSManagedObjectContext alloc] init];
         [__managedObjectContext setPersistentStoreCoordinator:coordinator];
+        [__managedObjectContext setUndoManager:nil];
     }
     return __managedObjectContext;
 }
@@ -152,6 +607,9 @@
     __persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
     if (![__persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
     {
+        
+        // Potentially set the database migrated key to NO, so that next launch it re-creates the database
+        
         /*
          Replace this implementation with code to handle the error appropriately.
          
@@ -182,14 +640,142 @@
     return __persistentStoreCoordinator;
 }
 
-#pragma mark - Application's Documents directory
+#pragma mark - File Methods
+
+- (void)cleanCacheWithHighestDisplayIndex:(NSInteger)argHighestDisplayIndex
+{   
+    NSArray *screenshotFileNames = [[self fileManager] contentsOfDirectoryAtPath:[self pathForScreenshotsDirectory] error:NULL];
+    
+    for (NSString *fileName in screenshotFileNames)
+    {
+        NSInteger fileDisplayIndex = [[fileName stringByDeletingPathExtension] integerValue];
+        if (fileDisplayIndex > argHighestDisplayIndex)
+            [[self fileManager] removeItemAtPath:[[self pathForScreenshotsDirectory] stringByAppendingPathComponent:fileName] error:NULL];
+    }
+}
+
+- (BOOL)databaseExists
+{
+    NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentDirectoryPath = [searchPaths objectAtIndex:0];
+    NSString *databaseFilePath = [documentDirectoryPath stringByAppendingPathComponent:@"SeeTheApp.sqlite"];
+    
+    BOOL databaseExists = [[self fileManager] fileExistsAtPath:databaseFilePath];
+    if (databaseExists == NO)
+    {           
+        NSBlockOperation *databaseMigrationOp = [self databaseMigrationBlockOperation];
+        [[self operationQueue] addOperation:databaseMigrationOp];
+        return NO;
+    }
+    else if (databaseExists == YES && [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsDatabaseHasCopiedKey] boolValue] == NO)
+    {
+        //NSLog(@"Redoing Database");
+        // Redo the database copy
+        [[self fileManager] removeItemAtPath:databaseFilePath error:nil];
+        
+        NSBlockOperation *databaseMigrationOp = [self databaseMigrationBlockOperation];
+        [[self operationQueue] addOperation:databaseMigrationOp];
+        return NO;
+    }
+    else
+    {
+        return YES;
+    }
+}
+
+- (NSBlockOperation*)databaseMigrationBlockOperation
+{
+    NSBlockOperation *databaseMigrationOp = [NSBlockOperation blockOperationWithBlock:
+                                             ^{
+                                                 NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+                                                 
+                                                 NSFileManager *opFileManager = [[NSFileManager alloc] init];
+                                                 
+                                                 NSURL *starterDatabaseURL = [[NSBundle mainBundle] URLForResource:@"SeeTheApp" withExtension:@"sqlite"];
+                                                 
+                                                 NSURL *documentsDirectoryURL = [[opFileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+                                                 
+                                                 NSURL *destinationPathForDatabaseURL = [documentsDirectoryURL URLByAppendingPathComponent:@"SeeTheApp.sqlite"];
+                                                 
+                                                 NSError *fileCopyError = nil;
+                                                 
+                                                 BOOL copySuccessful = [opFileManager copyItemAtURL:starterDatabaseURL toURL:destinationPathForDatabaseURL error:&fileCopyError];
+                                                 
+                                                 if (copySuccessful == NO)
+                                                 {
+                                                    #ifdef LOG_DatabaseCopyingNotifications
+                                                     NSLog(@"Error copying database: %@", [fileCopyError description]);
+                                                    #endif
+                                                 }
+                                                 else
+                                                 {
+                                                    #ifdef LOG_DatabaseCopyingNotifications
+                                                     NSLog(@"Successfully copied database");
+                                                    #endif
+                                                 }
+                                                 
+                                                 [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:YES] forKey:STADefaultsDatabaseHasCopiedKey];
+                                                 
+                                                 [[NSUserDefaults standardUserDefaults] synchronize];
+                                                 
+                                                 [self performSelectorOnMainThread:@selector(startSessionAndDownloads) withObject:nil waitUntilDone:NO];
+                                                 
+                                                 [opFileManager release];
+                                                 
+                                                 [pool drain];
+                                             }];
+    return databaseMigrationOp;
+}
+
+#pragma mark - File Paths
 
 /**
  Returns the URL to the application's Documents directory.
  */
 - (NSURL *)applicationDocumentsDirectory
 {
-    return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+    return [[[self fileManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
 }
+
+- (NSString*)pathForScreenshotsDirectory
+{
+    if (pathForScreenshotsDirectory_gv)
+        return pathForScreenshotsDirectory_gv;
+    NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
+    NSString *libraryPath = [searchPaths objectAtIndex:0];
+    pathForScreenshotsDirectory_gv = [[libraryPath stringByAppendingPathComponent:@"STAScreenshots"] retain];
+    return pathForScreenshotsDirectory_gv;
+}
+
+#pragma mark - File Manager
+
+- (NSFileManager*)fileManager
+{
+    if (fileManager_gv)
+        return fileManager_gv;
+    
+    fileManager_gv = [[NSFileManager alloc] init];
+    return fileManager_gv;
+}
+
+#pragma mark - Operation Queue
+
+- (NSOperationQueue*)operationQueue
+{
+    if (operationQueue_gv)
+        return operationQueue_gv;
+    
+    operationQueue_gv = [[NSOperationQueue alloc] init];
+    [operationQueue_gv setMaxConcurrentOperationCount:1];
+    return operationQueue_gv;
+}
+
+#pragma mark - Property Synthesis
+
+@synthesize unorderedAppsArray;
+@synthesize viewController;
+@synthesize evaluationTimer;
+@synthesize hasNetworkConnection;
+@synthesize reachability;
 
 @end

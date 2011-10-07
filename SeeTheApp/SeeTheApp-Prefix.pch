@@ -13,3 +13,96 @@
     #import <Foundation/Foundation.h>
     #import <CoreData/CoreData.h>
 #endif
+
+#define AnaylticsID                         @"352f0f0b939709c6bf8827d-6ce92666-ebb0-11e0-21aa-00c25d050352"
+
+#define AnaylticsEventAppStoreButtonTapped  @"AppStoreButtonTapped"
+
+// ---------------------------------------------------------------------------------------
+// STA GalleryView View Tags
+
+#define kGVGalleryViewHeaderView            -1
+#define kGVGalleryViewFooterView            -2
+#define kGVGalleryViewCell                  2
+
+// ---------------------------------------------------------------------------------------
+// STA GalleryView Cell Tags
+
+#define STAScreenshotImageViewTag           3
+#define STAActivityIndicatorViewTag         4
+#define STANoConnectionLabelTag             5
+#define STAAppStoreButtonTag                6
+
+// ---------------------------------------------------------------------------------------
+// STA Defaults
+
+// Database Status
+#define STADefaultsDatabaseHasCopiedKey     @"DatabaseHasCopiedKey"
+
+// State Defaults
+#define STADefaultsLastDisplayedIndexKey    @"LastDisplayedIndexKey"
+#define STADefaultsHighestDisplayedIndexKey @"HighestDisplayedIndexKey"
+
+// Session Defaults
+#define STADefaultsAverageSessionViewsKey   @"AverageSessionViewsKey"
+#define STADefaultsSessionViewsKey          @"SessionViewsKey"
+#define STADefaultsSessionDownloadsKey      @"SessionDownloadsKey"
+#define STADefaultsSessionStartDateKey      @"SessionStartDateKey"
+#define STADefaultsSessionEndDateKey        @"SessionEndDateKey"
+#define STADefaultsPreviousVersionsKey      @"PreviousVersionsKey"
+#define STADefaultsSessionReviewsKey        @"SessionReviewsKey"
+
+// Cache Defaults
+#define STADefaultsCacheSizeKey             @"CacheSizeKey"
+
+// Rate Dialog Defaults
+#define STADefaultsCanAskToRateKey          @"CanAskToRateKey"
+#define STADefaultsNumberOfOpensKey         @"NumberOfOpensKey"
+#define STADefaultsOpenValidationDateKey    @"ValidationDateKey"
+
+// ---------------------------------------------------------------------------------------
+// STA App Properties
+
+#define STAAppPropertyImagePath             @"screenshotImagePath"
+#define STAAppPropertyAppID                 @"appID"
+#define STAAppPropertyDisplayIndex          @"displayIndex"
+#define STAAppPropertyAppURL                @"appURL"
+
+// ---------------------------------------------------------------------------------------
+// STA App Info
+
+#define STAAppInfoAppID                     @"AppID"
+#define STAAppInfoObjectID                  @"ObjectID"
+#define STAAppInfoAppURL                    @"AppURL"
+#define STAAppInfoImagePath                 @"ImagePath"
+#define STAAppInfoDisplayIndex              @"DisplayIndex"
+
+// ---------------------------------------------------------------------------------------
+// STA Evaluation
+
+// Actions
+#define STAEvaluationActionDownload         @"EvaluationActionDownload"
+#define STAEvaluationActionEvaluate         @"EvaluationActionEvaluate"
+
+// Values
+#define STAActionDictionaryDisplayIndexKey  @"DisplayIndex"
+
+// ---------------------------------------------------------------------------------------
+// goVertex Affiliate String
+
+#define SeeTheAppAffiliateString            @"&partnerID=30&siteID=/cVWfZilOnw"
+
+// ---------------------------------------------------------------------------------------
+// DEBUG
+
+//#define LOG_SessionNotifications            1
+//#define LOG_DatabaseCopyingNotifications    1
+//#define LOG_GalleryViewCellSource           1
+//#define LOG_EvaluationOperation             1
+//#define LOG_DownloadNotifications           1
+//#define LOG_AlertViewResponse               1
+//#define LOG_DownloadFailures                1
+//#define LOG_ReachabilityChangeNotifications 1
+//#define LOG_PrintContentOffset              1
+//#define LOG_HeaderFooterRequests            1
+//#define LOG_FooterLocation                  1
