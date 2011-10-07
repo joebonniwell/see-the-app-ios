@@ -57,7 +57,7 @@
         #ifdef LOG_DownloadFailures
             NSLog(@"Invalid iTunes Response Data");
         #endif
-        [[self delegate] performSelectorOnMainThread:@selector(downloadFailed) withObject:nil waitUntilDone:NO];
+        [[self delegate] performSelectorOnMainThread:@selector(downloadFailed) withObject:nil waitUntilDone:YES];
         [self cleanup];
         return;
     }
@@ -81,7 +81,7 @@
         #ifdef LOG_DownloadFailures
             NSLog(@"No lookup results");
         #endif
-        [[self delegate] performSelectorOnMainThread:@selector(downloadFailed) withObject:nil waitUntilDone:NO];
+        [[self delegate] performSelectorOnMainThread:@selector(downloadFailed) withObject:nil waitUntilDone:YES];
         [self cleanup];
         return;
     }
@@ -109,7 +109,7 @@
         #ifdef LOG_DownloadFailures
             NSLog(@"No screenshots");
         #endif
-        [[self delegate] performSelectorOnMainThread:@selector(downloadFailed) withObject:nil waitUntilDone:NO];
+        [[self delegate] performSelectorOnMainThread:@selector(downloadFailed) withObject:nil waitUntilDone:YES];
         [self cleanup];
         return;
     }
@@ -137,7 +137,7 @@
         #ifdef LOG_DownloadFailures
             NSLog(@"Invalid or missing screenshot data");
         #endif
-        [[self delegate] performSelectorOnMainThread:@selector(downloadFailed) withObject:nil waitUntilDone:NO];
+        [[self delegate] performSelectorOnMainThread:@selector(downloadFailed) withObject:nil waitUntilDone:YES];
         [self cleanup];
         return;
     }
@@ -194,7 +194,7 @@
             #ifdef LOG_DownloadFailures
                 NSLog(@"Failed to save");
             #endif
-            [[self delegate] performSelectorOnMainThread:@selector(downloadFailed) withObject:nil waitUntilDone:NO];
+            [[self delegate] performSelectorOnMainThread:@selector(downloadFailed) withObject:nil waitUntilDone:YES];
             [self cleanup];
             return;
         }

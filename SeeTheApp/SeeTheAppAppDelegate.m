@@ -204,9 +204,16 @@
     
     [self updateUnorderedAppsArray];
         
-    SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
-    [[self operationQueue] addOperation:newEvalOp];
-    [newEvalOp release];
+    #ifdef LOG_OperationAdds
+        NSLog(@"Adding Operation from Start Sessions, existing ops: %d", [[self operationQueue] operationCount]);
+    #endif
+    
+    if ([[self operationQueue] operationCount] == 0)
+    {
+        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
+        [[self operationQueue] addOperation:newEvalOp];
+        [newEvalOp release];
+    }
     
     [self startTimer];
     
@@ -234,6 +241,10 @@
     
     if ([[self operationQueue] operationCount] == 0)
     {
+        #ifdef LOG_OperationAdds
+            NSLog(@"Adding Operation from resume Sessions, existing ops: %d", [[self operationQueue] operationCount]);
+        #endif
+        
         SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
         [[self operationQueue] addOperation:newEvalOp];
         [newEvalOp release]; 
@@ -437,7 +448,8 @@
 - (void)imageDownloadedForApp:(NSDictionary*)appInfo
 {
 #ifdef LOG_DownloadNotifications
-    NSLog(@"Finished Downloading AppID: %d", [[appInfo valueForKey:STAAppInfoAppID] integerValue]);
+    //NSLog(@"Finished Downloading AppID: %d", [[appInfo valueForKey:STAAppInfoAppID] integerValue]);
+    NSLog(@"Downloaded App for DisplayIndex: %d", [[appInfo valueForKey:STAAppInfoDisplayIndex] integerValue]);
 #endif
     
     NSManagedObject *app = [[self managedObjectContext] objectWithID:[appInfo objectForKey:STAAppInfoObjectID]];
@@ -452,9 +464,12 @@
     if (rowOfDownloadedApp >= [self currentRow] - 1 && rowOfDownloadedApp <= [self currentRow] + 1)
         [[[self viewController] galleryView] reloadData];
     
-    SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
-    [[self operationQueue] addOperation:newEvalOp];
-    [newEvalOp release];
+    if ([[self operationQueue] operationCount] == 1)
+    {
+        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
+        [[self operationQueue] addOperation:newEvalOp];
+        [newEvalOp release];
+    }
 }
 
 - (void)downloadFailed
@@ -463,9 +478,12 @@
     NSLog(@"Download Failed");
 #endif
     
-    SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
-    [[self operationQueue] addOperation:newEvalOp];
-    [newEvalOp release];
+    if ([[self operationQueue] operationCount] == 1)
+    {
+        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
+        [[self operationQueue] addOperation:newEvalOp];
+        [newEvalOp release];
+    }
 }
 
 - (void)evaluateOperationFinishedWithRowAndIndex:(NSDictionary*)argEvaluationResult
@@ -479,9 +497,12 @@
     
     if (evaluatedRow != [[[self viewController] galleryView] currentRow])
     {
-        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
-        [[self operationQueue] addOperation:newEvalOp];
-        [newEvalOp release];
+        if ([[self operationQueue] operationCount] == 1)
+        {
+           SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
+            [[self operationQueue] addOperation:newEvalOp];
+            [newEvalOp release]; 
+        }
     }
     else
     {
@@ -498,7 +519,7 @@
                         
             NSManagedObject *app = [[self unorderedAppsArray] objectAtIndex:randomAppIndex];
             
-            if ([self hasNetworkConnection])
+            if ([self hasNetworkConnection] && [[self operationQueue] operationCount] == 1)
             {
                 SeeTheAppDownloadOperation *newDLOp = [[SeeTheAppDownloadOperation alloc] initWithAppID:[[app valueForKey:@"appID"] integerValue] appObjectID:[app objectID] delegate:self displayIndex:(highestDisplayIndex + 1) canTrimCache:canTrimCache];
                 [[self operationQueue] addOperation:newDLOp];
@@ -513,7 +534,7 @@
             
             NSManagedObject *app = [[[[self viewController] resultsController] fetchedObjects] objectAtIndex:indexToDownload];
             
-            if ([self hasNetworkConnection])
+            if ([self hasNetworkConnection] && [[self operationQueue] operationCount] == 1)
             {
                 SeeTheAppDownloadOperation *newDLOp = [[SeeTheAppDownloadOperation alloc] initWithAppID:[[app valueForKey:@"appID"] integerValue] appObjectID:[app objectID] delegate:self displayIndex:indexToDownload canTrimCache:canTrimCache];
                 [[self operationQueue] addOperation:newDLOp];
@@ -601,7 +622,7 @@
         return __persistentStoreCoordinator;
     }
     
-    NSURL *storeURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"SeeTheApp.sqlite"];
+    NSURL *storeURL = [[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheApp.sqlite"];
     
     NSError *error = nil;
     __persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
@@ -656,19 +677,21 @@
 
 - (BOOL)databaseExists
 {
-    NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentDirectoryPath = [searchPaths objectAtIndex:0];
-    NSString *databaseFilePath = [documentDirectoryPath stringByAppendingPathComponent:@"SeeTheApp.sqlite"];
+    NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
+    NSString *libraryDirectory = [searchPaths objectAtIndex:0];
+    NSString *databaseFilePath = [libraryDirectory stringByAppendingPathComponent:@"SeeTheApp.sqlite"];
     
     BOOL databaseExists = [[self fileManager] fileExistsAtPath:databaseFilePath];
     if (databaseExists == NO)
     {           
+        //NSLog(@"Database does not exist");
         NSBlockOperation *databaseMigrationOp = [self databaseMigrationBlockOperation];
         [[self operationQueue] addOperation:databaseMigrationOp];
         return NO;
     }
     else if (databaseExists == YES && [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsDatabaseHasCopiedKey] boolValue] == NO)
     {
+        //NSLog(@"Database exists and we are going to recopy");
         //NSLog(@"Redoing Database");
         // Redo the database copy
         [[self fileManager] removeItemAtPath:databaseFilePath error:nil];
@@ -687,15 +710,17 @@
 {
     NSBlockOperation *databaseMigrationOp = [NSBlockOperation blockOperationWithBlock:
                                              ^{
+                                                 //NSLog(@"Start db copy");
+                                                 
                                                  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
                                                  
                                                  NSFileManager *opFileManager = [[NSFileManager alloc] init];
                                                  
                                                  NSURL *starterDatabaseURL = [[NSBundle mainBundle] URLForResource:@"SeeTheApp" withExtension:@"sqlite"];
                                                  
-                                                 NSURL *documentsDirectoryURL = [[opFileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+                                                 NSURL *libraryDirectory = [[opFileManager URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask] lastObject];
                                                  
-                                                 NSURL *destinationPathForDatabaseURL = [documentsDirectoryURL URLByAppendingPathComponent:@"SeeTheApp.sqlite"];
+                                                 NSURL *destinationPathForDatabaseURL = [libraryDirectory URLByAppendingPathComponent:@"SeeTheApp.sqlite"];
                                                  
                                                  NSError *fileCopyError = nil;
                                                  
@@ -723,6 +748,8 @@
                                                  [opFileManager release];
                                                  
                                                  [pool drain];
+                                                 
+                                                 //NSLog(@"End db copy");
                                              }];
     return databaseMigrationOp;
 }
@@ -732,9 +759,15 @@
 /**
  Returns the URL to the application's Documents directory.
  */
+/*
 - (NSURL *)applicationDocumentsDirectory
 {
     return [[[self fileManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+}
+*/
+- (NSURL*)applicationLibraryDirectory
+{
+    return [[[self fileManager] URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask] lastObject];
 }
 
 - (NSString*)pathForScreenshotsDirectory

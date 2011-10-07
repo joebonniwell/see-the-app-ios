@@ -24,9 +24,6 @@
 		1F947BD114338EBF00133361 /* STACellHeaderFooter.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F947BD014338EBF00133361 /* STACellHeaderFooter.png */; };
 		1F947BD314338EE000133361 /* STAHeaderFooterHD.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F947BD214338EE000133361 /* STAHeaderFooterHD.png */; };
 		1F947BD514338EF500133361 /* STACellHeaderFooter@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F947BD414338EF500133361 /* STACellHeaderFooter@2x.png */; };
-		1FC78F05143675B900A6B80D /* LocalyticsDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78EFF143675B900A6B80D /* LocalyticsDatabase.m */; };
-		1FC78F06143675B900A6B80D /* LocalyticsSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F01143675B900A6B80D /* LocalyticsSession.m */; };
-		1FC78F07143675B900A6B80D /* UploaderThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FC78F03143675B900A6B80D /* UploaderThread.m */; };
 		1FC78F091436762300A6B80D /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC78F081436762300A6B80D /* libsqlite3.dylib */; };
 		1FCEA81C143CDA99000E5E1D /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FCEA81B143CDA99000E5E1D /* libz.dylib */; };
 		1FD3434514180CCC002EA48D /* STAAppStoreButton@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD3432E14180CCB002EA48D /* STAAppStoreButton@2x.png */; };
@@ -62,6 +59,9 @@
 		1FE85108141F07AB0078457C /* SBJsonTokeniser.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE850FC141F07AB0078457C /* SBJsonTokeniser.m */; };
 		1FE85109141F07AB0078457C /* SBJsonUTF8Stream.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE850FE141F07AB0078457C /* SBJsonUTF8Stream.m */; };
 		1FE8510A141F07AB0078457C /* SBJsonWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FE85100141F07AB0078457C /* SBJsonWriter.m */; };
+		1FEF9229143F5DF30086C92E /* LocalyticsDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FEF9223143F5DF30086C92E /* LocalyticsDatabase.m */; };
+		1FEF922A143F5DF30086C92E /* LocalyticsSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FEF9225143F5DF30086C92E /* LocalyticsSession.m */; };
+		1FEF922B143F5DF30086C92E /* UploaderThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FEF9227143F5DF30086C92E /* UploaderThread.m */; };
 		1FF703411416805D00F99082 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF703401416805D00F99082 /* UIKit.framework */; };
 		1FF703431416805D00F99082 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF703421416805D00F99082 /* Foundation.framework */; };
 		1FF703451416805D00F99082 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF703441416805D00F99082 /* CoreGraphics.framework */; };
@@ -100,13 +100,6 @@
 		1F947BD014338EBF00133361 /* STACellHeaderFooter.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = STACellHeaderFooter.png; sourceTree = "<group>"; };
 		1F947BD214338EE000133361 /* STAHeaderFooterHD.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = STAHeaderFooterHD.png; sourceTree = "<group>"; };
 		1F947BD414338EF500133361 /* STACellHeaderFooter@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "STACellHeaderFooter@2x.png"; sourceTree = "<group>"; };
-		1FC78EFE143675B900A6B80D /* LocalyticsDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalyticsDatabase.h; sourceTree = "<group>"; };
-		1FC78EFF143675B900A6B80D /* LocalyticsDatabase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LocalyticsDatabase.m; sourceTree = "<group>"; };
-		1FC78F00143675B900A6B80D /* LocalyticsSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalyticsSession.h; sourceTree = "<group>"; };
-		1FC78F01143675B900A6B80D /* LocalyticsSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LocalyticsSession.m; sourceTree = "<group>"; };
-		1FC78F02143675B900A6B80D /* UploaderThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UploaderThread.h; sourceTree = "<group>"; };
-		1FC78F03143675B900A6B80D /* UploaderThread.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UploaderThread.m; sourceTree = "<group>"; };
-		1FC78F04143675B900A6B80D /* WebserviceConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebserviceConstants.h; sourceTree = "<group>"; };
 		1FC78F081436762300A6B80D /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		1FCEA81B143CDA99000E5E1D /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		1FD3432E14180CCB002EA48D /* STAAppStoreButton@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "STAAppStoreButton@2x.png"; sourceTree = "<group>"; };
@@ -157,6 +150,13 @@
 		1FE850FE141F07AB0078457C /* SBJsonUTF8Stream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SBJsonUTF8Stream.m; path = "../../3rd Party Frameworks/json-framework/Classes/SBJsonUTF8Stream.m"; sourceTree = "<group>"; };
 		1FE850FF141F07AB0078457C /* SBJsonWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SBJsonWriter.h; path = "../../3rd Party Frameworks/json-framework/Classes/SBJsonWriter.h"; sourceTree = "<group>"; };
 		1FE85100141F07AB0078457C /* SBJsonWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SBJsonWriter.m; path = "../../3rd Party Frameworks/json-framework/Classes/SBJsonWriter.m"; sourceTree = "<group>"; };
+		1FEF9222143F5DF30086C92E /* LocalyticsDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalyticsDatabase.h; sourceTree = "<group>"; };
+		1FEF9223143F5DF30086C92E /* LocalyticsDatabase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LocalyticsDatabase.m; sourceTree = "<group>"; };
+		1FEF9224143F5DF30086C92E /* LocalyticsSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalyticsSession.h; sourceTree = "<group>"; };
+		1FEF9225143F5DF30086C92E /* LocalyticsSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LocalyticsSession.m; sourceTree = "<group>"; };
+		1FEF9226143F5DF30086C92E /* UploaderThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UploaderThread.h; sourceTree = "<group>"; };
+		1FEF9227143F5DF30086C92E /* UploaderThread.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UploaderThread.m; sourceTree = "<group>"; };
+		1FEF9228143F5DF30086C92E /* WebserviceConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebserviceConstants.h; sourceTree = "<group>"; };
 		1FF7033C1416805D00F99082 /* SeeTheApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SeeTheApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FF703401416805D00F99082 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		1FF703421416805D00F99082 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -221,13 +221,13 @@
 		1FC78EFC1436759500A6B80D /* Localytics */ = {
 			isa = PBXGroup;
 			children = (
-				1FC78EFE143675B900A6B80D /* LocalyticsDatabase.h */,
-				1FC78EFF143675B900A6B80D /* LocalyticsDatabase.m */,
-				1FC78F00143675B900A6B80D /* LocalyticsSession.h */,
-				1FC78F01143675B900A6B80D /* LocalyticsSession.m */,
-				1FC78F02143675B900A6B80D /* UploaderThread.h */,
-				1FC78F03143675B900A6B80D /* UploaderThread.m */,
-				1FC78F04143675B900A6B80D /* WebserviceConstants.h */,
+				1FEF9222143F5DF30086C92E /* LocalyticsDatabase.h */,
+				1FEF9223143F5DF30086C92E /* LocalyticsDatabase.m */,
+				1FEF9224143F5DF30086C92E /* LocalyticsSession.h */,
+				1FEF9225143F5DF30086C92E /* LocalyticsSession.m */,
+				1FEF9226143F5DF30086C92E /* UploaderThread.h */,
+				1FEF9227143F5DF30086C92E /* UploaderThread.m */,
+				1FEF9228143F5DF30086C92E /* WebserviceConstants.h */,
 			);
 			name = Localytics;
 			sourceTree = "<group>";
@@ -555,10 +555,10 @@
 				1FE8510A141F07AB0078457C /* SBJsonWriter.m in Sources */,
 				1FDC10B2142AA4A4008D2486 /* SeeTheAppEvaluateOperation.m in Sources */,
 				1F29C0D61435241A0042A9D8 /* Reachability.m in Sources */,
-				1FC78F05143675B900A6B80D /* LocalyticsDatabase.m in Sources */,
-				1FC78F06143675B900A6B80D /* LocalyticsSession.m in Sources */,
-				1FC78F07143675B900A6B80D /* UploaderThread.m in Sources */,
 				1F735511143A266B00C4C6A4 /* SeeTheAppViewController.m in Sources */,
+				1FEF9229143F5DF30086C92E /* LocalyticsDatabase.m in Sources */,
+				1FEF922A143F5DF30086C92E /* LocalyticsSession.m in Sources */,
+				1FEF922B143F5DF30086C92E /* UploaderThread.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -595,7 +595,10 @@
 		1FF703651416805E00F99082 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = (
+					armv6,
+					armv7,
+				);
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -614,7 +617,10 @@
 		1FF703661416805E00F99082 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = (
+					armv6,
+					armv7,
+				);
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: goVertex LLC";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
