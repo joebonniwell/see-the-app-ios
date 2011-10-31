@@ -361,37 +361,70 @@
     GVGalleryViewCell *cell = (GVGalleryViewCell*)[appStoreButton superview];
     NSInteger row = [cell row];
     
-    NSURL *appURL;
-    NSString *appIDString;
+    NSURL *appURL = nil;
+    NSString *appIDString = nil;
     
     if (row == 0) // Seaquations !!!
     {
-        appURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://itunes.apple.com/us/app/seaquations/id447974258?mt=8&uo=4%@", SeeTheAppAffiliateString]];
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+            appURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://itunes.apple.com/us/app/seaquations/id447974258?mt=8&uo=4%@%@", SeeTheAppAffiliateStringAmpersand, SeeTheAppAffiliateSignatureiPad]];
+        else
+            appURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://itunes.apple.com/us/app/seaquations/id447974258?mt=8&uo=4%@%@", SeeTheAppAffiliateStringAmpersand, SeeTheAppAffiliateSignatureiPhone]];
         
         appIDString = @"Seaquations";
     }
     else
     {        
-        NSManagedObject *selectedApp = [[[self resultsController] fetchedObjects] objectAtIndex:(row - 1)];
-        NSString *appURLString = [selectedApp valueForKey:STAAppPropertyAppURL];
+        NSArray *fetchedObjects = [[self resultsController] fetchedObjects];
         
-        #ifdef LOG_SelectedAppDetails
-            NSLog(@"DisplayIndex: %d", [[selectedApp valueForKey:STAAppPropertyDisplayIndex] integerValue]);
-            NSLog(@"AppID: %d", [[selectedApp valueForKey:STAAppPropertyAppID] integerValue]);
-            NSLog(@"AppImagePath: %@", [selectedApp valueForKey:STAAppPropertyImagePath]);
-        #endif
+        if ([fetchedObjects count] > (row - 1))
+        {
+            NSManagedObject *selectedApp = [fetchedObjects objectAtIndex:(row - 1)];
+            NSString *appURLString = [selectedApp valueForKey:STAAppPropertyAppURL]; 
+            
+            NSRange rangeOfFirstSlash = [appURLString rangeOfString:@"/" options:NSBackwardsSearch];
+            
+            NSRange rangeOfQuestionMark = [appURLString rangeOfString:@"?" options:NSBackwardsSearch];
+                        
+            if (rangeOfQuestionMark.location == NSNotFound || rangeOfQuestionMark.location < rangeOfFirstSlash.location)
+            {
+                // Question Mark
+                
+                if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+                    appURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@%@", appURLString, SeeTheAppAffiliateStringQuestion, SeeTheAppAffiliateSignatureiPad]];
+                else
+                    appURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@%@", appURLString, SeeTheAppAffiliateStringQuestion, SeeTheAppAffiliateSignatureiPhone]];
+            }
+            else
+            {
+                // Ampersand
+                
+                if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+                    appURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@%@", appURLString, SeeTheAppAffiliateStringAmpersand, SeeTheAppAffiliateSignatureiPad]];
+                else
+                    appURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@%@", appURLString, SeeTheAppAffiliateStringAmpersand, SeeTheAppAffiliateSignatureiPhone]];
+            }
         
-        // Do a check to determine if the appURL contains a ? before the first / when searching backwards... if not, use a different affiliate string...
-        
-        appURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@", appURLString, SeeTheAppAffiliateString]];
-        
-        appIDString = [NSString stringWithFormat:@"%d", [[selectedApp valueForKey:STAAppPropertyAppID] integerValue]];
+            appIDString = [NSString stringWithFormat:@"%d", [[selectedApp valueForKey:STAAppPropertyAppID] integerValue]];
+            
+            #ifdef LOG_SelectedAppDetails
+                NSLog(@"DisplayIndex: %d", [[selectedApp valueForKey:STAAppPropertyDisplayIndex] integerValue]);
+                NSLog(@"AppID: %d", [[selectedApp valueForKey:STAAppPropertyAppID] integerValue]);
+                NSLog(@"AppImagePath: %@", [selectedApp valueForKey:STAAppPropertyImagePath]);
+                NSLog(@"App URL: %@", appURL);
+            #endif
+        }
+        else
+        {
+            NSLog(@"Attempting to access an app for appStore access that is beyond bounds of fetched objects, fetched objects count: %d, requested object: %d", [fetchedObjects count], (row - 1));
+        }
     }
     
-    NSLog(@"App URL: %@", appURL);
-    
-    [[LocalyticsSession sharedLocalyticsSession] tagEvent:appIDString];
-    [[UIApplication sharedApplication] openURL:appURL];
+    if (appURL)
+    {
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:appIDString];
+        [[UIApplication sharedApplication] openURL:appURL];
+    }
 }
 
 #pragma mark - Image Management Methods
@@ -418,7 +451,20 @@
     else if ([argRow integerValue] > 0 && [argRow integerValue] <= [[[[self resultsController] sections] lastObject] numberOfObjects])
     {    
         NSInteger screenshotIndex = [argRow integerValue] - 1;
-        NSManagedObject *app = [[self resultsController] objectAtIndexPath:[NSIndexPath indexPathForRow:screenshotIndex inSection:0]];
+        
+        NSManagedObject *app = nil;
+        @try 
+        {
+            app = [[self resultsController] objectAtIndexPath:[NSIndexPath indexPathForRow:screenshotIndex inSection:0]];
+        }
+        @catch (NSException *exception) 
+        {
+            NSLog(@"Requesting app from NSFetchedResultsController that does not exist");
+        }
+        
+        if (!app)
+            return;
+        
         imageFilePath = [app valueForKey:STAAppPropertyImagePath];
         
         NSData *imageData = [[NSData alloc] initWithContentsOfFile:imageFilePath];

@@ -17,7 +17,8 @@
 //#define AnaylticsID                         @"e0729712e0939b192c7c7fe-618fa608-ebb0-11e0-21aa-00c25d050352" // Dev
 #define AnaylticsID                         @"352f0f0b939709c6bf8827d-6ce92666-ebb0-11e0-21aa-00c25d050352" // Production
 
-#define AnaylticsEventAppStoreButtonTapped  @"AppStoreButtonTapped"
+#define AnalyticsEventAppStoreButtonTapped  @"AppStoreButtonTapped"
+#define AnalyticsEventError                 @"Error"
 
 // ---------------------------------------------------------------------------------------
 // STA GalleryView View Tags
@@ -39,6 +40,8 @@
 
 // Database Status
 #define STADefaultsDatabaseHasCopiedKey     @"DatabaseHasCopiedKey"
+#define STADefaultsShouldAddToDatabaseKey   @"ShouldAddToDatabaseKey"
+#define STADefaultsLastFileAddedToDBKey     @"LastFileAddedToDBKey"
 
 // State Defaults
 #define STADefaultsLastDisplayedIndexKey    @"LastDisplayedIndexKey"
@@ -68,6 +71,8 @@
 #define STAAppPropertyAppID                 @"appID"
 #define STAAppPropertyDisplayIndex          @"displayIndex"
 #define STAAppPropertyAppURL                @"appURL"
+#define STAAppPropertyUniversalApp          @"universalApp"
+#define STAAppPropertyiPadOnlyApp           @"iPadOnlyApp"
 
 // ---------------------------------------------------------------------------------------
 // STA App Info
@@ -91,11 +96,18 @@
 // ---------------------------------------------------------------------------------------
 // goVertex Affiliate String
 
-#define SeeTheAppAffiliateString            @"&partnerID=30&siteID=/cVWfZilOnw"
+#define SeeTheAppAffiliateStringQuestion    @"?partnerId=30&siteID=/cVWfZilOnw"
+#define SeeTheAppAffiliateStringAmpersand   @"&partnerId=30&siteID=/cVWfZilOnw"
+
+#define SeeTheAppAffiliateSignatureiPad     @"&u1=stav11iPad"
+#define SeeTheAppAffiliateSignatureiPhone   @"&u1=stav11iPhone"
+
+//#define SeeTheAppAffiliateString            @"&partnerID=30&siteID=%2FcVWfZilOnw"
 
 // ---------------------------------------------------------------------------------------
 // DEBUG
 
+//#define LOG_Errors                          1
 //#define LOG_OperationAdds                   1
 //#define LOG_SessionNotifications            1
 //#define LOG_DatabaseCopyingNotifications    1
@@ -108,3 +120,4 @@
 //#define LOG_PrintContentOffset              1
 //#define LOG_HeaderFooterRequests            1
 //#define LOG_FooterLocation                  1
+//#define LOG_SelectedAppDetails              1

@@ -79,10 +79,14 @@
 - (void)startSessionAndDownloads;
 - (void)resumeSessionAndDownloads;
 - (NSInteger)currentRow;
-- (BOOL)databaseExists;
+//- (BOOL)databaseExists;
+//- (void)makeDatabase;
+
+- (void)addAppsToDatabase;
+
 - (void)cleanCacheWithHighestDisplayIndex:(NSInteger)argHighestDisplayIndex;
 
-- (NSBlockOperation*)databaseMigrationBlockOperation;
+//- (NSBlockOperation*)databaseMigrationBlockOperation;
 
 - (void)startTimer;
 - (void)stopTimer;

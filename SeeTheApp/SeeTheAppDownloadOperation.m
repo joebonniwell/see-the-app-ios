@@ -38,7 +38,7 @@
     
     NSString *iTunesLookupString = [[NSString alloc] initWithFormat:@"http://itunes.apple.com/lookup?id=%ld", [self appID]];
     NSURL *iTunesLookupURL = [[NSURL alloc] initWithString:iTunesLookupString];
-    NSURLRequest *iTunesDataRequest = [[NSURLRequest alloc] initWithURL:iTunesLookupURL];
+    NSURLRequest *iTunesDataRequest = [[NSURLRequest alloc] initWithURL:iTunesLookupURL cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:20];
     
     NSData *iTunesResponseData = [NSURLConnection sendSynchronousRequest:iTunesDataRequest returningResponse:nil error:nil];
     
@@ -120,7 +120,7 @@
     
     NSString *screenshotURLString = [screenshotsArray objectAtIndex:0];
     NSURL *screenshotURL = [NSURL URLWithString:screenshotURLString];
-    NSURLRequest *screenshotRequest = [[NSURLRequest alloc] initWithURL:screenshotURL];
+    NSURLRequest *screenshotRequest = [[NSURLRequest alloc] initWithURL:screenshotURL cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:20];
             
     NSData *screenshotImageData = [NSURLConnection sendSynchronousRequest:screenshotRequest returningResponse:nil error:nil];
             

@@ -31,18 +31,64 @@
                                         [NSNumber numberWithInteger:0],     STADefaultsNumberOfOpensKey,
                                         [NSDate distantPast],               STADefaultsOpenValidationDateKey,
                                         [NSNumber numberWithBool:NO],       STADefaultsDatabaseHasCopiedKey,
+                                        [NSNumber numberWithBool:YES],      STADefaultsShouldAddToDatabaseKey,
+                                        [NSNumber numberWithInteger:-1],    STADefaultsLastFileAddedToDBKey,
                                         nil];
     [[NSUserDefaults standardUserDefaults] registerDefaults:defaultDefaults];
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
+{    
+    // Screenshots Directory
+    if ([[self fileManager] fileExistsAtPath:[self pathForScreenshotsDirectory]] == NO)
+    {
+        NSString *screenshotsDirectoryPath = [self pathForScreenshotsDirectory];
+        [[self fileManager] createDirectoryAtPath:screenshotsDirectoryPath withIntermediateDirectories:NO attributes:nil error:nil];
+    }
+    
+    NSURL *firstGenStoreURL = [[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheApp.sqlite"];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:[firstGenStoreURL path]])
+    {
+        NSError *appsFetchError;
+        NSFetchRequest *allAppsFetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"App"];
+        NSUInteger appCount = [[self managedObjectContext] countForFetchRequest:allAppsFetchRequest error:&appsFetchError];
+        
+        if (appCount == NSNotFound || appCount == 0)
+        {
+            [__managedObjectContext release];
+            __managedObjectContext = nil;
+            
+            [__persistentStoreCoordinator release];
+            __persistentStoreCoordinator = nil;
+            
+            NSError *fileRemovalError;
+            BOOL removalResult = [[NSFileManager defaultManager] removeItemAtURL:firstGenStoreURL error:&fileRemovalError];
+            
+            if (removalResult == NO)
+            {
+                NSLog(@"Error during database removal");
+            }
+            
+            [self performSelector:@selector(addAppsToDatabase) withObject:nil afterDelay:0.1];
+        }
+        [allAppsFetchRequest release];
+    }
+    else
+    {
+        if([[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsShouldAddToDatabaseKey])
+            [self performSelector:@selector(addAppsToDatabase) withObject:nil afterDelay:0.1];
+    }
+    
     // View Controller
     SeeTheAppViewController *tempViewController = [[SeeTheAppViewController alloc] initWithDelegate:self];
     [self setViewController:tempViewController];
     [tempViewController release];
     
-    [[self window] addSubview:[[self viewController] view]];
+    [[self window] setRootViewController:tempViewController];
+    [[tempViewController view] setFrame:[[UIScreen mainScreen] bounds]];
+    
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent];
     
     [self.window makeKeyAndVisible];
             
@@ -61,18 +107,9 @@
         
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kReachabilityChangedNotification object:nil];
     [tempReachability startNotifier];
+        
+    [self startSessionAndDownloads];
     
-    // Screenshots Directory
-    if ([[self fileManager] fileExistsAtPath:[self pathForScreenshotsDirectory]] == NO)
-    {
-        NSString *screenshotsDirectoryPath = [self pathForScreenshotsDirectory];
-        [[self fileManager] createDirectoryAtPath:screenshotsDirectoryPath withIntermediateDirectories:NO attributes:nil error:nil];
-    }
-        
-    // Database
-    if ([self databaseExists] == YES)
-        [self startSessionAndDownloads];
-        
     return YES;
 }
 
@@ -93,9 +130,8 @@
         [self setHasNetworkConnection:YES];
     else
         [self setHasNetworkConnection:NO];
-    
-    if ([self databaseExists] == YES)
-        [self resumeSessionAndDownloads];
+
+    [self resumeSessionAndDownloads];
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application
@@ -163,12 +199,71 @@
             /*
              Replace this implementation with code to handle the error appropriately.
              
-             abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development. If it is not possible to recover from the error, display an alert panel that instructs the user to quit the application by pressing the Home button.
              */
+
+            
             NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
-            abort();
         } 
     }
+}
+
+#pragma mark - Database Creation Methods
+
+- (void)addAppsToDatabase
+{    
+    NSInteger nextFileNumber = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastFileAddedToDBKey] integerValue] + 1;
+    
+    NSString *filePath;
+    
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        filePath = [[NSBundle mainBundle] pathForResource:[NSString stringWithFormat:@"staipadstarter%d", nextFileNumber] ofType:@"stadata"];
+    else
+        filePath = [[NSBundle mainBundle] pathForResource:[NSString stringWithFormat:@"staiphonestarter%d", nextFileNumber] ofType:@"stadata"];
+    
+    NSArray *appsToAdd = nil;
+    
+    @try 
+    {
+        appsToAdd = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+    }
+    @catch (NSException *exception) 
+    {
+        // Log that this file does not contain a valid archive
+        NSLog(@"Failure to load archive");
+        appsToAdd = nil;
+    }
+
+    if (appsToAdd)
+    {
+        for (NSDictionary *appDictionary in appsToAdd)
+        {            
+            NSManagedObject *newApp = [NSEntityDescription insertNewObjectForEntityForName:@"App" inManagedObjectContext:[self managedObjectContext]];
+            
+            [newApp setValue:[appDictionary valueForKey:STAAppPropertyAppID] forKey:STAAppPropertyAppID];
+            [newApp setValue:[appDictionary valueForKey:STAAppPropertyUniversalApp] forKey:STAAppPropertyUniversalApp];
+            [newApp setValue:[appDictionary valueForKey:STAAppPropertyiPadOnlyApp] forKey:STAAppPropertyiPadOnlyApp];
+        }
+        
+        [self saveContext];
+    }
+    else
+        NSLog(@"Failed to load archive");
+        
+    NSString *nextFilePath = nil;
+    
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        nextFilePath = [[NSBundle mainBundle] pathForResource:[NSString stringWithFormat:@"staipadstarter%d", (nextFileNumber + 1)] ofType:@"stadata"];
+    else
+        nextFilePath = [[NSBundle mainBundle] pathForResource:[NSString stringWithFormat:@"staiphonestarter%d", (nextFileNumber + 1)] ofType:@"stadata"];
+    
+    if (!nextFilePath)
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsShouldAddToDatabaseKey];
+    else
+        [self performSelector:@selector(addAppsToDatabase) withObject:nil afterDelay:1.0];
+    
+    [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:(nextFileNumber + 1)] forKey:STADefaultsLastFileAddedToDBKey];
+    
+    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 #pragma mark - Session Management
@@ -326,7 +421,7 @@
             // Launch Email View Controller
             MFMailComposeViewController *mailViewController = [[MFMailComposeViewController alloc] init];
             [mailViewController setMailComposeDelegate:self];
-            [mailViewController setToRecipients:[NSArray arrayWithObject:[NSString stringWithFormat:@"contact@xyzapps.com"]]];
+            [mailViewController setToRecipients:[NSArray arrayWithObject:[NSString stringWithFormat:@"contact@seetheapp.com"]]];
             [mailViewController setSubject:[NSString stringWithFormat:@"See the App"]];
             [[self viewController] presentModalViewController:mailViewController animated:YES];
             [mailViewController release];
@@ -514,31 +609,56 @@
         
         if (indexToDownload > highestDisplayIndex || highestDisplayIndex == 0)
         {            
-            // Get a random App
-            NSInteger randomAppIndex = arc4random() % [[self unorderedAppsArray] count];
-                        
-            NSManagedObject *app = [[self unorderedAppsArray] objectAtIndex:randomAppIndex];
-            
-            if ([self hasNetworkConnection] && [[self operationQueue] operationCount] == 1)
+            if ([[self unorderedAppsArray] count] > 0)
             {
-                SeeTheAppDownloadOperation *newDLOp = [[SeeTheAppDownloadOperation alloc] initWithAppID:[[app valueForKey:@"appID"] integerValue] appObjectID:[app objectID] delegate:self displayIndex:(highestDisplayIndex + 1) canTrimCache:canTrimCache];
-                [[self operationQueue] addOperation:newDLOp];
-                [newDLOp release];
+               NSInteger randomAppIndex = arc4random() % [[self unorderedAppsArray] count];
+                        
+                NSManagedObject *app = [[self unorderedAppsArray] objectAtIndex:randomAppIndex];
+            
+                if ([self hasNetworkConnection] && [[self operationQueue] operationCount] == 1)
+                {
+                    SeeTheAppDownloadOperation *newDLOp = [[SeeTheAppDownloadOperation alloc] initWithAppID:[[app valueForKey:@"appID"] integerValue] appObjectID:[app objectID] delegate:self displayIndex:(highestDisplayIndex + 1) canTrimCache:canTrimCache];
+                    [[self operationQueue] addOperation:newDLOp];
+                    [newDLOp release];
                 
-                [[self unorderedAppsArray] removeObjectAtIndex:randomAppIndex];
+                    [[self unorderedAppsArray] removeObjectAtIndex:randomAppIndex];
+                } 
+            }
+            else
+            {
+                [self updateUnorderedAppsArray];
+                
+                #ifdef LOG_Errors
+                    NSLog(@"***ERROR: Evaluation finished, attempting to get an object from unordered apps, which is empty");
+                #endif
+                [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"AccessAttemptToEmptyUnorderedAppsArray"];
             }
         }
         else if (indexToDownload >= 0)
         {            
             //NSLog(@"Evaluation caused redownload for displayIndex: %d", indexToDownload);
+            NSManagedObject *app;
             
-            NSManagedObject *app = [[[[self viewController] resultsController] fetchedObjects] objectAtIndex:indexToDownload];
-            
-            if ([self hasNetworkConnection] && [[self operationQueue] operationCount] == 1)
+            NSArray *fetchedObjects = [[[self viewController] resultsController] fetchedObjects];
+            if ([fetchedObjects count] > indexToDownload)
             {
-                SeeTheAppDownloadOperation *newDLOp = [[SeeTheAppDownloadOperation alloc] initWithAppID:[[app valueForKey:@"appID"] integerValue] appObjectID:[app objectID] delegate:self displayIndex:indexToDownload canTrimCache:canTrimCache];
-                [[self operationQueue] addOperation:newDLOp];
-                [newDLOp release];
+                app = [[[[self viewController] resultsController] fetchedObjects] objectAtIndex:indexToDownload];
+                if ([self hasNetworkConnection] && [[self operationQueue] operationCount] == 1)
+                {
+                    SeeTheAppDownloadOperation *newDLOp = [[SeeTheAppDownloadOperation alloc] initWithAppID:[[app valueForKey:@"appID"] integerValue] appObjectID:[app objectID] delegate:self displayIndex:indexToDownload canTrimCache:canTrimCache];
+                    [[self operationQueue] addOperation:newDLOp];
+                    [newDLOp release];
+                }
+            }
+            else
+            {
+                #ifdef LOG_Errors
+                NSLog(@"***ERROR: Evaluation finished, attempting to get an object from existing apps beyond bounds\n Fetched Objects Available: %d\n Requested Object Index: %d", [fetchedObjects count], indexToDownload);
+                #endif
+                if ([fetchedObjects count] == 0)
+                    [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"AccessAttemptInEmptyFetchedObjectsArray"];
+                else
+                    [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"AccessAttemptOutsideFetchedObjectsRange"];
             }
         }
     }
@@ -561,10 +681,17 @@
     NSFetchRequest *allUnorderedAppsFetchRequest = [[NSFetchRequest alloc] init];
     [allUnorderedAppsFetchRequest setEntity:appEntity];
     [allUnorderedAppsFetchRequest setPredicate:negativeDisplayIndexPredicate];
-    //[allUnorderedAppsFetchRequest setIncludesPropertyValues:NO];
     
-    NSArray *unorderedApps = [[self managedObjectContext] executeFetchRequest:allUnorderedAppsFetchRequest error:nil];
+    NSError *fetchError;
+    
+    NSArray *unorderedApps = [[self managedObjectContext] executeFetchRequest:allUnorderedAppsFetchRequest error:&fetchError];
     [allUnorderedAppsFetchRequest release];
+        
+    if (!unorderedApps)
+    {
+        NSLog(@"Fetch error during creation of unorderedAppsArray: %@", [fetchError localizedDescription]);
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"UnableToCreateUnorderedAppsArray"];
+    }
         
     NSMutableArray *unorderedAppsCopy = [unorderedApps mutableCopy];
     [self setUnorderedAppsArray:unorderedAppsCopy];
@@ -621,41 +748,24 @@
     {
         return __persistentStoreCoordinator;
     }
+ 
+    NSURL *storeURL;
     
-    NSURL *storeURL = [[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheApp.sqlite"];
+    NSURL *firstGenStoreURL = [[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheApp.sqlite"];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:[firstGenStoreURL path]])
+        storeURL = firstGenStoreURL;
+    else
+        storeURL = [[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheAppGen2.sqlite"];
     
     NSError *error = nil;
     __persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
+    
     if (![__persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
     {
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"Error-PersistentStoreAddFail"];
         
-        // Potentially set the database migrated key to NO, so that next launch it re-creates the database
-        
-        /*
-         Replace this implementation with code to handle the error appropriately.
-         
-         abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development. If it is not possible to recover from the error, display an alert panel that instructs the user to quit the application by pressing the Home button.
-         
-         Typical reasons for an error here include:
-         * The persistent store is not accessible;
-         * The schema for the persistent store is incompatible with current managed object model.
-         Check the error message to determine what the actual problem was.
-         
-         
-         If the persistent store is not accessible, there is typically something wrong with the file path. Often, a file URL is pointing into the application's resources directory instead of a writeable directory.
-         
-         If you encounter schema incompatibility errors during development, you can reduce their frequency by:
-         * Simply deleting the existing store:
-         [[NSFileManager defaultManager] removeItemAtURL:storeURL error:nil]
-         
-         * Performing automatic lightweight migration by passing the following dictionary as the options parameter: 
-         [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:YES], NSMigratePersistentStoresAutomaticallyOption, [NSNumber numberWithBool:YES], NSInferMappingModelAutomaticallyOption, nil];
-         
-         Lightweight migration will only work for a limited set of schema changes; consult "Core Data Model Versioning and Data Migration Programming Guide" for details.
-         
-         */
         NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
-        abort();
     }    
     
     return __persistentStoreCoordinator;
@@ -675,37 +785,79 @@
     }
 }
 
+/*
 - (BOOL)databaseExists
 {
-    NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
-    NSString *libraryDirectory = [searchPaths objectAtIndex:0];
-    NSString *databaseFilePath = [libraryDirectory stringByAppendingPathComponent:@"SeeTheApp.sqlite"];
+    NSLog(@"Checking if database exists");
+    
+    NSString *databaseFilePath = [[[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheApp.sqlite"] path];
     
     BOOL databaseExists = [[self fileManager] fileExistsAtPath:databaseFilePath];
-    if (databaseExists == NO)
-    {           
-        //NSLog(@"Database does not exist");
-        NSBlockOperation *databaseMigrationOp = [self databaseMigrationBlockOperation];
-        [[self operationQueue] addOperation:databaseMigrationOp];
-        return NO;
-    }
-    else if (databaseExists == YES && [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsDatabaseHasCopiedKey] boolValue] == NO)
-    {
-        //NSLog(@"Database exists and we are going to recopy");
-        //NSLog(@"Redoing Database");
-        // Redo the database copy
-        [[self fileManager] removeItemAtPath:databaseFilePath error:nil];
+    
+    if (databaseExists == YES)
+    {        
+        NSFetchRequest *allAppsFetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"App"];
         
-        NSBlockOperation *databaseMigrationOp = [self databaseMigrationBlockOperation];
-        [[self operationQueue] addOperation:databaseMigrationOp];
-        return NO;
+        NSError *allAppsFetchError;
+        
+        NSUInteger totalApps = [[self managedObjectContext] countForFetchRequest:allAppsFetchRequest error:&allAppsFetchError];
+        
+        if (totalApps == NSNotFound || totalApps == 0)
+        {
+            // remove the database
+            
+            // determine if there is a managed object context or a persistent store coordinator
+            [[NSFileManager defaultManager] removeItemAtPath:databaseFilePath error:nil];
+            return NO;
+        }
+        
+        return YES;
     }
     else
     {
-        return YES;
+        return NO;
     }
 }
+*/
 
+/*
+- (void)makeDatabase
+{
+    NSString *databaseFilePath = [[[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheApp.sqlite"] path];
+    
+    BOOL databaseExists = [[self fileManager] fileExistsAtPath:databaseFilePath];
+    if (databaseExists)
+    {           
+        NSError *databaseRemovalError;
+        
+        BOOL databaseRemoved = [[self fileManager] removeItemAtPath:databaseFilePath error:&databaseRemovalError];
+        
+        if (databaseRemoved == NO)
+        {
+            NSLog(@"Database was unable to be removed, error: %@", [databaseRemovalError localizedDescription]);
+        }
+                
+        if (__managedObjectContext)
+        {
+            [__managedObjectContext release];
+            __managedObjectContext = nil;
+        }
+        
+        if (__persistentStoreCoordinator)
+        {
+            [__persistentStoreCoordinator release];
+            __persistentStoreCoordinator = nil;
+        }
+    }
+    [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsDatabaseHasCopiedKey];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+        
+    NSBlockOperation *databaseMigrationOp = [self databaseMigrationBlockOperation];
+    [[self operationQueue] addOperation:databaseMigrationOp];
+}
+*/
+
+/*
 - (NSBlockOperation*)databaseMigrationBlockOperation
 {
     NSBlockOperation *databaseMigrationOp = [NSBlockOperation blockOperationWithBlock:
@@ -728,22 +880,28 @@
                                                  
                                                  if (copySuccessful == NO)
                                                  {
-                                                    #ifdef LOG_DatabaseCopyingNotifications
                                                      NSLog(@"Error copying database: %@", [fileCopyError description]);
-                                                    #endif
+                                                     
+                                                     // Should attempt to recopy the database i guess.....
                                                  }
                                                  else
                                                  {
-                                                    #ifdef LOG_DatabaseCopyingNotifications
                                                      NSLog(@"Successfully copied database");
-                                                    #endif
+                                                     
+                                                     NSError *error;
+                                                     NSDictionary *fileAttributes = [opFileManager attributesOfItemAtPath:[destinationPathForDatabaseURL path] error:&error];
+                                                     
+                                                     if (!fileAttributes)
+                                                         NSLog(@"File attributes error: %@", [error localizedDescription]);
+                                                     else
+                                                         NSLog(@"Size of database: %lld", [[fileAttributes valueForKey:NSFileSize] unsignedLongLongValue]);
+                                                           
+                                                     [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:YES] forKey:STADefaultsDatabaseHasCopiedKey];
+                                                 
+                                                     [[NSUserDefaults standardUserDefaults] synchronize];
+                                                 
+                                                     [self performSelectorOnMainThread:@selector(startSessionAndDownloads) withObject:nil waitUntilDone:NO];
                                                  }
-                                                 
-                                                 [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:YES] forKey:STADefaultsDatabaseHasCopiedKey];
-                                                 
-                                                 [[NSUserDefaults standardUserDefaults] synchronize];
-                                                 
-                                                 [self performSelectorOnMainThread:@selector(startSessionAndDownloads) withObject:nil waitUntilDone:NO];
                                                  
                                                  [opFileManager release];
                                                  
@@ -753,6 +911,7 @@
                                              }];
     return databaseMigrationOp;
 }
+*/
 
 #pragma mark - File Paths
 

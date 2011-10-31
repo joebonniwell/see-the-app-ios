@@ -39,10 +39,7 @@
 	<key>UIPrerenderedIcon</key>
 	<true/>
 	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>armv6</string>
-		<string>armv7</string>
-	</array>
+	<array/>
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleBlackTranslucent</string>
 	<key>UISupportedInterfaceOrientations</key>
