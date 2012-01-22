@@ -15,10 +15,88 @@
 #endif
 
 //#define AnaylticsID                         @"e0729712e0939b192c7c7fe-618fa608-ebb0-11e0-21aa-00c25d050352" // Dev
-#define AnaylticsID                         @"352f0f0b939709c6bf8827d-6ce92666-ebb0-11e0-21aa-00c25d050352" // Production
+//#define AnaylticsID                         @"352f0f0b939709c6bf8827d-6ce92666-ebb0-11e0-21aa-00c25d050352" // Old Production
+#define AnaylticsID                         @"173a854c12034e94009cb75-d0b2977c-a4ff-11e0-01df-007f58cb3154" // New Production (110 and higher)
 
 #define AnalyticsEventAppStoreButtonTapped  @"AppStoreButtonTapped"
 #define AnalyticsEventError                 @"Error"
+
+// ---------------------------------------------------------------------------------------
+// Caching Constants
+
+#define kGVNumberOfScreenshotsToKeepOnDisk      200
+#define kGVNumberOfScreenshotsToKeepInMemory    20
+
+// ---------------------------------------------------------------------------------------
+// AppStore Label Dimensions
+
+#define STAConstantAvailableLabelX              38.0f
+#define STAConstantAvailableLabelY              6.0f
+#define STAConstantAvailableLabelYJapanese      32.0f
+#define STAConstantAvailableLabelWidth          102.0f
+#define STAConstantAvailableLabelHeight         16.0f
+
+#define STAConstantAppStoreLabelX               38.0f
+#define STAConstantAppStoreLabelY               24.0f
+#define STAConstantAppStoreLabelYJapanese       8.0f
+#define STAConstantAppStoreLabelWidth           102.0f
+#define STAConstantAppStoreLabelHeight          24.0f
+
+#define STAConstantAvailableLabelHDX            74.0f
+#define STAConstantAvailableLabelHDY            12.0f
+#define STAConstantAvailableLabelHDYJapanese    66.0f
+#define STAConstantAvailableLabelHDWidth        220.0f
+#define STAConstantAvailableLabelHDHeight       32.0f
+
+#define STAConstantAppStoreLabelHDX             74.0f
+#define STAConstantAppStoreLabelHDY             44.0f
+#define STAConstantAppStoreLabelHDYJapanese     12.0f
+#define STAConstantAppStoreLabelHDWidth         220.0f
+#define STAConstantAppStoreLabelHDHeight        54.0f
+
+// ---------------------------------------------------------------------------------------
+// STAGalleryView Modes
+
+enum STAGalleryViewMode
+{
+    STAGalleryViewModeBrowse = 1,
+    STAGalleryViewModeList = 2,
+    STAGalleryViewModeSearch = 3
+};
+
+// ---------------------------------------------------------------------------------------
+// App Store Categories
+
+enum AppStoreCategory
+{
+    AppStoreCategoryNews = 6014
+};
+
+// ---------------------------------------------------------------------------------------
+// STA Display Modes
+
+enum STADisplayMode
+{
+    STADisplayModeNone = 0,
+    STADisplayModeBrowse = 1,
+    STADisplayModeList = 2,
+    STADisplayModeMainMenu = 3,
+    STADisplayModeCategoriesMenu = 4,
+    STADisplayModeGameCategoriesMenu = 5,
+    STADisplayModeOptionsMenu = 6
+    // Search
+    // Help & Settings
+    // Favorites or whatever
+};
+
+// ---------------------------------------------------------------------------------------
+// STA Price Tiers
+
+enum STAPriceTier
+{
+    STAPriceTierFree = 0,
+    STAPriceTierAll = 1
+};
 
 // ---------------------------------------------------------------------------------------
 // STA GalleryView View Tags
@@ -38,81 +116,49 @@
 // ---------------------------------------------------------------------------------------
 // STA Defaults
 
-// Database Status
-#define STADefaultsDatabaseHasCopiedKey     @"DatabaseHasCopiedKey"
-#define STADefaultsShouldAddToDatabaseKey   @"ShouldAddToDatabaseKey"
-#define STADefaultsLastFileAddedToDBKey     @"LastFileAddedToDBKey"
-
 // State Defaults
-#define STADefaultsLastDisplayedIndexKey    @"LastDisplayedIndexKey"
-#define STADefaultsHighestDisplayedIndexKey @"HighestDisplayedIndexKey"
+#define STADefaultsLastModeKey                      @"LastModeKey"
+#define STADefaultsLastCategoryKey                  @"LastCategoryKey"
+#define STADefaultsLastListPriceTierKey             @"LastListPriceTierKey"
+#define STADefaultsLastPositionsDictionaryKey       @"LastPositionsDictionary"
 
 // Session Defaults
-#define STADefaultsAverageSessionViewsKey   @"AverageSessionViewsKey"
-#define STADefaultsSessionViewsKey          @"SessionViewsKey"
-#define STADefaultsSessionDownloadsKey      @"SessionDownloadsKey"
-#define STADefaultsSessionStartDateKey      @"SessionStartDateKey"
-#define STADefaultsSessionEndDateKey        @"SessionEndDateKey"
-#define STADefaultsPreviousVersionsKey      @"PreviousVersionsKey"
-#define STADefaultsSessionReviewsKey        @"SessionReviewsKey"
-
-// Cache Defaults
-#define STADefaultsCacheSizeKey             @"CacheSizeKey"
+#define STADefaultsPreviousVersionsKey              @"PreviousVersionsKey"
 
 // Rate Dialog Defaults
-#define STADefaultsCanAskToRateKey          @"CanAskToRateKey"
-#define STADefaultsNumberOfOpensKey         @"NumberOfOpensKey"
-#define STADefaultsOpenValidationDateKey    @"ValidationDateKey"
+#define STADefaultsCanAskToRateKey                  @"CanAskToRateKey"
+#define STADefaultsNumberOfOpensKey                 @"NumberOfOpensKey"
+#define STADefaultsOpenValidationDateKey            @"ValidationDateKey"
+
+// Country Defaults
+#define STADefaultsAppStoreCountryKey               @"AppStoreCountryKey"
+#define STADefaultsLastAppStoreCountryKey           @"LastAppStoreCountryKey"
 
 // ---------------------------------------------------------------------------------------
-// STA App Properties
+// STA Display Index Attributes
 
-#define STAAppPropertyImagePath             @"screenshotImagePath"
-#define STAAppPropertyAppID                 @"appID"
-#define STAAppPropertyDisplayIndex          @"displayIndex"
-#define STAAppPropertyAppURL                @"appURL"
-#define STAAppPropertyUniversalApp          @"universalApp"
-#define STAAppPropertyiPadOnlyApp           @"iPadOnlyApp"
-
-// ---------------------------------------------------------------------------------------
-// STA App Info
-
-#define STAAppInfoAppID                     @"AppID"
-#define STAAppInfoObjectID                  @"ObjectID"
-#define STAAppInfoAppURL                    @"AppURL"
-#define STAAppInfoImagePath                 @"ImagePath"
-#define STAAppInfoDisplayIndex              @"DisplayIndex"
+#define STADisplayIndexAttributePositionIndex   @"positionIndex"
+#define STADisplayIndexAttributeCountry         @"country"
+#define STADisplayIndexAttributeCategory        @"category"
+#define STADisplayIndexAttributePriceTier       @"priceTier"
+#define STADisplayIndexAttributeAppID           @"appID"
+#define STADisplayIndexAttributeAppURL          @"appURL"
+#define STADisplayIndexAttributeScreenshotURL   @"screenshotURL"
 
 // ---------------------------------------------------------------------------------------
-// STA Evaluation
+// Connection Dictionary Keys
 
-// Actions
-#define STAEvaluationActionDownload         @"EvaluationActionDownload"
-#define STAEvaluationActionEvaluate         @"EvaluationActionEvaluate"
-
-// Values
-#define STAActionDictionaryDisplayIndexKey  @"DisplayIndex"
-
-// ---------------------------------------------------------------------------------------
-// goVertex Affiliate String
-
-#define SeeTheAppAffiliateStringQuestion    @"?partnerId=30&siteID=/cVWfZilOnw"
-#define SeeTheAppAffiliateStringAmpersand   @"&partnerId=30&siteID=/cVWfZilOnw"
-
-#define SeeTheAppAffiliateSignatureiPad     @"&u1=stav11iPad"
-#define SeeTheAppAffiliateSignatureiPhone   @"&u1=stav11iPhone"
-
-//#define SeeTheAppAffiliateString            @"&partnerID=30&siteID=%2FcVWfZilOnw"
+#define STAConnectionURLStringKey               @"URLString"
+#define STAConnectionDataKey                    @"ConnectionData"
 
 // ---------------------------------------------------------------------------------------
 // DEBUG
 
+//#define LOG_ApplicationLifecycle            1
 //#define LOG_Errors                          1
 //#define LOG_OperationAdds                   1
 //#define LOG_SessionNotifications            1
-//#define LOG_DatabaseCopyingNotifications    1
 //#define LOG_GalleryViewCellSource           1
-//#define LOG_EvaluationOperation             1
 //#define LOG_DownloadNotifications           1
 //#define LOG_AlertViewResponse               1
 //#define LOG_DownloadFailures                1
@@ -121,3 +167,57 @@
 //#define LOG_HeaderFooterRequests            1
 //#define LOG_FooterLocation                  1
 //#define LOG_SelectedAppDetails              1
+//#define LOG_AppStoreCountryChanges          1
+//#define LOG_UpdateDownloadsResults          1
+//#define LOG_DownloadActivity                1
+//#define LOG_InMemoryCacheCounts             1
+
+// ---------------------------------------------------------------------------------------
+// STA Categories
+
+enum STACategory
+{
+    STACategoryNone = 0,
+    STACategoryBrowse = 1000,
+    STACategorySearchResult = 1001,
+    STACategoryBusiness = 6000,
+    STACategoryWeather = 6001,
+    STACategoryUtilities = 6002,
+    STACategoryTravel = 6003,
+    STACategorySports = 6004,
+    STACategorySocialNetworking = 6005,
+    STACategoryReference = 6006,
+    STACategoryProductivity = 6007,
+    STACategoryPhotography = 6008,
+    STACategoryNews = 6009,
+    STACategoryNavigation = 6010,
+    STACategoryMusic = 6011,
+    STACategoryLifestyle = 6012,
+    STACategoryHealthcareAndFitness = 6013,
+    STACategoryGames = 6014,
+    STACategoryGamesAction = 7001,
+    STACategoryGamesAdventure = 7002,
+    STACategoryGamesArcade = 7003,
+    STACategoryGamesBoard = 7004,
+    STACategoryGamesCard = 7005,
+    STACategoryGamesCasino = 7006,
+    STACategoryGamesDice = 7007,
+    STACategoryGamesEducational = 7008,
+    STACategoryGamesFamily = 7009,
+    STACategoryGamesKids = 7010,
+    STACategoryGamesMusic = 7011,
+    STACategoryGamesPuzzle = 7012,
+    STACategoryGamesRacing = 7013,
+    STACategoryGamesRolePlaying = 7014,
+    STACategoryGamesSimulation = 7015,
+    STACategoryGamesSports = 7016,
+    STACategoryGamesStrategy = 7017,
+    STACategoryGamesTrivia = 7018,
+    STACategoryGamesWord = 7019,
+    STACategoryFinance = 6015,
+    STACategoryEntertainment = 6016,
+    STACategoryEducation = 6017,
+    STACategoryBook = 6018,
+    STACategoryMedical = 6020,
+    STACategoryNewsstand = 6021
+};

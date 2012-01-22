@@ -8,90 +8,119 @@
 
 #import <UIKit/UIKit.h>
 
-#import "SeeTheAppViewController.h"
+#import "SeeTheAppGalleryViewController.h"
+#import "SeeTheAppMainMenuViewController.h"
+#import "SeeTheAppCategoriesMenuViewController.h"
+#import "SeeTheAppGamesSubcategoriesMenuViewController.h"
+#import "SeeTheAppOptionsViewController.h"
 #import "LocalyticsSession.h"
 #import "Reachability.h"
-#import "SeeTheAppEvaluateOperation.h"
-#import "SeeTheAppDownloadOperation.h"
-#import <MessageUI/MessageUI.h>
+#import "SBJson.h"
 
-@interface SeeTheAppAppDelegate : NSObject <UIApplicationDelegate, MFMailComposeViewControllerDelegate> 
+@interface SeeTheAppAppDelegate : NSObject <UIApplicationDelegate, NSURLConnectionDelegate, NSURLConnectionDataDelegate, STAMainMenuDelegate, UINavigationControllerDelegate, SeeTheAppOptionsViewControllerDelegate> 
 {
-    // Unordered Apps Array
-    NSMutableArray *unorderedAppsArray;
-    /*
-        This array is a mutable copy of all fetch results with a displayIndex of -1 (meaning they have not been ordered).
-        Apps are randomly selected from this array when the user pages forward. Apps that fail in the download operation for any reason
-        are removed from this array, but not the database. This means that when this array reaches 0, it can be updated from the database
-        with apps that will be given a "second chance".
-     */
-        
-    // View Controller
-    SeeTheAppViewController *viewController;
-    /*
-        The view controller handles the galleryview, providing it with number of rows, and cells similar to a UITableViewDatasource.
-        It also carries messages from the galleryView about row changes to the delegate to start evaluation operations.
-        The views behave the same for both the iPad and iPhone / iPod Touch, so dimensions and image path names are determined using the
-        UIInterface_idiom() function.
-     */
-    
     // Reachability
     BOOL hasNetworkConnection;
     Reachability *reachability;
     
     // Evaluation Timer
-    NSTimer *evaluationTimer;
+    NSTimer *downloadStarterTimer;
     
     @private
-    NSString *pathForScreenshotsDirectory_gv;
-    NSFileManager *fileManager_gv;
-    NSOperationQueue *operationQueue_gv;
+    
+    // View Controllers
+    UINavigationController *navigationController_gv;
+    SeeTheAppGalleryViewController *galleryViewController_gv;
+    SeeTheAppMainMenuViewController *mainMenuViewController_gv;
+    SeeTheAppCategoriesMenuViewController *categoriesMenuViewController_gv;
+    SeeTheAppGamesSubcategoriesMenuViewController *gamesSubcategoriesMenuViewController_gv;
+    SeeTheAppOptionsViewController *optionsViewController_gv;
+    
+    // List Download Connections
+    CFMutableDictionaryRef currentListDownloadConnections_gv;
+    NSMutableArray *pendingListDownloadConnections_gv;
+    
+    // Image Download Connections
+    CFMutableDictionaryRef currentImageDownloadConnections_gv;
+    NSMutableArray *pendingImageDownloadConnections_gv;
+    
+    NSString *pathForImageDataDirectory_gv;
+    
+    // Data
+    NSArray *appStoreCountryCodes_gv;
+    NSDictionary *affiliateCodesDictionary_gv;
+    NSArray *categoriesInfo_gv;
+    NSArray *gameCategoriesInfo_gv;
+    
+    NSURL *applicationLibrarySTADirectory_gv;
 }
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;
 
+@property (nonatomic, retain, readonly) SeeTheAppGalleryViewController *galleryViewController;
+@property (nonatomic, retain, readonly) UINavigationController *navigationController;
+@property (nonatomic, retain, readonly) SeeTheAppMainMenuViewController *mainMenuViewController;
+@property (nonatomic, retain, readonly) SeeTheAppCategoriesMenuViewController *categoriesMenuViewController;
+@property (nonatomic, retain, readonly) SeeTheAppGamesSubcategoriesMenuViewController *gamesSubcategoriesMenuViewController;
+@property (nonatomic, retain, readonly) SeeTheAppOptionsViewController *optionsViewController;
 
-@property (nonatomic, retain) NSMutableArray *unorderedAppsArray;
-
-@property (retain) SeeTheAppViewController *viewController;
-
-@property (nonatomic, retain) NSTimer *evaluationTimer;
+@property (nonatomic, retain) NSTimer *downloadStarterTimer;
 
 @property (nonatomic) BOOL hasNetworkConnection;
 @property (nonatomic, retain) Reachability *reachability;
-
-@property (nonatomic, retain, readonly) NSOperationQueue *operationQueue;
 
 @property (nonatomic, retain, readonly) NSManagedObjectContext *managedObjectContext;
 @property (nonatomic, retain, readonly) NSManagedObjectModel *managedObjectModel;
 @property (nonatomic, retain, readonly) NSPersistentStoreCoordinator *persistentStoreCoordinator;
 
-@property (nonatomic, retain, readonly) NSString *pathForScreenshotsDirectory;
-@property (nonatomic, retain, readonly) NSFileManager *fileManager;
-
-
-- (void)updateUnorderedAppsArray;
+@property (nonatomic, retain, readonly) NSMutableArray *pendingListDownloadConnections;
+@property (nonatomic, retain, readonly) NSMutableArray *pendingImageDownloadConnections;
 
 - (void)saveContext;
-//- (NSURL *)applicationDocumentsDirectory;
-- (NSURL*)applicationLibraryDirectory;
 
-- (void)startSessionAndDownloads;
-- (void)resumeSessionAndDownloads;
-- (NSInteger)currentRow;
-//- (BOOL)databaseExists;
-//- (void)makeDatabase;
+// Current Connections
+- (CFMutableDictionaryRef)currentListDownloadConnections;
+- (CFMutableDictionaryRef)currentImageDownloadConnections;
 
-- (void)addAppsToDatabase;
+// Download Starter Timer Methods
+- (void)startDownloadStarterTimer;
+- (void)stopDownloadStarterTimer;
 
-- (void)cleanCacheWithHighestDisplayIndex:(NSInteger)argHighestDisplayIndex;
-
-//- (NSBlockOperation*)databaseMigrationBlockOperation;
-
-- (void)startTimer;
-- (void)stopTimer;
 // Rating
 - (BOOL)shouldPresentRateAlert;
 - (void)presentRateAndFeedbackAlert;
 
+- (void)populateInitialAppsForCurrentCountry;
+
+- (NSString*)fileNameOfImageWithURLString:(NSString*)argURLString;
+- (NSString*)filePathOfImageDataForURLString:(NSString*)argURLString;
+
+- (void)checkPendingConnections;
+
+- (void)restoreLastDisplayMode;
+
+//- (void)displayLastRow;
+//- (void)saveCurrentRow;
+
+- (void)relocalizeText;
+
+- (NSString*)pathForImageDataDirectory;
+
+- (void)processNewAppsInDictionary:(NSDictionary*)argDictionary;
+
+- (NSURL*)applicationLibrarySTADirectory;
+
+- (NSInteger)lastPositionForCategory:(NSInteger)argCategory;
+
+// Update State Data Methods
+- (void)updateAppStoreCountry:(NSString*)argCountryCode;
+- (void)updateLastPosition:(NSInteger)argLastPosition;
+- (void)updateCategory:(enum STACategory)argCategory;
+- (void)updatePriceTier:(enum STAPriceTier)argPriceTier;
+
+// Information Arrays
+- (NSArray*)appStoreCountryCodes;
+- (NSDictionary*)affiliateCodesDictionary;
+- (NSArray*)categoriesInfo;
+- (NSArray*)gameCategoriesInfo;
 @end

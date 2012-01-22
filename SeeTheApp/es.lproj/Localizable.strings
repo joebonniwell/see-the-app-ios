@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Por favor, evalúe See the App";
+"Rate See the App" = "Evaluar See the App";
+"No thanks" = "No, gracias";
+"Maybe later" = "Tal vez más tarde";
+
+// Status strings
+"Unable to connect" = "No se puede conectar";
+
+// Menu Titles
+"Menu" = "Menú";
+"Browse All Apps" = "Ver todos los apps";
+"All Apps" = "Todos los Apps";
+"Categories" = "Categorías";
+"All" = "Todos";
+"Free" = "Gratuito";
+"Options" = "Opciones";
+
+// Options Strings
+"Email us" = "Envíenos un correo electrónico";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Elija el App Store para buscar y descargar aplicaciones desde.";
+"Please email us with questions or comments." = "Por favor, envíenos un correo electrónico con preguntas o comentarios";
+
+// AppStore Button
+"Available on the" = "Disponible en el";
+
+// Categories
+"Books" = "Libros";
+"Business" = "Economía y empresa";
+"Education" = "Educación";
+"Entertainment" = "Entretenimiento";
+"Finance" = "Finanzas";
+"Games" = "Juegos";
+"All Games" = "Todos los Juegos";
+"Action" = "Acción";
+"Adventure" = "Aventura";
+"Arcade" = "Arcade";
+"Board" = "Juegos de mesa";
+"Card" = "Cartas";
+"Casino" = "Casino";
+"Dice" = "Dados";
+"Educational" = "Educación";
+"Family" = "Familiar";
+"Kids" = "Niños";
+"Music" = "Música";
+"Puzzle" = "Puzzle";
+"Racing" = "Carreras";
+"Role Playing" = "Juegos de rol";
+"Simulation" = "Simulación";
+"Sports" = "Deportes";
+"Strategy" = "Estrategia";
+"Trivia" = "Trivia";
+"Word" = "Palabras";
+"Health & Fitness" = "Salud y forma fisica";
+"Lifestyle" = "Estilo de vida";
+"Medical" = "Medicina";
+"Music" = "Música";
+"Navigation" = "Navegación";
+"News" = "Noticias";
+"Newsstand" = "Quiosco";
+"Photo & Video" = "Foto y vídeo";
+"Productivity" = "Productividad";
+"Reference" = "Referencia";
+"Social Networking" = "Redes sociales";
+"Sports" = "Deportes";
+"Travel" = "Viajes";
+"Utilities" = "Utilidades";
+"Weather" = "Tiempo";

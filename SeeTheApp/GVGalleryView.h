@@ -35,8 +35,10 @@
 
 @property NSInteger currentRow;
 
+- (void)displayRow:(NSInteger)argRow animated:(BOOL)argAnimated;
 - (GVGalleryViewCell*)dequeueCell;
 - (GVGalleryViewCell*)visibleCellForRow:(NSInteger)argRow;
+- (NSArray*)visibleCells;
 - (void)reloadData;
 
 @end
@@ -51,7 +53,5 @@
 @end
 
 @protocol GVGalleryViewDelegate <NSObject>
-
-- (void)didUpdateDisplayRow:(NSInteger)argRow;
 
 @end

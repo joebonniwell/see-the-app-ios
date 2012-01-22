@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Prašome įvertinti See the App";
+"Rate See the App" = "Įvertinti See the App";
+"No thanks" = "Ne, ačiū";
+"Maybe later" = "Tik vėliau";
+
+// Status strings
+"Unable to connect" = "Nepavyko prisijungti";
+
+// Menu Titles
+"Menu" = "Meniu";
+"Browse All Apps" = "Naršyti visus Apps";
+"All Apps" = "Visi Apps";
+"Categories" = "Kategorijos";
+"All" = "Visi";
+"Free" = "Nemokamai";
+"Options" = "Parinktys";
+
+// Options Strings
+"Email us" = "Rašykite mums";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Pasirinkite App Store naršyti ir parsisiųsti programų iš.";
+"Please email us with questions or comments." = "Siųskite mums elektroninį laišką su klausimų ar komentarų.";
+
+// AppStore Button
+"Available on the" = "Galima įsigyti";
+
+// Categories
+"Books" = "Knygos";
+"Business" = "Verslas";
+"Education" = "švietimas";
+"Entertainment" = "Pramoga";
+"Finance" = "Finansuoti";
+"Games" = "žaidimai";
+"All Games" = "Visus žaidimus";
+"Action" = "Veiksmas";
+"Adventure" = "Nuotykis";
+"Arcade" = "Arkada";
+"Board" = "Stalo";
+"Card" = "Kortelė";
+"Casino" = "Kazino";
+"Dice" = "Kauliukai";
+"Educational" = "švietimas";
+"Family" = "šeimos";
+"Kids" = "Vaikams";
+"Music" = "Muzika";
+"Puzzle" = "Dėlionės";
+"Racing" = "Lenktynių";
+"Role Playing" = "Vaidmenų";
+"Simulation" = "Modeliavimas";
+"Sports" = "Sporto";
+"Strategy" = "Strategija";
+"Trivia" = "Drobnostki";
+"Word" = "žodiniai";
+"Health & Fitness" = "Sveikatos ir Fitneso";
+"Lifestyle" = "Gyvenimo Būdas";
+"Medical" = "Medicinos";
+"Music" = "Muzika";
+"Navigation" = "Navigacija";
+"News" = "Naujienos";
+"Newsstand" = "Newsstand";
+"Photo & Video" = "Foto ir Video";
+"Productivity" = "Produktyvumas";
+"Reference" = "Nuoroda";
+"Social Networking" = "Socialinius Tinklus";
+"Sports" = "Sporto";
+"Travel" = "Keliauti";
+"Utilities" = "Naudingumo";
+"Weather" = "Oras";

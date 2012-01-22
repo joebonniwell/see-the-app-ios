@@ -121,6 +121,15 @@
     return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
 
+- (void)setResultsControllerToCategory:(NSInteger)argCategory priceTier:(NSInteger)argPriceTier
+{
+    // create predicate
+    // create fetch request
+    // create a new fetchedresultscontroller
+    // perform fetch  
+    // replace the instance variable with a new fetched results controller
+}
+
 #pragma mark - NSFetchedResultsControllerDelegate Methods
 
 - (void)controller:(NSFetchedResultsController *)controller didChangeObject:(id)anObject atIndexPath:(NSIndexPath *)indexPath forChangeType:(NSFetchedResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath

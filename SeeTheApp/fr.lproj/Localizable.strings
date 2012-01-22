@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "S'il vous plaît évaluer See the App";
+"Rate See the App" = "Évaluer See the App";
+"No thanks" = "Non merci";
+"Maybe later" = "Peut être plus tard";
+
+// Status strings
+"Unable to connect" = "Impossible de se connecter";
+
+// Menu Titles
+"Menu" = "Menu";
+"Browse All Apps" = "Parcourir toutes les applications";
+"All Apps" = "Toutes les applications";
+"Categories" = "Catégories";
+"All" = "Toutes";
+"Free" = "Gratuit";
+"Options" = "Les options";
+
+// Options Strings
+"Email us" = "Écrivez-nous";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Choisissez le App Store de naviguer et de télécharger des applications de.";
+"Please email us with questions or comments." = "S'il vous plaît nous envoyer un email avec vos questions ou commentaires.";
+
+// AppStore Button
+"Available on the" = "Disponible sur";
+
+// Categories
+"Books" = "Livres";
+"Business" = "Économie et entreprise";
+"Education" = "Enseignement";
+"Entertainment" = "Divertissement";
+"Finance" = "Finance";
+"Games" = "Jeux";
+"All Games" = "Tous les jeux";
+"Action" = "Action";
+"Adventure" = "Aventure";
+"Arcade" = "Arcade";
+"Board" = "Jeux de société";
+"Card" = "Carte";
+"Casino" = "Casino";
+"Dice" = "Dés";
+"Educational" = "Enseignement";
+"Family" = "Famille";
+"Kids" = "Enfants";
+"Music" = "Musique";
+"Puzzle" = "Casse-tête";
+"Racing" = "Course";
+"Role Playing" = "Jeux de rôle";
+"Simulation" = "Simulation";
+"Sports" = "Sports";
+"Strategy" = "Stratégie";
+"Trivia" = "Quiz";
+"Word" = "Mots";
+"Health & Fitness" = "Forme et santé";
+"Lifestyle" = "Style de vie";
+"Medical" = "Médecine";
+"Music" = "Musique";
+"Navigation" = "Navigation";
+"News" = "Actualités";
+"Newsstand" = "Kiosque";
+"Photo & Video" = "Photo et vidéo";
+"Productivity" = "Productivité";
+"Reference" = "Références";
+"Social Networking" = "Réseaux sociaux";
+"Sports" = "Sports";
+"Travel" = "Tourisme";
+"Utilities" = "Utilitaires";
+"Weather" = "Météo";

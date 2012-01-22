@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Venligst evaluere See the App";
+"Rate See the App" = "Evaluere See the App";
+"No thanks" = "Nej tak";
+"Maybe later" = "Måske senere";
+
+// Status strings
+"Unable to connect" = "Kan ikke forbinde";
+
+// Menu Titles
+"Menu" = "Menu";
+"Browse All Apps" = "Gennemse alle apps";
+"All Apps" = "Alle apps";
+"Categories" = "Kategorier";
+"All" = "Alle";
+"Free" = "Gratis";
+"Options" = "Optioner";
+
+// Options Strings
+"Email us" = "Email os";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Vælg den App Store til at gennemse og downloade appsfra.";
+"Please email us with questions or comments." = "Du kan kontakte os med spørgsmål eller kommentarer.";
+
+// AppStore Button
+"Available on the" = "Fås i";
+
+// Categories
+"Books" = "Bøger";
+"Business" = "Forretning";
+"Education" = "Uddannelse";
+"Entertainment" = "Underholdning";
+"Finance" = "Finansiering";
+"Games" = "Spil";
+"All Games" = "Alle Spil";
+"Action" = "Handling";
+"Adventure" = "Eventyr";
+"Arcade" = "Arcade";
+"Board" = "Brætspil";
+"Card" = "Kortspil";
+"Casino" = "Kasinospil";
+"Dice" = "Terningespil";
+"Educational" = "Uddannelse";
+"Family" = "Familie";
+"Kids" = "Børn";
+"Music" = "Musik";
+"Puzzle" = "Puslespil";
+"Racing" = "Racerspil";
+"Role Playing" = "Rollespil";
+"Simulation" = "Simulationsspil";
+"Sports" = "Sport";
+"Strategy" = "Strategi";
+"Trivia" = "Trivia";
+"Word" = "Ordspil";
+"Health & Fitness" = "Sundhed og Fitness";
+"Lifestyle" = "Livsstil";
+"Medical" = "Medicinske";
+"Music" = "Musik";
+"Navigation" = "Navigation";
+"News" = "Nyheder";
+"Newsstand" = "Bladkiosk";
+"Photo & Video" = "Foto og Video";
+"Productivity" = "Produktivitet";
+"Reference" = "Henvisning";
+"Social Networking" = "Sociale Netværk";
+"Sports" = "Sport";
+"Travel" = "Rejser";
+"Utilities" = "Værktøjer";
+"Weather" = "Vejret";

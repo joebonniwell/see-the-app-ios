@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "See the App の評価をお聞かせください";
+"Rate See the App" = "See the App を評価する";
+"No thanks" = "遠慮します";
+"Maybe later" = "多分、後で";
+
+// Status strings
+"Unable to connect" = "接続できない";
+
+// Menu Titles
+"Menu" = "メニュー";
+"Browse All Apps" = "すべてのアプリを見て";
+"All Apps" = "すべてのアプリ";
+"Categories" = "カテゴリ";
+"All" = "全ての";
+"Free" = "無料の";
+"Options" = "オプション";
+
+// Options Strings
+"Email us" = "私達に電子メールを送りなさい";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "からアプリケーションをブラウズし、ダウンロードするApp Storeを選択してください。";
+"Please email us with questions or comments." = "質問やコメントが私達に電子メールを送りなさい";
+
+// AppStore Button
+"Available on the" = "に登場";
+
+// Categories
+"Books" = "ブック";
+"Business" = "ビジネス";
+"Education" = "教育";
+"Entertainment" = "エンターテインメント";
+"Finance" = "ファイナンス";
+"Games" = "ゲーム";
+"All Games" = "すべてのゲーム";
+"Action" = "アクション";
+"Adventure" = "アドベンチャー";
+"Arcade" = "アーケード";
+"Board" = "ボード";
+"Card" = "カード";
+"Casino" = "カジノ";
+"Dice" = "さいころ";
+"Educational" = "教育";
+"Family" = "ファミリー";
+"Kids" = "キッズ";
+"Music" = "ミュージック";
+"Puzzle" = "パズル";
+"Racing" = "レーシング";
+"Role Playing" = "ロールプレイング";
+"Simulation" = "シミュレーション";
+"Sports" = "スポーツ";
+"Strategy" = "ストラテジー";
+"Trivia" = "トリビア";
+"Word" = "単語";
+"Health & Fitness" = "ヘルスケア／フィットネス";
+"Lifestyle" = "ライフスタイル";
+"Medical" = "メディカル";
+"Music" = "ミュージック";
+"Navigation" = "ナビゲーション";
+"News" = "ニュース";
+"Newsstand" = "Newsstand";
+"Photo & Video" = "写真／ビデオ";
+"Productivity" = "仕事効率化";
+"Reference" = "辞書／辞典／その他";
+"Social Networking" = "ソーシャルネットワーキング";
+"Sports" = "スポーツ";
+"Travel" = "旅行";
+"Utilities" = "ユーティリティ";
+"Weather" = "天気";

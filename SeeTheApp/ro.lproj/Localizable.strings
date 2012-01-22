@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Vă rugăm să evaluaţi See the App";
+"Rate See the App" = "Evaluaţi See the App";
+"No thanks" = "Nu, multumesc";
+"Maybe later" = "Poate mai târziu";
+
+// Status strings
+"Unable to connect" = "Imposibil de conectat";
+
+// Menu Titles
+"Menu" = "Meniu";
+"Browse All Apps" = "Vizionati toate aplicaţiile";
+"All Apps" = "Toate aplicaţiile";
+"Categories" = "Categorii";
+"All" = "Toate";
+"Free" = "Gratuit";
+"Options" = "Opţiuni";
+
+// Options Strings
+"Email us" = "E-mail-ne";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Alegeţi App Store pentru a căuta şi descărca aplicaţii de la.";
+"Please email us with questions or comments." = "Vă rugăm să ne trimiteţi un email cu intrebari sau comentarii.";
+
+// AppStore Button
+"Available on the" = "Disponibil in";
+
+// Categories
+"Books" = "Cărţi";
+"Business" = "Afaceri";
+"Education" = "Educaţie";
+"Entertainment" = "Divertisment";
+"Finance" = "Finanţe";
+"Games" = "Jocuri";
+"All Games" = "Toate Jocurile";
+"Action" = "Actiune";
+"Adventure" = "Aventura";
+"Arcade" = "Arcade";
+"Board" = "Masă";
+"Card" = "Cărţi";
+"Casino" = "Cazinou";
+"Dice" = "Zaruri";
+"Educational" = "Educaţie";
+"Family" = "Familie";
+"Kids" = "Copii";
+"Music" = "Muzică";
+"Puzzle" = "Puzzle";
+"Racing" = "Curse";
+"Role Playing" = "Jocul de Rol";
+"Simulation" = "Simulare";
+"Sports" = "Sport";
+"Strategy" = "Strategie";
+"Trivia" = "Trivia";
+"Word" = "Cuvinte";
+"Health & Fitness" = "Sănătate şi de Fitness";
+"Lifestyle" = "Stil de Viaţă";
+"Medical" = "Medical";
+"Music" = "Muzică";
+"Navigation" = "Navigare";
+"News" = "Știri";
+"Newsstand" = "Publicaţii";
+"Photo & Video" = "Foto şi Video";
+"Productivity" = "Productivitate";
+"Reference" = "Referinţă";
+"Social Networking" = "Reţele Sociale";
+"Sports" = "Sport";
+"Travel" = "Călătorie";
+"Utilities" = "Utilităţi";
+"Weather" = "Vreme";

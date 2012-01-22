@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Prosimo, da ovrednoti See the App";
+"Rate See the App" = "Ovrednotite See the App";
+"No thanks" = "Ne, hvala";
+"Maybe later" = "Mogoče kasneje";
+
+// Status strings
+"Unable to connect" = "Ne morem se povezati";
+
+// Menu Titles
+"Menu" = "Meni";
+"Browse All Apps" = "Preglejte vse aplikacije";
+"All Apps" = "Vse aplikacije";
+"Categories" = "Kategorije";
+"All" = "Vse";
+"Free" = "Prosti";
+"Options" = "Možnosti";
+
+// Options Strings
+"Email us" = "Nas Email";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Izberite App Store za brskanje in prenos aplikacij iz.";
+"Please email us with questions or comments." = "Prosimo, da nam e-pošto z vprašanji inpripombami.";
+
+// AppStore Button
+"Available on the" = "Na voljo v trgovini";
+
+// Categories
+"Books" = "Knjige";
+"Business" = "Poslovne";
+"Education" = "Izobraževanje";
+"Entertainment" = "Zabavo";
+"Finance" = "Finance";
+"Games" = "Igre";
+"All Games" = "Vse Igre";
+"Action" = "Akcijske";
+"Adventure" = "Avanture";
+"Arcade" = "Arkadne";
+"Board" = "Namizne";
+"Card" = "Kartami";
+"Casino" = "Casino";
+"Dice" = "Kocke";
+"Educational" = "Izobraževanje";
+"Family" = "Družina";
+"Kids" = "Otroci";
+"Music" = "Glasba";
+"Puzzle" = "Puzzle";
+"Racing" = "Dirke";
+"Role Playing" = "Vlogo Igranjem";
+"Simulation" = "Simulacijo";
+"Sports" = "Športi";
+"Strategy" = "Strategija";
+"Trivia" = "Trivia";
+"Word" = "Besedne";
+"Health & Fitness" = "Zdravje in Fitnes";
+"Lifestyle" = "Način Življenja";
+"Medical" = "Medicinske";
+"Music" = "Glasba";
+"Navigation" = "Navigacijo";
+"News" = "Novice";
+"Newsstand" = "Newsstand";
+"Photo & Video" = "Foto in Video";
+"Productivity" = "Produktivnost";
+"Reference" = "Referenčne";
+"Social Networking" = "Socialne Mreže";
+"Sports" = "Športi";
+"Travel" = "Potovanja";
+"Utilities" = "Utilities";
+"Weather" = "Vreme";

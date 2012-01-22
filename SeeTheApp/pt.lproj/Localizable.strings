@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Por favor, avalie See the App";
+"Rate See the App" = "Avaliar See the App";
+"No thanks" = "Não, obrigado";
+"Maybe later" = "Talvez mais tarde";
+
+// Status strings
+"Unable to connect" = "Incapaz de se conectar";
+
+// Menu Titles
+"Menu" = "Menu";
+"Browse All Apps" = "Navegue por todos os aplicativos";
+"All Apps" = "Todos os Aplicativos";
+"Categories" = "Categorias";
+"All" = "Todos";
+"Free" = "Gratuito";
+"Options" = "Opções";
+
+// Options Strings
+"Email us" = "E-mail";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Escolha o App Store para navegar e baixar aplicativos a partir de.";
+"Please email us with questions or comments." = "Envie um email com perguntas ou comentários.";
+
+// AppStore Button
+"Available on the" = "Disponível na";
+
+// Categories
+"Books" = "Livros";
+"Business" = "Negócios";
+"Education" = "Educação";
+"Entertainment" = "Entretenimento";
+"Finance" = "Finanças";
+"Games" = "Games";
+"All Games" = "Todos os Games";
+"Action" = "Ação";
+"Adventure" = "Aventura";
+"Arcade" = "Arcade";
+"Board" = "Quadro";
+"Card" = "Cartas";
+"Casino" = "Cassino";
+"Dice" = "Dados";
+"Educational" = "Educacional";
+"Family" = "Família";
+"Kids" = "Crianças";
+"Music" = "Música";
+"Puzzle" = "Quebra-cabeça";
+"Racing" = "Corrida";
+"Role Playing" = "RPG";
+"Simulation" = "Simulação";
+"Sports" = "Esportes";
+"Strategy" = "Estratégia";
+"Trivia" = "Trívia";
+"Word" = "Palavras";
+"Health & Fitness" = "Saúde e fitness";
+"Lifestyle" = "Estilo de vida";
+"Medical" = "Medicina";
+"Music" = "Música";
+"Navigation" = "Navegação";
+"News" = "Notícias";
+"Newsstand" = "Quiosque";
+"Photo & Video" = "Foto e vídeo";
+"Productivity" = "Produtividade";
+"Reference" = "Referência";
+"Social Networking" = "Redes sociais";
+"Sports" = "Esportes";
+"Travel" = "Viagens";
+"Utilities" = "Utilidades";
+"Weather" = "Previsão do tempo";

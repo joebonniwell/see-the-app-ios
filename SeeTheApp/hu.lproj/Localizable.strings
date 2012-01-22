@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Kérjük, értékelje See the App";
+"Rate See the App" = "Értékelje See the App";
+"No thanks" = "Nem, köszönöm";
+"Maybe later" = "Talán később";
+
+// Status strings
+"Unable to connect" = "Nem lehet kapcsolódni";
+
+// Menu Titles
+"Menu" = "Menü";
+"Browse All Apps" = "Tallózás az összes apps";
+"All Apps" = "Minden apps";
+"Categories" = "Kategóriák";
+"All" = "Minden";
+"Free" = "Ingyenes";
+"Options" = "Beállítások";
+
+// Options Strings
+"Email us" = "E-mail nekünk";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Válassza ki a App Store böngészni és letölteni apps-től.";
+"Please email us with questions or comments." = "Kérjük, írjon nekünk a kérdéseket és észrevételeket.";
+
+// AppStore Button
+"Available on the" = "Elérhető itt";
+
+// Categories
+"Books" = "Könyvek";
+"Business" = "Űzleti";
+"Education" = "Oktatás";
+"Entertainment" = "Szórakozás";
+"Finance" = "Pénzügy";
+"Games" = "Játékok";
+"All Games" = "Az összes játék";
+"Action" = "Akciójátékok";
+"Adventure" = "Kalandjátékok";
+"Arcade" = "Űgyességi";
+"Board" = "Társasjátékok";
+"Card" = "Kártyajátékok";
+"Casino" = "Kaszinó";
+"Dice" = "Kockajáték";
+"Educational" = "Oktatás";
+"Family" = "Család";
+"Kids" = "Gyerek";
+"Music" = "Zene";
+"Puzzle" = "Rejtvény";
+"Racing" = "Verseny";
+"Role Playing" = "Szerepjáték";
+"Simulation" = "Szimuláció";
+"Sports" = "Sport";
+"Strategy" = "Stratégiai";
+"Trivia" = "Apróságok";
+"Word" = "Szó";
+"Health & Fitness" = "Egészségügyi és Fitness";
+"Lifestyle" = "Életmód";
+"Medical" = "Orvosi";
+"Music" = "Zene";
+"Navigation" = "Navigáció";
+"News" = "Hír";
+"Newsstand" = "Újságos";
+"Photo & Video" = "Fotó és Videó";
+"Productivity" = "Termelékenység";
+"Reference" = "Hivatkozás";
+"Social Networking" = "Szociális Háló";
+"Sports" = "Sport";
+"Travel" = "Utazás";
+"Utilities" = "Segédprogram";
+"Weather" = "Időjárás";

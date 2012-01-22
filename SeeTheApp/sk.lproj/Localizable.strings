@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Prosím vyhodnocuje See the App";
+"Rate See the App" = "Vyhodnocuje See the App";
+"No thanks" = "Nie, vďaka";
+"Maybe later" = "Možno neskôr";
+
+// Status strings
+"Unable to connect" = "Nedá sa pripojiť";
+
+// Menu Titles
+"Menu" = "Menu";
+"Browse All Apps" = "Prechádzať všetky aplikácie";
+"All Apps" = "Všetky aplikácie";
+"Categories" = "Kategórie";
+"All" = "Všetko";
+"Free" = "Voľný";
+"Options" = "Možnosti";
+
+// Options Strings
+"Email us" = "Napíšte nám";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Vyberte App Store prezerať a sťahovaťaplikácie z.";
+"Please email us with questions or comments." = "Pošlite nám prosím email s otázky čipripomienky.";
+
+// AppStore Button
+"Available on the" = "K dispozícii v";
+
+// Categories
+"Books" = "Knihy";
+"Business" = "Obchod";
+"Education" = "Vzdelanie";
+"Entertainment" = "Zábava";
+"Finance" = "Financie";
+"Games" = "Hry";
+"All Games" = "Všetky Hry";
+"Action" = "Akčné";
+"Adventure" = "Dobrodružné";
+"Arcade" = "Arkádovej";
+"Board" = "Stolné";
+"Card" = "Kartové";
+"Casino" = "Casino";
+"Dice" = "Kocky";
+"Educational" = "Vzdelanie";
+"Family" = "Rodinné";
+"Kids" = "Detské";
+"Music" = "Hudba";
+"Puzzle" = "Hádanka";
+"Racing" = "Závodné";
+"Role Playing" = "RPG";
+"Simulation" = "Simulačné";
+"Sports" = "športové";
+"Strategy" = "Strategické";
+"Trivia" = "Maličkosti";
+"Word" = "Slovné";
+"Health & Fitness" = "Zdravie a Fitness";
+"Lifestyle" = "životný štýl";
+"Medical" = "Zdravotné";
+"Music" = "Hudba";
+"Navigation" = "Navigácia";
+"News" = "Správy";
+"Newsstand" = "Newsstand";
+"Photo & Video" = "Foto a Video";
+"Productivity" = "Produktivita";
+"Reference" = "Referencie";
+"Social Networking" = "Sociálne Siete";
+"Sports" = "športové";
+"Travel" = "Cestovanie";
+"Utilities" = "Obslužný";
+"Weather" = "Počasie";

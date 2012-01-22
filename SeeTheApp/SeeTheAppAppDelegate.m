@@ -7,94 +7,152 @@
 //
 
 #import "SeeTheAppAppDelegate.h"
+#include <sys/xattr.h>
+
+@implementation UINavigationBar (UINavigationBarCategory)
+
+- (void)drawRect:(CGRect)rect
+{
+    UIImage *img;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        img = [UIImage imageNamed:@"STANavigationBarHD.png"];
+    else
+        img = [UIImage imageNamed:@"STANavigationBar.png"];
+    [img drawInRect:rect];
+}
+
+@end
 
 @implementation SeeTheAppAppDelegate
 
+#pragma mark - Property Synthesis
+
 @synthesize window=_window;
-
 @synthesize managedObjectContext=__managedObjectContext;
-
 @synthesize managedObjectModel=__managedObjectModel;
-
 @synthesize persistentStoreCoordinator=__persistentStoreCoordinator;
+
+#pragma mark - Application Lifecycle
 
 + (void)initialize
 {
-    NSDictionary *defaultDefaults = [NSDictionary dictionaryWithObjectsAndKeys:
-                                        [NSNumber numberWithInteger:0],     STADefaultsLastDisplayedIndexKey,
-                                        [NSNumber numberWithInteger:0],     STADefaultsHighestDisplayedIndexKey,
-                                        [NSNumber numberWithInteger:8],     STADefaultsAverageSessionViewsKey,
-                                        [NSNumber numberWithInteger:0],     STADefaultsSessionViewsKey,
-                                        [NSNumber numberWithInteger:0],     STADefaultsSessionReviewsKey,
-                                        [NSNumber numberWithInteger:120],   STADefaultsCacheSizeKey,
-                                        [NSNumber numberWithBool:YES],      STADefaultsCanAskToRateKey,
-                                        [NSNumber numberWithInteger:0],     STADefaultsNumberOfOpensKey,
-                                        [NSDate distantPast],               STADefaultsOpenValidationDateKey,
-                                        [NSNumber numberWithBool:NO],       STADefaultsDatabaseHasCopiedKey,
-                                        [NSNumber numberWithBool:YES],      STADefaultsShouldAddToDatabaseKey,
-                                        [NSNumber numberWithInteger:-1],    STADefaultsLastFileAddedToDBKey,
-                                        nil];
-    [[NSUserDefaults standardUserDefaults] registerDefaults:defaultDefaults];
+    NSString *preferenceListPath = [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:@"Settings.bundle/Root.plist"];
+    
+    NSDictionary *settingsDictionary = [NSDictionary dictionaryWithContentsOfFile:preferenceListPath];
+    
+    NSMutableArray *settingsArray = [settingsDictionary objectForKey:@"PreferenceSpecifiers"];
+    NSMutableDictionary *defaultSettingsDictionary = [NSMutableDictionary dictionary];
+    
+    for (NSDictionary *settingDict in settingsArray)
+    {
+        NSString *settingKey = [settingDict objectForKey:@"Key"];
+        if (settingKey)
+        {
+            id settingDefaultValue = [settingDict objectForKey:@"DefaultValue"];
+            [defaultSettingsDictionary setObject:settingDefaultValue forKey:settingKey];
+        }
+    }
+    
+    [defaultSettingsDictionary setObject:[NSNumber numberWithBool:YES] forKey:STADefaultsCanAskToRateKey];
+    [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:0] forKey:STADefaultsNumberOfOpensKey];
+    [defaultSettingsDictionary setObject:[NSDate distantPast] forKey:STADefaultsOpenValidationDateKey];
+    [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:STACategoryNone] forKey:STADefaultsLastCategoryKey];
+    [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:STAPriceTierAll] forKey:STADefaultsLastListPriceTierKey];
+    [defaultSettingsDictionary setObject:[NSDictionary dictionary] forKey:STADefaultsLastPositionsDictionaryKey];
+    [defaultSettingsDictionary setObject:@"None" forKey:STADefaultsLastAppStoreCountryKey];
+    
+    [[NSUserDefaults standardUserDefaults] registerDefaults:defaultSettingsDictionary];
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{    
-    // Screenshots Directory
-    if ([[self fileManager] fileExistsAtPath:[self pathForScreenshotsDirectory]] == NO)
-    {
-        NSString *screenshotsDirectoryPath = [self pathForScreenshotsDirectory];
-        [[self fileManager] createDirectoryAtPath:screenshotsDirectoryPath withIntermediateDirectories:NO attributes:nil error:nil];
-    }
+{        
+    #ifdef LOG_ApplicationLifecycle
+        NSLog(@"DID FINISH LAUNCHING **************************************");
+    #endif
     
-    NSURL *firstGenStoreURL = [[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheApp.sqlite"];
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     
-    if ([[NSFileManager defaultManager] fileExistsAtPath:[firstGenStoreURL path]])
-    {
-        NSError *appsFetchError;
-        NSFetchRequest *allAppsFetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"App"];
-        NSUInteger appCount = [[self managedObjectContext] countForFetchRequest:allAppsFetchRequest error:&appsFetchError];
-        
-        if (appCount == NSNotFound || appCount == 0)
+    NSString *bundleVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey];
+    
+    NSString *appFirstStartOfVersionKey = [NSString stringWithFormat:@"first_start_%@", bundleVersion];
+    
+    NSNumber *alreadyStartedOnVersion = [defaults objectForKey:appFirstStartOfVersionKey];
+    if(!alreadyStartedOnVersion || [alreadyStartedOnVersion boolValue] == NO) 
+    {        
+        NSDictionary *lastDisplayedIndexDictionary = [defaults valueForKey:@"LastDisplayedIndexDictionaryKey"];
+        if ([[lastDisplayedIndexDictionary allKeys] count] > 0)
         {
-            [__managedObjectContext release];
-            __managedObjectContext = nil;
-            
-            [__persistentStoreCoordinator release];
-            __persistentStoreCoordinator = nil;
-            
-            NSError *fileRemovalError;
-            BOOL removalResult = [[NSFileManager defaultManager] removeItemAtURL:firstGenStoreURL error:&fileRemovalError];
-            
-            if (removalResult == NO)
+            NSMutableDictionary *newLastPositionsDictionary = [NSMutableDictionary dictionaryWithDictionary:[defaults valueForKey:STADefaultsLastPositionsDictionaryKey]];
+            for (NSString *key in [lastDisplayedIndexDictionary allKeys])
             {
-                NSLog(@"Error during database removal");
+                NSInteger displayIndexValue = [[lastDisplayedIndexDictionary valueForKey:key] integerValue];
+                NSString *newKey = [key substringToIndex:6];
+                
+                [newLastPositionsDictionary setValue:[NSNumber numberWithInteger:displayIndexValue] forKey:newKey];
             }
-            
-            [self performSelector:@selector(addAppsToDatabase) withObject:nil afterDelay:0.1];
+            [defaults setValue:[NSDictionary dictionary] forKey:@"LastDisplayedIndexDictionaryKey"];
+            [defaults setValue:newLastPositionsDictionary forKey:STADefaultsLastPositionsDictionaryKey];
         }
-        [allAppsFetchRequest release];
+        [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:YES] forKey:appFirstStartOfVersionKey];
     }
-    else
+    
+    NSString *lastAppStoreCountryCode = [defaults objectForKey:STADefaultsLastAppStoreCountryKey];
+    
+    NSString *userSelectedAppStoreCountryCode = [defaults objectForKey:STADefaultsAppStoreCountryKey];
+    
+    #ifdef LOG_AppStoreCountryChanges
+        NSLog(@"App Launching - Last App Store: %@ | User App Store: %@", lastAppStoreCountryCode, userSelectedAppStoreCountryCode);
+    #endif
+    
+    if ([lastAppStoreCountryCode isEqual:@"None"])
     {
-        if([[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsShouldAddToDatabaseKey])
-            [self performSelector:@selector(addAppsToDatabase) withObject:nil afterDelay:0.1];
+        NSString *countryCode = [[NSLocale currentLocale] objectForKey:NSLocaleCountryCode];
+        if ([[self appStoreCountryCodes] containsObject:countryCode])
+        {
+            #ifdef LOG_AppStoreCountryChanges
+                NSLog(@"App Store country was None, changing to %@ based on user country code of: %@", countryCode, countryCode);
+            #endif
+            
+            [[NSUserDefaults standardUserDefaults] setValue:countryCode forKey:STADefaultsLastAppStoreCountryKey];
+            [[NSUserDefaults standardUserDefaults] setValue:countryCode forKey:STADefaultsAppStoreCountryKey];
+            [[NSUserDefaults standardUserDefaults] synchronize];            
+        }
+        else
+        {
+            #ifdef LOG_AppStoreCountryChanges
+                NSLog(@"App Store country was None, changing to US based on user country code of: %@", countryCode);
+            #endif
+            
+            [[NSUserDefaults standardUserDefaults] setValue:@"US" forKey:STADefaultsLastAppStoreCountryKey];
+            [[NSUserDefaults standardUserDefaults] setValue:@"US" forKey:STADefaultsAppStoreCountryKey];
+            [[NSUserDefaults standardUserDefaults] synchronize];            
+        }
+        
+        [self performSelector:@selector(populateInitialAppsForCurrentCountry) withObject:nil afterDelay:0.1];        
+    }
+    else if ([lastAppStoreCountryCode isEqual:userSelectedAppStoreCountryCode] == NO)
+    {
+        #ifdef LOG_AppStoreCountryChanges
+            NSLog(@"App Store country changed from: %@ to %@", lastAppStoreCountryCode, userSelectedAppStoreCountryCode);
+        #endif
+        
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"UserChangedAppStore" attributes:[NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"%@_to_%@", lastAppStoreCountryCode, userSelectedAppStoreCountryCode] forKey:@"CountryChange"]];
+        
+        [[NSUserDefaults standardUserDefaults] setValue:userSelectedAppStoreCountryCode forKey:STADefaultsLastAppStoreCountryKey];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        
+        [self performSelector:@selector(populateInitialAppsForCurrentCountry) withObject:nil afterDelay:0.1];
     }
     
-    // View Controller
-    SeeTheAppViewController *tempViewController = [[SeeTheAppViewController alloc] initWithDelegate:self];
-    [self setViewController:tempViewController];
-    [tempViewController release];
-    
-    [[self window] setRootViewController:tempViewController];
-    [[tempViewController view] setFrame:[[UIScreen mainScreen] bounds]];
-    
-    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent];
-    
+    // Views
+    [[self window] setBackgroundColor:[UIColor blackColor]];
+    [[self window] setRootViewController:[self navigationController]];
     [self.window makeKeyAndVisible];
-            
+    [self restoreLastDisplayMode];  
+        
     // Start Localytics
     [[LocalyticsSession sharedLocalyticsSession] startSession:AnaylticsID];
-        
+
     // Reachability
     Reachability *tempReachability = [Reachability reachabilityForInternetConnection];
     [self setReachability:tempReachability];
@@ -107,8 +165,16 @@
         
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kReachabilityChangedNotification object:nil];
     [tempReachability startNotifier];
-        
-    [self startSessionAndDownloads];
+            
+    // Rate Alert View
+    if ([self shouldPresentRateAlert])
+        [self performSelector:@selector(presentRateAndFeedbackAlert) withObject:nil afterDelay:3.0 inModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];
+    
+    [[NSOperationQueue mainQueue] setMaxConcurrentOperationCount:1];
+    
+    [self startDownloadStarterTimer];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:[self managedObjectContext] selector:@selector(mergeChangesFromContextDidSaveNotification:) name:NSManagedObjectContextDidSaveNotification object:nil];
     
     return YES;
 }
@@ -122,6 +188,45 @@
     [[LocalyticsSession sharedLocalyticsSession] resume];
     [[LocalyticsSession sharedLocalyticsSession] upload];
     
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    NSString *lastCountryCode = [[NSUserDefaults standardUserDefaults] objectForKey:STADefaultsLastAppStoreCountryKey];
+    NSString *currentCountryCode = [[NSUserDefaults standardUserDefaults] objectForKey:STADefaultsAppStoreCountryKey];
+    
+    #ifdef LOG_AppStoreCountryChanges
+        NSLog(@"App returning from background - Last App Store: %@ | User App Store: %@", lastCountryCode, currentCountryCode);
+    #endif
+    
+    if ([lastCountryCode isEqualToString:currentCountryCode] == NO)
+    {
+        #ifdef LOG_AppStoreCountryChanges
+            NSLog(@"App Store country changed from: %@ to %@", lastCountryCode, currentCountryCode);
+        #endif
+        
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"UserChangedAppStore" attributes:[NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"%@_to_%@", lastCountryCode, currentCountryCode] forKey:@"CountryChange"]];
+        
+        // Get the last viewed category..... regardless of country.... because it should still be the same...
+        
+        enum STADisplayMode lastDisplayMode = (enum STADisplayMode)[[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastModeKey] integerValue];
+        [self updateAppStoreCountry:currentCountryCode];
+        
+        if (lastDisplayMode == STADisplayModeList)
+        {
+            [[self galleryViewController] displayMode:STADisplayModeList];
+            NSInteger lastCategory = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastCategoryKey] integerValue];
+            [[self galleryViewController] displayCategory:lastCategory forAppStoreCountryCode:currentCountryCode];   
+        }
+        else if (lastDisplayMode == STADisplayModeBrowse)
+        {
+            [[self galleryViewController] displayMode:STADisplayModeBrowse];
+            [[self galleryViewController] displayCategory:STACategoryBrowse forAppStoreCountryCode:currentCountryCode];
+        }
+        
+        [self performSelector:@selector(populateInitialAppsForCurrentCountry) withObject:nil afterDelay:0.1];
+    }
+    
+    [[[self galleryViewController] galleryView] reloadData];
+    [[self galleryViewController] updateDownloads];
+    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kReachabilityChangedNotification object:nil];
     [[self reachability] startNotifier];
     
@@ -130,8 +235,17 @@
         [self setHasNetworkConnection:YES];
     else
         [self setHasNetworkConnection:NO];
+    
+    [self startDownloadStarterTimer];
+    
+    if (optionsViewController_gv)
+        [[self optionsViewController] refreshAppStoreCountryLabel];
+    
+    [self relocalizeText];
 
-    [self resumeSessionAndDownloads];
+    // Rate Alert View
+    if ([self shouldPresentRateAlert])
+        [self performSelector:@selector(presentRateAndFeedbackAlert) withObject:nil afterDelay:3.0 inModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application
@@ -140,15 +254,23 @@
         NSLog(@"DID ENTER BACKGROUND *************************************");
     #endif
     
+    if ([[[self navigationController] visibleViewController] isEqual:galleryViewController_gv])
+        [self updateLastPosition:[[self galleryViewController] positionOfCurrentRow]];
+    
     [[LocalyticsSession sharedLocalyticsSession] close];
     [[LocalyticsSession sharedLocalyticsSession] upload];
     
-    [[self operationQueue] cancelAllOperations];
+    // if we are doing a core data save...... we have to save for background task
     
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:kReachabilityChangedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    
     [[self reachability] stopNotifier];
     
-    [self stopTimer];
+    [self stopDownloadStarterTimer];
+    
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(presentRateAndFeedbackAlert) object:nil];    
+    
+    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application
@@ -160,23 +282,39 @@
     // Saves changes in the application's managed object context before the application terminates.
     [self saveContext];
     
+    if ([[[self navigationController] visibleViewController] isEqual:galleryViewController_gv])
+        [self updateLastPosition:[[self galleryViewController] positionOfCurrentRow]];
+    
     [[LocalyticsSession sharedLocalyticsSession] close];
     [[LocalyticsSession sharedLocalyticsSession] upload];
+        
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:kReachabilityChangedNotification object:nil];
     [[self reachability] stopNotifier];
     
-    [[self operationQueue] cancelAllOperations];
+    // cancel core data save, or try to get extra time to finish it 
     
-    [self stopTimer];
+    [self stopDownloadStarterTimer];
+    
+    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 - (void)dealloc
 {
-    [fileManager_gv release];
-    [pathForScreenshotsDirectory_gv release];
-    [operationQueue_gv release];
-    [self setViewController:nil];
+    if (currentListDownloadConnections_gv)
+        CFRelease(currentListDownloadConnections_gv);
+    [pendingListDownloadConnections_gv release];
+    
+    if (currentImageDownloadConnections_gv)
+        CFRelease(currentImageDownloadConnections_gv);
+    [pendingImageDownloadConnections_gv release];
+    
+    [pathForImageDataDirectory_gv release];
+    
+    [appStoreCountryCodes_gv release];
+    [affiliateCodesDictionary_gv release];
+    
+    [applicationLibrarySTADirectory_gv release];
     
     [self setReachability:nil];
     
@@ -187,165 +325,150 @@
     [super dealloc];
 }
 
+- (void)restoreLastDisplayMode
+{
+    enum STADisplayMode lastDisplayMode = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastModeKey] integerValue];
+    NSString *currentCountry = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsAppStoreCountryKey];
+    enum STACategory lastCategory = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastCategoryKey] integerValue];
+    NSInteger lastPosition = [self lastPositionForCategory:lastCategory];
+    
+    switch (lastDisplayMode) 
+    {
+        case STADisplayModeBrowse:
+        {
+            [[self galleryViewController] view];
+            [[self galleryViewController] displayMode:STADisplayModeBrowse];
+            [[self galleryViewController] displayCategory:lastCategory forAppStoreCountryCode:currentCountry];
+            [[self navigationController] pushViewController:[self galleryViewController] animated:NO];
+            [[self galleryViewController] displayPosition:lastPosition forPriceTier:STAPriceTierAll];
+            [[self galleryViewController] updateDownloads];
+            break;
+        }
+        case STADisplayModeList:
+        {
+            [[self navigationController] pushViewController:[self categoriesMenuViewController] animated:NO];
+            if (lastCategory >= STACategoryGamesAction || lastCategory == STACategoryGames)
+                [[self navigationController] pushViewController:[self gamesSubcategoriesMenuViewController] animated:NO];
+
+            enum STAPriceTier lastPriceTier = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastListPriceTierKey] integerValue];
+            
+            [[self galleryViewController] view];
+            [[self galleryViewController] displayMode:STADisplayModeList];
+            [[self galleryViewController] displayCategory:lastCategory forAppStoreCountryCode:currentCountry];
+            [[self navigationController] pushViewController:[self galleryViewController] animated:NO];
+            [[self galleryViewController] displayPosition:lastPosition forPriceTier:lastPriceTier];
+            [[self galleryViewController] updateDownloads];
+            break;
+        }
+        case STADisplayModeCategoriesMenu:
+            [[self navigationController] pushViewController:[self categoriesMenuViewController] animated:NO];
+            break;
+        case STADisplayModeGameCategoriesMenu:
+            [[self navigationController] pushViewController:[self categoriesMenuViewController] animated:NO];
+            [[self navigationController] pushViewController:[self gamesSubcategoriesMenuViewController] animated:NO];
+            break;
+        case STADisplayModeOptionsMenu:
+            [[self navigationController] pushViewController:[self optionsViewController] animated:NO];
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)relocalizeText
+{
+    NSLog(@"Relocalizing text");
+    
+    if (categoriesInfo_gv)
+    {
+        [categoriesInfo_gv release];
+        categoriesInfo_gv = nil;
+        [self categoriesInfo];
+    }
+    
+    if (gameCategoriesInfo_gv)
+    {
+        [gameCategoriesInfo_gv release];
+        gameCategoriesInfo_gv = nil;
+        [self gameCategoriesInfo];
+    }
+
+    if (mainMenuViewController_gv)
+        [[self mainMenuViewController] resetText];
+    
+    if (categoriesMenuViewController_gv)
+        [[self categoriesMenuViewController] resetText];
+    
+    if (gamesSubcategoriesMenuViewController_gv)
+        [[self gamesSubcategoriesMenuViewController] resetText];
+    
+    if (optionsViewController_gv)
+        [[self optionsViewController] resetText];
+    
+    if (galleryViewController_gv)
+    {
+        if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastModeKey] integerValue] == STADisplayModeList)
+        {            
+            enum STACategory currentCategory = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastCategoryKey] integerValue];
+            
+            if (currentCategory >= STACategoryGamesAction || currentCategory == STACategoryGames)
+            {
+                
+                NSUInteger indexOfCategory = [[self gameCategoriesInfo] indexOfObjectPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop){
+                    
+                    if([[(NSDictionary*)obj valueForKey:@"CategoryCode"] integerValue] == currentCategory)
+                        return YES;
+                    return NO;
+                }];
+                
+                if (indexOfCategory == NSNotFound)
+                    NSLog(@"Category Not Found");
+                else
+                {
+                    NSString *categoryName = [[[self gameCategoriesInfo] objectAtIndex:indexOfCategory] valueForKey:@"CategoryName"];
+                    [[self galleryViewController] setTitle:categoryName];
+                }
+            }
+            else
+            {
+                NSUInteger indexOfCategory = [[self categoriesInfo] indexOfObjectPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop){
+                    
+                    if([[(NSDictionary*)obj valueForKey:@"CategoryCode"] integerValue] == currentCategory)
+                        return YES;
+                    return NO;
+                }];
+                
+                if (indexOfCategory == NSNotFound)
+                    NSLog(@"Category Not Found");
+                else
+                {
+                    NSString *categoryName = [[[self categoriesInfo] objectAtIndex:indexOfCategory] valueForKey:@"CategoryName"];
+                    //[[[self galleryViewController] navigationItem] setTitle:categoryName];
+                    [[self galleryViewController] setTitle:categoryName];
+                }
+            }
+        }
+        else
+            [[self galleryViewController] setTitle:NSLocalizedString(@"All Apps", @"All Apps")];
+        
+        [[self galleryViewController] resetText];
+        [[[self galleryViewController] galleryView] reloadData];
+    }
+}
+
+#pragma mark - Core Data Save
+
 - (void)saveContext
 {
-    //NSLog(@"Saving Context");
     NSError *error = nil;
     NSManagedObjectContext *managedObjectContext = self.managedObjectContext;
     if (managedObjectContext != nil)
     {
         if ([managedObjectContext hasChanges] && ![managedObjectContext save:&error])
         {
-            /*
-             Replace this implementation with code to handle the error appropriately.
-             
-             */
-
-            
             NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
         } 
     }
-}
-
-#pragma mark - Database Creation Methods
-
-- (void)addAppsToDatabase
-{    
-    NSInteger nextFileNumber = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastFileAddedToDBKey] integerValue] + 1;
-    
-    NSString *filePath;
-    
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-        filePath = [[NSBundle mainBundle] pathForResource:[NSString stringWithFormat:@"staipadstarter%d", nextFileNumber] ofType:@"stadata"];
-    else
-        filePath = [[NSBundle mainBundle] pathForResource:[NSString stringWithFormat:@"staiphonestarter%d", nextFileNumber] ofType:@"stadata"];
-    
-    NSArray *appsToAdd = nil;
-    
-    @try 
-    {
-        appsToAdd = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
-    }
-    @catch (NSException *exception) 
-    {
-        // Log that this file does not contain a valid archive
-        NSLog(@"Failure to load archive");
-        appsToAdd = nil;
-    }
-
-    if (appsToAdd)
-    {
-        for (NSDictionary *appDictionary in appsToAdd)
-        {            
-            NSManagedObject *newApp = [NSEntityDescription insertNewObjectForEntityForName:@"App" inManagedObjectContext:[self managedObjectContext]];
-            
-            [newApp setValue:[appDictionary valueForKey:STAAppPropertyAppID] forKey:STAAppPropertyAppID];
-            [newApp setValue:[appDictionary valueForKey:STAAppPropertyUniversalApp] forKey:STAAppPropertyUniversalApp];
-            [newApp setValue:[appDictionary valueForKey:STAAppPropertyiPadOnlyApp] forKey:STAAppPropertyiPadOnlyApp];
-        }
-        
-        [self saveContext];
-    }
-    else
-        NSLog(@"Failed to load archive");
-        
-    NSString *nextFilePath = nil;
-    
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-        nextFilePath = [[NSBundle mainBundle] pathForResource:[NSString stringWithFormat:@"staipadstarter%d", (nextFileNumber + 1)] ofType:@"stadata"];
-    else
-        nextFilePath = [[NSBundle mainBundle] pathForResource:[NSString stringWithFormat:@"staiphonestarter%d", (nextFileNumber + 1)] ofType:@"stadata"];
-    
-    if (!nextFilePath)
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsShouldAddToDatabaseKey];
-    else
-        [self performSelector:@selector(addAppsToDatabase) withObject:nil afterDelay:1.0];
-    
-    [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:(nextFileNumber + 1)] forKey:STADefaultsLastFileAddedToDBKey];
-    
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-#pragma mark - Session Management
-
-- (void)startSessionAndDownloads
-{
-#ifdef LOG_SessionNotifications
-    NSLog(@"Session Starting");
-#endif
-    
-    // Session Views    
-    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:0] forKey:STADefaultsSessionViewsKey];
-    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:0] forKey:STADefaultsSessionReviewsKey];
-    
-    // Session Start Time
-    
-    // Session End Time
-    
-    [[NSUserDefaults standardUserDefaults] synchronize];
-    
-    // Start a session -> report the previous session
-    
-    NSInteger lastDisplayedRow = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastDisplayedIndexKey] integerValue];
-    
-    if (lastDisplayedRow > 0)
-        [[[self viewController] galleryView] setContentOffset:CGPointMake(lastDisplayedRow * [[[self viewController] galleryView] frame].size.width, 0.0f)];
-        
-    if ([self shouldPresentRateAlert])
-        [self presentRateAndFeedbackAlert];
-    
-    NSInteger highestDisplayIndex = [[[[[[self viewController] resultsController] fetchedObjects] lastObject] valueForKey:@"displayIndex"] integerValue];
-    [self cleanCacheWithHighestDisplayIndex:highestDisplayIndex];
-    
-    [self updateUnorderedAppsArray];
-        
-    #ifdef LOG_OperationAdds
-        NSLog(@"Adding Operation from Start Sessions, existing ops: %d", [[self operationQueue] operationCount]);
-    #endif
-    
-    if ([[self operationQueue] operationCount] == 0)
-    {
-        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
-        [[self operationQueue] addOperation:newEvalOp];
-        [newEvalOp release];
-    }
-    
-    [self startTimer];
-    
-    #ifdef LOG_SessionNotifications
-        NSLog(@"Session Started");
-    #endif
-}
-
-- (void)resumeSessionAndDownloads
-{
-#ifdef LOG_SessionNotifications
-    NSLog(@"Session resuming - operation count: %d", [[self operationQueue] operationCount]);
-#endif
-    
-    NSInteger lastDisplayedRow = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastDisplayedIndexKey] integerValue];
-    
-    if (lastDisplayedRow > 0)
-        [[[self viewController] galleryView] setContentOffset:CGPointMake(lastDisplayedRow * [[[self viewController] galleryView] frame].size.width, 0.0f)];
-    
-    if ([self shouldPresentRateAlert])
-        [self presentRateAndFeedbackAlert];
-    
-    if ([[self unorderedAppsArray] count] == 0)
-        [self updateUnorderedAppsArray];
-    
-    if ([[self operationQueue] operationCount] == 0)
-    {
-        #ifdef LOG_OperationAdds
-            NSLog(@"Adding Operation from resume Sessions, existing ops: %d", [[self operationQueue] operationCount]);
-        #endif
-        
-        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
-        [[self operationQueue] addOperation:newEvalOp];
-        [newEvalOp release]; 
-    }
-    
-    [self startTimer];
 }
 
 #pragma mark - Rate Dialog
@@ -372,20 +495,10 @@
 
 - (void)presentRateAndFeedbackAlert
 {
-    if ([MFMailComposeViewController canSendMail] == YES)
-    {
-        UIAlertView *rateAndFeedbackAlertView = [[UIAlertView alloc] initWithTitle:@"Enjoying See the App?" message:@"Please consider rating it in the AppStore, or contacting us if there is something we can improve." delegate:self cancelButtonTitle:@"No Thanks" otherButtonTitles:@"Rate See the App", @"Contact the Developer", @"Maybe Later", nil];
-        [rateAndFeedbackAlertView setTag:4];
-        [rateAndFeedbackAlertView show];
-        [rateAndFeedbackAlertView release];
-    }
-    else
-    {
-        UIAlertView *rateAlertView = [[UIAlertView alloc] initWithTitle:@"Enjoying See the App?" message:@"Please consider rating it in the AppStore, or contacting us at contact@xyzapps.com if there is something we can improve." delegate:self cancelButtonTitle:@"No Thanks" otherButtonTitles:@"Rate See the App", @"Maybe Later", nil];
+    UIAlertView *rateAlertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Please rate See the App", nil) message:nil delegate:self cancelButtonTitle:NSLocalizedString(@"Maybe later", nil) otherButtonTitles:NSLocalizedString(@"Rate See the App", nil), NSLocalizedString(@"No thanks", nil), nil];
         [rateAlertView setTag:5];
         [rateAlertView show];
         [rateAlertView release];
-    }
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
@@ -393,91 +506,67 @@
     if (buttonIndex == [alertView cancelButtonIndex])
     {
         #ifdef LOG_AlertViewResponse
-            NSLog(@"AlertView: No Thanks");
+            NSLog(@"AlertView: Maybe Later");
         #endif
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsCanAskToRateKey];
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:0] forKey:STADefaultsNumberOfOpensKey];
+        [[NSUserDefaults standardUserDefaults] setValue:[NSDate dateWithTimeIntervalSinceNow:259200] forKey:STADefaultsOpenValidationDateKey];
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
-    else if (buttonIndex == 1)
+    else if (buttonIndex == 1)  // Open Rate URL
     {
         #ifdef LOG_AlertViewResponse
             NSLog(@"AlertView: Rate App");
         #endif
+        
         [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsCanAskToRateKey];
         [[NSUserDefaults standardUserDefaults] synchronize];
-        // Open Rate URL
-        NSURL *rateURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=470079430&pageNumber=0&sortOrdering=1&type=Purple+Software&mt=8"]];
-        [[UIApplication sharedApplication] openURL:rateURL];
+        
+        NSString *appStoreCountry = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsAppStoreCountryKey];
+        
+        NSString *affiliateString = @"";
+        
+        if ([[[self affiliateCodesDictionary] allKeys] containsObject:appStoreCountry])
+            affiliateString = [[self affiliateCodesDictionary] objectForKey:appStoreCountry];
+        
+        NSString *seeTheAppURLString = [NSString stringWithFormat:@"http://itunes.apple.com/%@/app/id470079430?mt=8&uo=4%@", appStoreCountry, affiliateString];
+
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:seeTheAppURLString]];
     }
     else if (buttonIndex == 2)
     {
-        if ([alertView tag] == 4)
-        {
-            #ifdef LOG_AlertViewResponse
-                NSLog(@"AlertView: Email Developer");
-            #endif
-            [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsCanAskToRateKey];
-            [[NSUserDefaults standardUserDefaults] synchronize];
-            // Launch Email View Controller
-            MFMailComposeViewController *mailViewController = [[MFMailComposeViewController alloc] init];
-            [mailViewController setMailComposeDelegate:self];
-            [mailViewController setToRecipients:[NSArray arrayWithObject:[NSString stringWithFormat:@"contact@seetheapp.com"]]];
-            [mailViewController setSubject:[NSString stringWithFormat:@"See the App"]];
-            [[self viewController] presentModalViewController:mailViewController animated:YES];
-            [mailViewController release];
-        }
-        else
-        {
-            #ifdef LOG_AlertViewResponse
-                NSLog(@"AlertView: Maybe Later");
-            #endif
-            [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:0] forKey:STADefaultsNumberOfOpensKey];
-            [[NSUserDefaults standardUserDefaults] setValue:[NSDate dateWithTimeIntervalSinceNow:259200] forKey:STADefaultsOpenValidationDateKey];
-            [[NSUserDefaults standardUserDefaults] synchronize];
-        }
-    }
-    else if (buttonIndex == 3)
-    {
         #ifdef LOG_AlertViewResponse
-            NSLog(@"AlertView: Don't Show Again");
+            NSLog(@"AlertView: No Thanks");
         #endif
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:0] forKey:STADefaultsNumberOfOpensKey];
-        [[NSUserDefaults standardUserDefaults] setValue:[NSDate dateWithTimeIntervalSinceNow:259200] forKey:STADefaultsOpenValidationDateKey];
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsCanAskToRateKey];
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
     
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
-#pragma mark - Timed Evaluation
+#pragma mark - Download Starter Timed Evaluation
 
-- (void)startTimer
+- (void)startDownloadStarterTimer
 {
-    NSTimer *evalTimer = [NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(timedEvaluation) userInfo:nil repeats:YES];
-    [self setEvaluationTimer:evalTimer];
+    NSTimer *tempDownloadStarterTimer = [NSTimer scheduledTimerWithTimeInterval:3 target:self selector:@selector(timedDownloadStartEvaluation) userInfo:nil repeats:YES];
+    [self setDownloadStarterTimer:tempDownloadStarterTimer];
 }
 
-- (void)stopTimer
+- (void)stopDownloadStarterTimer
 {
-    [[self evaluationTimer] invalidate];
-    [self setEvaluationTimer:nil];
+    [[self downloadStarterTimer] invalidate];
+    [self setDownloadStarterTimer:nil];
 }
 
-- (void)timedEvaluation
+- (void)timedDownloadStartEvaluation
 {
-    if ([[self operationQueue] operationCount] == 0)
-    {
-        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
-        [[self operationQueue] addOperation:newEvalOp];
-        [newEvalOp release];
-    }
+    [self checkPendingConnections];
 }
 
 #pragma mark - Reachability
 
 - (void)reachabilityChanged:(NSNotification*)reachabilityNotification
 {
-    BOOL databaseHasCopied = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsDatabaseHasCopiedKey] boolValue];
     NetworkStatus status = [[self reachability] currentReachabilityStatus];
     if (status == ReachableViaWiFi || status == ReachableViaWWAN)
     {
@@ -486,8 +575,8 @@
         #endif
         BOOL previousHasNetworkConnectionValue = [self hasNetworkConnection];
         [self setHasNetworkConnection:YES];
-        if (previousHasNetworkConnectionValue == NO && databaseHasCopied == YES)
-            [[[self viewController] galleryView] reloadData];
+        if (previousHasNetworkConnectionValue == NO)
+            [[[self galleryViewController] galleryView] reloadData];
     }
     else
     {
@@ -496,216 +585,607 @@
         #endif
         BOOL previousHasNetworkConnectionValue = [self hasNetworkConnection];
         [self setHasNetworkConnection:NO];
-        if (previousHasNetworkConnectionValue == YES && databaseHasCopied == YES)
-            [[[self viewController] galleryView] reloadData];
-    }
-}
-#pragma mark - MailComposeViewController Delegate Methods
-
-- (void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError *)error
-{
-    [[self viewController] dismissModalViewControllerAnimated:YES];
-    [[[self viewController] view] setCenter:CGPointMake(0.5f * [[[self viewController] view] frame].size.width, 0.5f * [[[self viewController] view] frame].size.height)];
-}
-
-#pragma mark - ViewController Delegate Methods
-
-- (void)rowChanged
-{
-    if ([[self operationQueue] operationCount] == 0)
-    {
-        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
-        [[self operationQueue] addOperation:newEvalOp];
-        [newEvalOp release];
-    }
-    
-    NSInteger newCurrentRow = [self currentRow];
-    
-    [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:newCurrentRow] forKey:STADefaultsLastDisplayedIndexKey];
-    
-    if (newCurrentRow > [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsHighestDisplayedIndexKey] integerValue])
-    {
-        // Count as a new view for this session
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:newCurrentRow] forKey:STADefaultsHighestDisplayedIndexKey];
-    }
-    
-    [[NSUserDefaults standardUserDefaults] synchronize];
-    // Should do actual view tracking here
-}
-
-#pragma mark - Download Delegate Methods
-
-- (NSInteger)currentRow
-{
-    return [[[self viewController] galleryView] currentRow];
-}
-
-- (void)imageDownloadedForApp:(NSDictionary*)appInfo
-{
-#ifdef LOG_DownloadNotifications
-    //NSLog(@"Finished Downloading AppID: %d", [[appInfo valueForKey:STAAppInfoAppID] integerValue]);
-    NSLog(@"Downloaded App for DisplayIndex: %d", [[appInfo valueForKey:STAAppInfoDisplayIndex] integerValue]);
-#endif
-    
-    NSManagedObject *app = [[self managedObjectContext] objectWithID:[appInfo objectForKey:STAAppInfoObjectID]];
-    [app setValue:[appInfo objectForKey:STAAppInfoAppURL] forKey:STAAppPropertyAppURL];
-    [app setValue:[appInfo objectForKey:STAAppInfoImagePath] forKey:STAAppPropertyImagePath];
-    [app setValue:[appInfo objectForKey:STAAppInfoDisplayIndex] forKey:STAAppPropertyDisplayIndex];
-    
-    [[self managedObjectContext] save:NULL];
-    
-    // If this app is one of the visible cells in the gallery view, reload
-    NSInteger rowOfDownloadedApp = [[appInfo objectForKey:STAAppInfoDisplayIndex] integerValue] + 1;
-    if (rowOfDownloadedApp >= [self currentRow] - 1 && rowOfDownloadedApp <= [self currentRow] + 1)
-        [[[self viewController] galleryView] reloadData];
-    
-    if ([[self operationQueue] operationCount] == 1)
-    {
-        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
-        [[self operationQueue] addOperation:newEvalOp];
-        [newEvalOp release];
+        if (previousHasNetworkConnectionValue == YES)
+            [[[self galleryViewController] galleryView] reloadData];
     }
 }
 
-- (void)downloadFailed
-{
-#ifdef LOG_DownloadNotifications
-    NSLog(@"Download Failed");
-#endif
-    
-    if ([[self operationQueue] operationCount] == 1)
-    {
-        SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
-        [[self operationQueue] addOperation:newEvalOp];
-        [newEvalOp release];
-    }
-}
+#pragma mark - Connection Start
 
-- (void)evaluateOperationFinishedWithRowAndIndex:(NSDictionary*)argEvaluationResult
-{
-#ifdef LOG_EvaluationNotifications
-    NSLog(@"Evaluation Finished");
-#endif
-    
-    NSInteger evaluatedRow = [[argEvaluationResult objectForKey:@"Row"] integerValue];
-    BOOL canTrimCache = [[argEvaluationResult objectForKey:@"CanTrimCache"] boolValue];
-    
-    if (evaluatedRow != [[[self viewController] galleryView] currentRow])
+- (void)checkPendingConnections
+{    
+    if ([[self pendingListDownloadConnections] count] > 0)
     {
-        if ([[self operationQueue] operationCount] == 1)
+        if (CFDictionaryGetCount([self currentListDownloadConnections]) == 0)
         {
-           SeeTheAppEvaluateOperation *newEvalOp = [[SeeTheAppEvaluateOperation alloc] initWithCurrentRow:[[[self viewController] galleryView] currentRow] delegate:self];
-            [[self operationQueue] addOperation:newEvalOp];
-            [newEvalOp release]; 
+            #ifdef LOG_DownloadActivity
+                NSLog(@"List download starting");
+            #endif
+            
+            NSString *connectionURLStringToStart = [[self pendingListDownloadConnections] objectAtIndex:0];
+            NSURL *url = [NSURL URLWithString:connectionURLStringToStart];
+            NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+            [request setURL:url];
+            [request setValue:@"STAClient" forHTTPHeaderField:@"User-Agent"];
+            
+            NSMutableDictionary *connectionDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:connectionURLStringToStart, STAConnectionURLStringKey, [NSMutableData data], STAConnectionDataKey, nil];
+            
+            NSURLConnection *connection = [NSURLConnection connectionWithRequest:request delegate:self];
+            
+            CFDictionaryAddValue([self currentListDownloadConnections], connection, connectionDict);
+            
+            [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];     
+            
+            [request release];
+            
+            [[self pendingListDownloadConnections] removeObjectAtIndex:0];
         }
+    }
+    
+    if ([[self pendingImageDownloadConnections] count] > 0)
+    {
+        NSInteger currentConnections = CFDictionaryGetCount([self currentImageDownloadConnections]);
+        if (currentConnections < 3)
+        {
+            for (int connectionCounter = 0; connectionCounter < (3 - currentConnections); connectionCounter++)
+            {
+                if ([[self pendingImageDownloadConnections] count] == 0)
+                    break;
+                
+                #ifdef LOG_DownloadActivity
+                    NSLog(@"Image download starting");
+                #endif
+                
+                NSString *imageURLString = [[self pendingImageDownloadConnections] objectAtIndex:0];
+                NSURL *imageURL = [NSURL URLWithString:imageURLString];
+                NSURLRequest *imageRequest = [NSURLRequest requestWithURL:imageURL];
+                
+                NSMutableDictionary *connectionDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:imageURLString, STAConnectionURLStringKey, [NSMutableData data], STAConnectionDataKey, nil];
+                
+                NSURLConnection *imageDownloadConnection = [NSURLConnection connectionWithRequest:imageRequest delegate:self];
+                
+                CFDictionaryAddValue([self currentImageDownloadConnections], imageDownloadConnection, connectionDict);
+                
+                [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+                
+                [[self pendingImageDownloadConnections] removeObjectAtIndex:0];
+            }
+        }
+    }
+}
+
+#pragma mark - Populate Initial Apps for Current Country
+
+- (void)populateInitialAppsForCurrentCountry
+{
+    NSFetchRequest *currentDisplayIndexesFetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"DisplayIndex"];
+    
+    NSString *currentCountry = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsAppStoreCountryKey];
+    
+    NSString *predicateString = [NSString stringWithFormat:@"positionIndex == 0 AND country like '%@'", currentCountry];
+    
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:predicateString];
+    
+    [currentDisplayIndexesFetchRequest setPredicate:predicate];
+    
+    NSArray *currentDisplayIndices = [[self managedObjectContext] executeFetchRequest:currentDisplayIndexesFetchRequest error:nil];
+    [currentDisplayIndexesFetchRequest release];
+    
+    if ([currentDisplayIndices count] == 0)
+    {
+        // Add seaquations
+                
+        NSString *countryCode = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsAppStoreCountryKey];
+        
+        NSString *seaquationsScreenshotImageURLString; 
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        {
+            seaquationsScreenshotImageURLString = [NSString stringWithFormat:@"http://a2.mzstatic.com/%@/r1000/083/Purple/bc/70/b5/mzl.nqygrekj.1024x1024-65.jpg", countryCode];
+            NSString *screenshotBundlePath = [[NSBundle mainBundle] pathForResource:@"SeaquationsScreenshotHD" ofType:@"png"];
+            NSString *destinationPath = [self filePathOfImageDataForURLString:seaquationsScreenshotImageURLString];
+            
+            NSError *fileCopyError = nil;
+            if(![[NSFileManager defaultManager] copyItemAtPath:screenshotBundlePath toPath:destinationPath error:&fileCopyError])
+                [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"FailedToCopySeaquationsScreenshot" attributes:[NSDictionary dictionaryWithObject:[fileCopyError localizedDescription] forKey:@"ErrorDescription"]];
+        }
+        else
+        {
+            seaquationsScreenshotImageURLString = [NSString stringWithFormat:@"http://a3.mzstatic.com/%@/r1000/102/Purple/60/e0/30/mzl.mujovijy.png", countryCode];
+            NSString *screenshotBundlePath = [[NSBundle mainBundle] pathForResource:@"SeaquationsScreenshot" ofType:@"png"];
+            NSString *destinationPath = [self filePathOfImageDataForURLString:seaquationsScreenshotImageURLString];
+            
+            NSError *fileCopyError = nil;
+            if(![[NSFileManager defaultManager] copyItemAtPath:screenshotBundlePath toPath:destinationPath error:&fileCopyError])
+                [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"FailedToCopySeaquationsScreenshot" attributes:[NSDictionary dictionaryWithObject:[fileCopyError localizedDescription] forKey:@"ErrorDescription"]];
+        }
+        
+        NSString *affiliateString = @"";
+            if ([[[self affiliateCodesDictionary] allKeys] containsObject:countryCode])
+                affiliateString = [[self affiliateCodesDictionary] objectForKey:countryCode];
+        
+        NSString *appURLString = [NSString stringWithFormat:@"http://itunes.apple.com/%@/app/id447974258?mt=8&uo=4%@", countryCode, affiliateString];
+                
+        NSArray *seaquationsCategories = [NSArray arrayWithObjects:
+                                          [NSNumber numberWithInteger:STACategoryBrowse], 
+                                          [NSNumber numberWithInteger:STACategoryGames],
+                                          [NSNumber numberWithInteger:STACategoryGamesEducational],
+                                          [NSNumber numberWithInteger:STACategoryGamesKids],
+                                          [NSNumber numberWithInteger:STACategoryEducation],
+                                          nil];
+        
+        for (NSNumber *category in seaquationsCategories)
+        {
+            NSManagedObject *seaquationsDisplayIndex = [NSEntityDescription insertNewObjectForEntityForName:@"DisplayIndex" inManagedObjectContext:[self managedObjectContext]];
+            [seaquationsDisplayIndex setValue:[NSNumber numberWithInteger:447974258] forKey:STADisplayIndexAttributeAppID];
+            [seaquationsDisplayIndex setValue:appURLString forKey:STADisplayIndexAttributeAppURL];
+            [seaquationsDisplayIndex setValue:seaquationsScreenshotImageURLString forKey:STADisplayIndexAttributeScreenshotURL];
+            [seaquationsDisplayIndex setValue:[NSNumber numberWithInteger:0] forKey:STADisplayIndexAttributePositionIndex];
+            [seaquationsDisplayIndex setValue:[NSNumber numberWithInteger:1] forKey:STADisplayIndexAttributePriceTier];
+            [seaquationsDisplayIndex setValue:category forKey:STADisplayIndexAttributeCategory];
+            [seaquationsDisplayIndex setValue:countryCode forKey:STADisplayIndexAttributeCountry];
+        }
+                
+        [self saveContext];
+    }
+}
+
+#pragma mark - NSURLConnection Delegate Methods
+
+- (void)connection:(NSURLConnection*)argConnection didReceiveResponse:(NSURLResponse*)argResponse
+{    
+    NSMutableDictionary *connectionDictionary = CFDictionaryGetValue([self currentListDownloadConnections], argConnection);
+    
+    if (connectionDictionary != NULL)
+    {                
+        [connectionDictionary setObject:[NSMutableData data] forKey:STAConnectionDataKey];
+        return;
+    }
+    
+    connectionDictionary = CFDictionaryGetValue([self currentImageDownloadConnections], argConnection);
+    
+    if (connectionDictionary != NULL)
+    {
+        [connectionDictionary setObject:[NSMutableData data] forKey:STAConnectionDataKey];
+        return;
+    }
+    
+    // Bad Connection
+    NSLog(@"Ghost Connection in did receive response");
+}
+
+- (void)connection:(NSURLConnection*)argConnection didReceiveData:(NSData*)argData
+{
+    NSMutableDictionary *connectionDictionary = CFDictionaryGetValue([self currentListDownloadConnections], argConnection);
+    
+    if (connectionDictionary != NULL)
+    {
+        NSMutableData *connectionData = [connectionDictionary objectForKey:STAConnectionDataKey];
+        [connectionData appendData:argData];
+        return;
+    }
+    
+    connectionDictionary = CFDictionaryGetValue([self currentImageDownloadConnections], argConnection);
+    
+    if (connectionDictionary != NULL)
+    {
+        NSMutableData *connectionData = [connectionDictionary objectForKey:STAConnectionDataKey];
+        [connectionData appendData:argData];
+        return;
+    }
+    
+    // Bad connection
+    NSLog(@"Ghost Connection in did receive data");
+}
+
+- (void)connectionDidFinishLoading:(NSURLConnection*)argConnection
+{    
+    NSMutableDictionary *connectionDictionary = CFDictionaryGetValue([self currentListDownloadConnections], argConnection);
+    
+    if (connectionDictionary != NULL)
+    {
+        NSMutableData *connectionData = [connectionDictionary objectForKey:STAConnectionDataKey];
+        if (connectionData)
+        {   
+            #ifdef LOG_DownloadActivity
+                NSString *dataString = [[NSString alloc] initWithData:connectionData encoding:NSUTF8StringEncoding];
+                NSLog(@"List download completed with data: %@", dataString);
+                [dataString release];
+            #endif
+            
+            // how to check if this data is a valid json response or just an error code....
+            
+            NSString *jsonString = [[NSString alloc] initWithData:connectionData encoding:NSUTF8StringEncoding];
+            NSDictionary *appListDictionary = [jsonString JSONValue];
+            [jsonString release];
+            
+            if (appListDictionary)
+                [self processNewAppsInDictionary:appListDictionary];
+            else
+                [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"InvalidJSONResponse" attributes:[NSDictionary dictionaryWithObject:[connectionDictionary objectForKey:STAConnectionURLStringKey] forKey:@"URL"]];
+        }
+             
+        CFDictionaryRemoveValue([self currentListDownloadConnections], argConnection);
+        
+        if ([[self pendingListDownloadConnections] count] > 0)
+        {
+            #ifdef LOG_DownloadActivity
+                NSLog(@"List download starting");
+            #endif
+
+            NSString *nextListURLString = [[self pendingListDownloadConnections] objectAtIndex:0];
+            
+            NSMutableDictionary *connectionDictionaryToStart = [NSMutableDictionary dictionaryWithObjectsAndKeys:nextListURLString, STAConnectionURLStringKey, [NSMutableData data], STAConnectionDataKey, nil];
+                                            
+            NSURL *listURL = [NSURL URLWithString:nextListURLString];
+            NSMutableURLRequest *listRequest = [NSMutableURLRequest requestWithURL:listURL];
+            [listRequest setValue:@"stav102" forHTTPHeaderField:@"User-Agent"];
+                        
+            NSURLConnection *listDownloadConnection = [NSURLConnection connectionWithRequest:listRequest delegate:self];
+            
+            CFDictionaryAddValue([self currentListDownloadConnections], listDownloadConnection, connectionDictionaryToStart);
+            
+            [[self pendingListDownloadConnections] removeObjectAtIndex:0];
+        }
+        else if (CFDictionaryGetCount([self currentListDownloadConnections]) == 0 && CFDictionaryGetCount([self currentImageDownloadConnections]) == 0)
+            [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+        
+        return;
+    }
+    
+    connectionDictionary = CFDictionaryGetValue([self currentImageDownloadConnections], argConnection);
+    if (connectionDictionary != NULL)
+    {
+        #ifdef LOG_DownloadActivity
+            NSLog(@"Image download completed");
+        #endif
+        
+        NSMutableData *connectionData = [connectionDictionary objectForKey:STAConnectionDataKey];
+        if (connectionData)
+        {
+            NSString *urlString = [connectionDictionary objectForKey:STAConnectionURLStringKey];
+            
+            NSString *imageFilePath = [self filePathOfImageDataForURLString:urlString];
+            
+            if([[NSFileManager defaultManager] createFileAtPath:imageFilePath contents:connectionData attributes:nil])
+                [[self galleryViewController] screenshotDownloadCompleted:urlString];
+        }
+        
+        CFDictionaryRemoveValue([self currentImageDownloadConnections], argConnection);
+        
+        if ([[self pendingImageDownloadConnections] count] > 0)
+        {
+            #ifdef LOG_DownloadActivity
+                NSLog(@"Image download starting");
+            #endif
+            
+            NSString *connectionURLString = [[self pendingImageDownloadConnections] objectAtIndex:0];
+            
+            NSMutableDictionary *connectionDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:connectionURLString, STAConnectionURLStringKey, [NSMutableData data], STAConnectionDataKey, nil];
+                                    
+            NSURL *imageURL = [NSURL URLWithString:connectionURLString];
+            NSURLRequest *imageRequest = [NSURLRequest requestWithURL:imageURL];
+            NSURLConnection *imageDownloadConnection = [NSURLConnection connectionWithRequest:imageRequest delegate:self];
+           
+            CFDictionaryAddValue([self currentImageDownloadConnections], imageDownloadConnection, connectionDict);
+            
+            [[self pendingImageDownloadConnections] removeObjectAtIndex:0];
+        }
+        else if (CFDictionaryGetCount([self currentListDownloadConnections]) == 0 && CFDictionaryGetCount([self currentImageDownloadConnections]) == 0)
+            [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+        
+        return;
+    }
+        
+    NSLog(@"Ghost Connection in did finish loading");
+}
+
+- (void)connection:(NSURLConnection*)argConnection didFailWithError:(NSError*)argError
+{
+    NSLog(@"Connection failed");
+    
+    if (CFDictionaryContainsKey([self currentListDownloadConnections], argConnection))
+    {
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"ListDownloadFailure" attributes:[NSDictionary dictionaryWithObject:[argError localizedDescription] forKey:@"Error"]];
+        CFDictionaryRemoveValue([self currentListDownloadConnections], argConnection);
     }
     else
-    {
-        NSInteger indexToDownload = [[argEvaluationResult objectForKey:@"Index"] integerValue];
-        
-        NSInteger highestDisplayIndex = 0;
-        if ([[[[self viewController] resultsController] fetchedObjects] count] > 0)   
-            highestDisplayIndex = [[[[[[self viewController] resultsController] fetchedObjects] lastObject] valueForKey:@"displayIndex"] integerValue];
-        
-        if (indexToDownload > highestDisplayIndex || highestDisplayIndex == 0)
-        {            
-            if ([[self unorderedAppsArray] count] > 0)
-            {
-               NSInteger randomAppIndex = arc4random() % [[self unorderedAppsArray] count];
+        CFDictionaryRemoveValue([self currentImageDownloadConnections], argConnection);
+    
+    if (CFDictionaryGetCount([self currentListDownloadConnections]) == 0 && CFDictionaryGetCount([self currentImageDownloadConnections]) == 0)
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+}
+
+#pragma mark - State Data Update Methods
+
+- (void)updateAppStoreCountry:(NSString*)argCountryCode
+{    
+    [[NSUserDefaults standardUserDefaults] setValue:argCountryCode forKey:STADefaultsAppStoreCountryKey];
+    [[NSUserDefaults standardUserDefaults] setValue:argCountryCode forKey:STADefaultsLastAppStoreCountryKey];
+    
+    enum STACategory currentCategory = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastCategoryKey] integerValue];
+    [[self galleryViewController] displayCategory:currentCategory forAppStoreCountryCode:argCountryCode];
                         
-                NSManagedObject *app = [[self unorderedAppsArray] objectAtIndex:randomAppIndex];
+    NSInteger lastPosition = [self lastPositionForCategory:currentCategory];
+    enum STAPriceTier lastPriceTier = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastListPriceTierKey] integerValue];
+    if (currentCategory == STACategoryBrowse)
+        lastPriceTier = STAPriceTierAll;
+    [[self galleryViewController] displayPosition:lastPosition forPriceTier:lastPriceTier];
+}
+
+- (void)updateLastPosition:(NSInteger)argLastPosition
+{
+    NSMutableDictionary *lastPositionsDictionary = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastPositionsDictionaryKey] mutableCopy];
+    NSString *appStoreCountryCode = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsAppStoreCountryKey];
+    NSInteger currentCategory = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastCategoryKey] integerValue];
+    NSString *positionKey = [NSString stringWithFormat:@"%@%d", appStoreCountryCode, currentCategory];
+    [lastPositionsDictionary setValue:[NSNumber numberWithInteger:argLastPosition] forKey:positionKey];
+    [[NSUserDefaults standardUserDefaults] setValue:lastPositionsDictionary forKey:STADefaultsLastPositionsDictionaryKey];
+    [lastPositionsDictionary release];
+}
+
+- (void)updateCategory:(enum STACategory)argCategory
+{
+    [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:argCategory] forKey:STADefaultsLastCategoryKey];
+    NSString *currentCountry = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsAppStoreCountryKey];
+    if (argCategory == STACategoryBrowse)
+        [[self galleryViewController] displayMode:STADisplayModeBrowse];
+    else
+        [[self galleryViewController] displayMode:STADisplayModeList];
+    [[self galleryViewController] displayCategory:argCategory forAppStoreCountryCode:currentCountry];
+    NSInteger lastPosition = [self lastPositionForCategory:argCategory];
+    enum STAPriceTier lastPriceTier = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastListPriceTierKey] integerValue];
+    if (argCategory == STACategoryBrowse)
+        lastPriceTier = STAPriceTierAll;
+    [[self galleryViewController] displayPosition:lastPosition forPriceTier:lastPriceTier];
+}
+
+- (void)updatePriceTier:(enum STAPriceTier)argPriceTier
+{
+    // hang on to old value
+    
+    // updatePriceTier
+    
+    // galleryView
+        // free -> all
+            // call specific update method
+        // all -> free
+            // call specific update method
+}
+
+#pragma mark - State Restoration
+
+- (NSInteger)lastPositionForCategory:(NSInteger)argCategory
+{   
+    //NSLog(@"Asking for last position for category: %d", argCategory);
+    
+    NSString *currentCountry = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsAppStoreCountryKey];
+    
+    NSDictionary *lastPositionsDictionary = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastPositionsDictionaryKey];
+    
+    NSString *lastPositionKey = [NSString stringWithFormat:@"%@%d", currentCountry, argCategory];
+    
+    if ([[lastPositionsDictionary allKeys] containsObject:lastPositionKey] == NO)
+        return 0;
+    
+    NSInteger lastPosition = [[lastPositionsDictionary valueForKey:lastPositionKey] integerValue];
+    return lastPosition;
+}
+
+#pragma mark - Import New Apps
+
+- (void)processNewAppsInDictionary:(NSDictionary*)argDictionary
+{
+    NSInteger listCategory = [[argDictionary valueForKey:@"cat"] integerValue];
+                
+    NSString *listCountry = [argDictionary valueForKey:@"country"];
+        
+    NSInteger nextPositionIndex = 0;
+        
+    NSFetchRequest *displayIndexFetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"DisplayIndex"];
+    NSPredicate *categoryAndCountryPredicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"category == %d AND country == '%@'", listCategory, listCountry]];
+    [displayIndexFetchRequest setPredicate:categoryAndCountryPredicate];
+    NSSortDescriptor *positionIndexSortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"positionIndex" ascending:NO];
+    [displayIndexFetchRequest setSortDescriptors:[NSArray arrayWithObject:positionIndexSortDescriptor]];
+        
+    NSArray *displayIndicies = [[self managedObjectContext] executeFetchRequest:displayIndexFetchRequest error:nil];
+    if ([displayIndicies count] > 0)
+        nextPositionIndex = [[[displayIndicies objectAtIndex:0] valueForKey:STADisplayIndexAttributePositionIndex] integerValue] + 1;
+        
+    [displayIndexFetchRequest release];
+        
+    NSArray *apps = [argDictionary objectForKey:@"results"];
+        
+    for (NSDictionary *appDict in apps)
+    {
+        NSInteger priceTier = [[appDict valueForKey:@"PriceTier"] integerValue];
+        NSInteger appID = [[appDict valueForKey:@"AppID"] integerValue];
+        NSString *appURL = [appDict valueForKey:@"AppURL"];
+        NSString *screenshotURL = [appDict valueForKey:@"ScreenshotURL"];
             
-                if ([self hasNetworkConnection] && [[self operationQueue] operationCount] == 1)
-                {
-                    SeeTheAppDownloadOperation *newDLOp = [[SeeTheAppDownloadOperation alloc] initWithAppID:[[app valueForKey:@"appID"] integerValue] appObjectID:[app objectID] delegate:self displayIndex:(highestDisplayIndex + 1) canTrimCache:canTrimCache];
-                    [[self operationQueue] addOperation:newDLOp];
-                    [newDLOp release];
+        NSManagedObject *newDisplayIndex = [NSEntityDescription insertNewObjectForEntityForName:@"DisplayIndex" inManagedObjectContext:[self managedObjectContext]];
+        [newDisplayIndex setValue:[NSNumber numberWithInteger:listCategory] forKey:STADisplayIndexAttributeCategory];
+        [newDisplayIndex setValue:[NSNumber numberWithInteger:priceTier] forKey:STADisplayIndexAttributePriceTier];
+        [newDisplayIndex setValue:[NSNumber numberWithInteger:nextPositionIndex] forKey:STADisplayIndexAttributePositionIndex];
+        [newDisplayIndex setValue:listCountry forKey:STADisplayIndexAttributeCountry];
+        [newDisplayIndex setValue:[NSNumber numberWithInteger:appID] forKey:STADisplayIndexAttributeAppID];
+        [newDisplayIndex setValue:appURL forKey:STADisplayIndexAttributeAppURL];
+        [newDisplayIndex setValue:screenshotURL forKey:STADisplayIndexAttributeScreenshotURL];
+        
+        nextPositionIndex++;            
+    }   
+    [self saveContext];
+}
+
+#pragma mark - UINavigationController Delegate Methods
+
+- (void)navigationController:(UINavigationController*)argNavigationController willShowViewController:(UIViewController*)argViewController animated:(BOOL)argAnimated
+{
+    if ([argViewController isEqual:galleryViewController_gv])
+    {
+        [[[self galleryViewController] view] setClipsToBounds:YES];
                 
-                    [[self unorderedAppsArray] removeObjectAtIndex:randomAppIndex];
-                } 
-            }
-            else
-            {
-                [self updateUnorderedAppsArray];
-                
-                #ifdef LOG_Errors
-                    NSLog(@"***ERROR: Evaluation finished, attempting to get an object from unordered apps, which is empty");
-                #endif
-                [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"AccessAttemptToEmptyUnorderedAppsArray"];
-            }
-        }
-        else if (indexToDownload >= 0)
+        if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastModeKey] integerValue] == STADisplayModeList)
         {            
-            //NSLog(@"Evaluation caused redownload for displayIndex: %d", indexToDownload);
-            NSManagedObject *app;
+            enum STACategory currentCategory = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastCategoryKey] integerValue];
             
-            NSArray *fetchedObjects = [[[self viewController] resultsController] fetchedObjects];
-            if ([fetchedObjects count] > indexToDownload)
+            if (currentCategory >= STACategoryGamesAction || currentCategory == STACategoryGames)
             {
-                app = [[[[self viewController] resultsController] fetchedObjects] objectAtIndex:indexToDownload];
-                if ([self hasNetworkConnection] && [[self operationQueue] operationCount] == 1)
+                
+                NSUInteger indexOfCategory = [[self gameCategoriesInfo] indexOfObjectPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop){
+                    
+                    if([[(NSDictionary*)obj valueForKey:@"CategoryCode"] integerValue] == currentCategory)
+                        return YES;
+                    return NO;
+                }];
+                
+                if (indexOfCategory == NSNotFound)
+                    NSLog(@"Category Not Found");
+                else
                 {
-                    SeeTheAppDownloadOperation *newDLOp = [[SeeTheAppDownloadOperation alloc] initWithAppID:[[app valueForKey:@"appID"] integerValue] appObjectID:[app objectID] delegate:self displayIndex:indexToDownload canTrimCache:canTrimCache];
-                    [[self operationQueue] addOperation:newDLOp];
-                    [newDLOp release];
+                    NSString *categoryName = [[[self gameCategoriesInfo] objectAtIndex:indexOfCategory] valueForKey:@"CategoryName"];
+                    [[self galleryViewController] setTitle:categoryName];
                 }
             }
             else
             {
-                #ifdef LOG_Errors
-                NSLog(@"***ERROR: Evaluation finished, attempting to get an object from existing apps beyond bounds\n Fetched Objects Available: %d\n Requested Object Index: %d", [fetchedObjects count], indexToDownload);
-                #endif
-                if ([fetchedObjects count] == 0)
-                    [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"AccessAttemptInEmptyFetchedObjectsArray"];
+                NSUInteger indexOfCategory = [[self categoriesInfo] indexOfObjectPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop){
+                    
+                    if([[(NSDictionary*)obj valueForKey:@"CategoryCode"] integerValue] == currentCategory)
+                        return YES;
+                    return NO;
+                }];
+                
+                if (indexOfCategory == NSNotFound)
+                    NSLog(@"Category Not Found");
                 else
-                    [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"AccessAttemptOutsideFetchedObjectsRange"];
+                {
+                    NSString *categoryName = [[[self categoriesInfo] objectAtIndex:indexOfCategory] valueForKey:@"CategoryName"];
+                    //[[[self galleryViewController] navigationItem] setTitle:categoryName];
+                    [[self galleryViewController] setTitle:categoryName];
+                }
             }
+        }
+        else
+            [[self galleryViewController] setTitle:NSLocalizedString(@"All Apps", @"All Apps")];
+        
+        return;
+    }
+    
+    if (([argViewController isEqual:categoriesMenuViewController_gv] || [argViewController isEqual:gamesSubcategoriesMenuViewController_gv]) && [[argNavigationController visibleViewController] isEqual:galleryViewController_gv])
+        [self updateLastPosition:[[self galleryViewController] positionOfCurrentRow]];
+}
+
+- (void)navigationController:(UINavigationController*)argNavigationController didShowViewController:(UIViewController*)argViewController animated:(BOOL)argAnimated
+{
+    if ([argViewController isEqual:galleryViewController_gv])
+    {
+        [[[self galleryViewController] view] setClipsToBounds:NO];
+        return;
+    }
+    
+    if ([argViewController isEqual:mainMenuViewController_gv])
+    {
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STADisplayModeMainMenu] forKey:STADefaultsLastModeKey];
+        return;
+    }
+    
+    if ([argViewController isEqual:categoriesMenuViewController_gv])
+    {
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STADisplayModeCategoriesMenu] forKey:STADefaultsLastModeKey];
+        return;
+    }
+    
+    if ([argViewController isEqual:gamesSubcategoriesMenuViewController_gv])
+    {
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STADisplayModeGameCategoriesMenu] forKey:STADefaultsLastModeKey];
+        return;
+    }
+    
+    if ([argViewController isEqual:optionsViewController_gv])
+    {
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STADisplayModeOptionsMenu] forKey:STADefaultsLastModeKey];
+        return;
+    }
+}
+
+#pragma mark - STAMainMenu Delegate Methods
+
+- (void)mainMenuRowSelected:(NSInteger)argRow
+{
+    // Tell navigation controller to transition to appropriate view controller
+    //NSLog(@"Acting on menu selection");
+
+    switch (argRow) 
+    {
+        case 0:
+        {
+            [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STADisplayModeBrowse] forKey:STADefaultsLastModeKey];
+            [[self galleryViewController] view];
+            [self updateCategory:STACategoryBrowse];
+            [[self navigationController] pushViewController:[self galleryViewController] animated:YES];
+            break;
+        }
+        case 1:
+            [[self navigationController] pushViewController:[self categoriesMenuViewController] animated:YES];
+            break;
+        case 2:
+            [[self navigationController] pushViewController:[self optionsViewController] animated:YES];
+            break;
+        default:
+            break;
+    }
+}
+
+#pragma mark - STACategoriesMenu Delegate Methods
+
+- (void)categoriesMenuCategorySelected:(NSInteger)argCategory
+{
+    if (argCategory == STACategoryGames)
+        [[self navigationController] pushViewController:[self gamesSubcategoriesMenuViewController] animated:YES];
+    else
+    {
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STADisplayModeList] forKey:STADefaultsLastModeKey];
+        [[self galleryViewController] view];
+        [self updateCategory:argCategory];        
+        [[self navigationController] pushViewController:[self galleryViewController] animated:YES];
+    }
+}
+
+#pragma mark - STAGamesSubcategories Delegate Methods
+
+- (void)gamesSubcategoriesMenuCategorySelected:(NSInteger)argCategory
+{    
+    [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STADisplayModeList] forKey:STADefaultsLastModeKey];
+    [[self galleryViewController] view];
+    [self updateCategory:argCategory];
+    [[self navigationController] pushViewController:[self galleryViewController] animated:YES];
+}
+
+#pragma mark - Manage Images on Disk
+
+- (void)cleanScreenshotDiskCache
+{
+    NSError *error = nil;
+    NSArray *screenshots = [[NSFileManager defaultManager] contentsOfDirectoryAtURL:[NSURL URLWithString:[self pathForImageDataDirectory]] includingPropertiesForKeys:[NSArray arrayWithObjects:NSURLContentAccessDateKey, NSURLIsRegularFileKey, nil] options:NSDirectoryEnumerationSkipsHiddenFiles error:&error];
+    
+    if ([screenshots count] > kGVNumberOfScreenshotsToKeepOnDisk)
+    {
+        NSSortDescriptor *contentAccessDateSortDescriptor = [NSSortDescriptor sortDescriptorWithKey:NSURLContentAccessDateKey ascending:YES];
+        NSArray *sortedScreenshotsArray = [screenshots sortedArrayUsingDescriptors:[NSArray arrayWithObject:contentAccessDateSortDescriptor]];
+        
+        NSInteger numberOfScreenshotsToRemove = [screenshots count] - kGVNumberOfScreenshotsToKeepOnDisk;
+        
+        for (int screenshotIndex = 0; screenshotIndex < numberOfScreenshotsToRemove; screenshotIndex++)
+        {
+            NSURL *urlToRemove = [sortedScreenshotsArray objectAtIndex:screenshotIndex];
+            if ([[urlToRemove valueForKey:NSURLIsRegularFileKey] boolValue] == YES)
+                [[NSFileManager defaultManager] removeItemAtURL:[sortedScreenshotsArray objectAtIndex:screenshotIndex] error:nil];
         }
     }
 }
 
-#pragma mark - Data Methods
-
-- (void)updateUnorderedAppsArray
-{
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    
-    NSEntityDescription *appEntity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:[self managedObjectContext]];
-    
-    NSPredicate *negativeDisplayIndexPredicate;
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-        negativeDisplayIndexPredicate = [NSPredicate predicateWithFormat:@"(iPadOnlyApp == YES OR universalApp == YES) AND displayIndex == -1"];
-    else
-        negativeDisplayIndexPredicate = [NSPredicate predicateWithFormat:@"iPadOnlyApp == NO AND displayIndex == -1"];
-     
-    NSFetchRequest *allUnorderedAppsFetchRequest = [[NSFetchRequest alloc] init];
-    [allUnorderedAppsFetchRequest setEntity:appEntity];
-    [allUnorderedAppsFetchRequest setPredicate:negativeDisplayIndexPredicate];
-    
-    NSError *fetchError;
-    
-    NSArray *unorderedApps = [[self managedObjectContext] executeFetchRequest:allUnorderedAppsFetchRequest error:&fetchError];
-    [allUnorderedAppsFetchRequest release];
-        
-    if (!unorderedApps)
-    {
-        NSLog(@"Fetch error during creation of unorderedAppsArray: %@", [fetchError localizedDescription]);
-        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"UnableToCreateUnorderedAppsArray"];
-    }
-        
-    NSMutableArray *unorderedAppsCopy = [unorderedApps mutableCopy];
-    [self setUnorderedAppsArray:unorderedAppsCopy];
-    [unorderedAppsCopy release];
-    
-    [pool drain];
-}
-
 #pragma mark - Core Data stack
 
-/**
- Returns the managed object context for the application.
- If the context doesn't already exist, it is created and bound to the persistent store coordinator for the application.
- */
 - (NSManagedObjectContext *)managedObjectContext
 {
     if (__managedObjectContext != nil)
@@ -723,10 +1203,6 @@
     return __managedObjectContext;
 }
 
-/**
- Returns the managed object model for the application.
- If the model doesn't already exist, it is created from the application's model.
- */
 - (NSManagedObjectModel *)managedObjectModel
 {
     if (__managedObjectModel != nil)
@@ -751,12 +1227,10 @@
  
     NSURL *storeURL;
     
-    NSURL *firstGenStoreURL = [[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheApp.sqlite"];
-    
-    if ([[NSFileManager defaultManager] fileExistsAtPath:[firstGenStoreURL path]])
-        storeURL = firstGenStoreURL;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        storeURL = [[self applicationLibrarySTADirectory] URLByAppendingPathComponent:@"SeeTheAppPhone.sqlite"];
     else
-        storeURL = [[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheAppGen2.sqlite"];
+        storeURL = [[self applicationLibrarySTADirectory] URLByAppendingPathComponent:@"SeeTheAppPad.sqlite"];
     
     NSError *error = nil;
     __persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
@@ -771,203 +1245,446 @@
     return __persistentStoreCoordinator;
 }
 
-#pragma mark - File Methods
-
-- (void)cleanCacheWithHighestDisplayIndex:(NSInteger)argHighestDisplayIndex
-{   
-    NSArray *screenshotFileNames = [[self fileManager] contentsOfDirectoryAtPath:[self pathForScreenshotsDirectory] error:NULL];
-    
-    for (NSString *fileName in screenshotFileNames)
-    {
-        NSInteger fileDisplayIndex = [[fileName stringByDeletingPathExtension] integerValue];
-        if (fileDisplayIndex > argHighestDisplayIndex)
-            [[self fileManager] removeItemAtPath:[[self pathForScreenshotsDirectory] stringByAppendingPathComponent:fileName] error:NULL];
-    }
-}
-
-/*
-- (BOOL)databaseExists
-{
-    NSLog(@"Checking if database exists");
-    
-    NSString *databaseFilePath = [[[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheApp.sqlite"] path];
-    
-    BOOL databaseExists = [[self fileManager] fileExistsAtPath:databaseFilePath];
-    
-    if (databaseExists == YES)
-    {        
-        NSFetchRequest *allAppsFetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"App"];
-        
-        NSError *allAppsFetchError;
-        
-        NSUInteger totalApps = [[self managedObjectContext] countForFetchRequest:allAppsFetchRequest error:&allAppsFetchError];
-        
-        if (totalApps == NSNotFound || totalApps == 0)
-        {
-            // remove the database
-            
-            // determine if there is a managed object context or a persistent store coordinator
-            [[NSFileManager defaultManager] removeItemAtPath:databaseFilePath error:nil];
-            return NO;
-        }
-        
-        return YES;
-    }
-    else
-    {
-        return NO;
-    }
-}
-*/
-
-/*
-- (void)makeDatabase
-{
-    NSString *databaseFilePath = [[[self applicationLibraryDirectory] URLByAppendingPathComponent:@"SeeTheApp.sqlite"] path];
-    
-    BOOL databaseExists = [[self fileManager] fileExistsAtPath:databaseFilePath];
-    if (databaseExists)
-    {           
-        NSError *databaseRemovalError;
-        
-        BOOL databaseRemoved = [[self fileManager] removeItemAtPath:databaseFilePath error:&databaseRemovalError];
-        
-        if (databaseRemoved == NO)
-        {
-            NSLog(@"Database was unable to be removed, error: %@", [databaseRemovalError localizedDescription]);
-        }
-                
-        if (__managedObjectContext)
-        {
-            [__managedObjectContext release];
-            __managedObjectContext = nil;
-        }
-        
-        if (__persistentStoreCoordinator)
-        {
-            [__persistentStoreCoordinator release];
-            __persistentStoreCoordinator = nil;
-        }
-    }
-    [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsDatabaseHasCopiedKey];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-        
-    NSBlockOperation *databaseMigrationOp = [self databaseMigrationBlockOperation];
-    [[self operationQueue] addOperation:databaseMigrationOp];
-}
-*/
-
-/*
-- (NSBlockOperation*)databaseMigrationBlockOperation
-{
-    NSBlockOperation *databaseMigrationOp = [NSBlockOperation blockOperationWithBlock:
-                                             ^{
-                                                 //NSLog(@"Start db copy");
-                                                 
-                                                 NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-                                                 
-                                                 NSFileManager *opFileManager = [[NSFileManager alloc] init];
-                                                 
-                                                 NSURL *starterDatabaseURL = [[NSBundle mainBundle] URLForResource:@"SeeTheApp" withExtension:@"sqlite"];
-                                                 
-                                                 NSURL *libraryDirectory = [[opFileManager URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask] lastObject];
-                                                 
-                                                 NSURL *destinationPathForDatabaseURL = [libraryDirectory URLByAppendingPathComponent:@"SeeTheApp.sqlite"];
-                                                 
-                                                 NSError *fileCopyError = nil;
-                                                 
-                                                 BOOL copySuccessful = [opFileManager copyItemAtURL:starterDatabaseURL toURL:destinationPathForDatabaseURL error:&fileCopyError];
-                                                 
-                                                 if (copySuccessful == NO)
-                                                 {
-                                                     NSLog(@"Error copying database: %@", [fileCopyError description]);
-                                                     
-                                                     // Should attempt to recopy the database i guess.....
-                                                 }
-                                                 else
-                                                 {
-                                                     NSLog(@"Successfully copied database");
-                                                     
-                                                     NSError *error;
-                                                     NSDictionary *fileAttributes = [opFileManager attributesOfItemAtPath:[destinationPathForDatabaseURL path] error:&error];
-                                                     
-                                                     if (!fileAttributes)
-                                                         NSLog(@"File attributes error: %@", [error localizedDescription]);
-                                                     else
-                                                         NSLog(@"Size of database: %lld", [[fileAttributes valueForKey:NSFileSize] unsignedLongLongValue]);
-                                                           
-                                                     [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:YES] forKey:STADefaultsDatabaseHasCopiedKey];
-                                                 
-                                                     [[NSUserDefaults standardUserDefaults] synchronize];
-                                                 
-                                                     [self performSelectorOnMainThread:@selector(startSessionAndDownloads) withObject:nil waitUntilDone:NO];
-                                                 }
-                                                 
-                                                 [opFileManager release];
-                                                 
-                                                 [pool drain];
-                                                 
-                                                 //NSLog(@"End db copy");
-                                             }];
-    return databaseMigrationOp;
-}
-*/
-
 #pragma mark - File Paths
 
-/**
- Returns the URL to the application's Documents directory.
- */
-/*
-- (NSURL *)applicationDocumentsDirectory
+- (NSURL*)applicationLibrarySTADirectory
 {
-    return [[[self fileManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
-}
-*/
-- (NSURL*)applicationLibraryDirectory
-{
-    return [[[self fileManager] URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask] lastObject];
-}
-
-- (NSString*)pathForScreenshotsDirectory
-{
-    if (pathForScreenshotsDirectory_gv)
-        return pathForScreenshotsDirectory_gv;
+    if (applicationLibrarySTADirectory_gv)
+        return applicationLibrarySTADirectory_gv;
     NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
     NSString *libraryPath = [searchPaths objectAtIndex:0];
-    pathForScreenshotsDirectory_gv = [[libraryPath stringByAppendingPathComponent:@"STAScreenshots"] retain];
-    return pathForScreenshotsDirectory_gv;
+    NSString *librarySTAPath = [libraryPath stringByAppendingPathComponent:@"SeeTheApp"];
+    
+    [[NSFileManager defaultManager] createDirectoryAtPath:librarySTAPath withIntermediateDirectories:NO attributes:nil error:nil];
+
+    applicationLibrarySTADirectory_gv = [[NSURL alloc] initFileURLWithPath:librarySTAPath];
+    return applicationLibrarySTADirectory_gv;
 }
 
-#pragma mark - File Manager
-
-- (NSFileManager*)fileManager
+- (NSString*)pathForImageDataDirectory
 {
-    if (fileManager_gv)
-        return fileManager_gv;
+    if (pathForImageDataDirectory_gv)
+        return pathForImageDataDirectory_gv;
     
-    fileManager_gv = [[NSFileManager alloc] init];
-    return fileManager_gv;
+    NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cachesPath = [searchPaths objectAtIndex:0];
+    
+    [[NSFileManager defaultManager] createDirectoryAtPath:[cachesPath stringByAppendingPathComponent:@"STAScreenshotImageData"] withIntermediateDirectories:NO attributes:nil error:nil];
+    
+    pathForImageDataDirectory_gv = [[cachesPath stringByAppendingPathComponent:@"STAScreenshotImageData"] retain];
+    
+    return pathForImageDataDirectory_gv;
 }
 
-#pragma mark - Operation Queue
-
-- (NSOperationQueue*)operationQueue
+- (NSString*)fileNameOfImageWithURLString:(NSString*)argURLString
 {
-    if (operationQueue_gv)
-        return operationQueue_gv;
+    NSString *slashlessURLString = [argURLString stringByReplacingOccurrencesOfString:@"/" withString:@"%2F"];
+    NSString *escapedURLString = [slashlessURLString stringByReplacingOccurrencesOfString:@":" withString:@"%3A"];
+    return escapedURLString;
+}
+
+- (NSString*)filePathOfImageDataForURLString:(NSString*)argURLString
+{
+    if (!argURLString)
+    {
+        NSLog(@"Passing nil to filePathOfImageData");
+        return nil;
+    }
     
-    operationQueue_gv = [[NSOperationQueue alloc] init];
-    [operationQueue_gv setMaxConcurrentOperationCount:1];
-    return operationQueue_gv;
+    NSString *escapedURLString = [self fileNameOfImageWithURLString:argURLString];
+        
+    return [[self pathForImageDataDirectory] stringByAppendingPathComponent:escapedURLString];
+}
+
+#pragma mark - Connection Collections
+
+- (CFMutableDictionaryRef)currentListDownloadConnections
+{
+    if (currentListDownloadConnections_gv)
+        return currentListDownloadConnections_gv;
+    currentListDownloadConnections_gv = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    return currentListDownloadConnections_gv;
+}
+
+- (NSMutableArray*)pendingListDownloadConnections
+{
+    if (pendingListDownloadConnections_gv)
+        return pendingListDownloadConnections_gv;
+    pendingListDownloadConnections_gv = [[NSMutableArray alloc] init];
+    return pendingListDownloadConnections_gv;
+}
+
+- (CFMutableDictionaryRef)currentImageDownloadConnections
+{
+    if (currentImageDownloadConnections_gv)
+        return currentImageDownloadConnections_gv;
+    currentImageDownloadConnections_gv = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    return currentImageDownloadConnections_gv;
+}
+
+- (NSMutableArray*)pendingImageDownloadConnections
+{
+    if (pendingImageDownloadConnections_gv)
+        return pendingImageDownloadConnections_gv;
+    pendingImageDownloadConnections_gv = [[NSMutableArray alloc] init];
+    return pendingImageDownloadConnections_gv;
+}
+
+#pragma mark - AppStore Country Codes
+
+- (NSArray*)appStoreCountryCodes
+{
+    if (appStoreCountryCodes_gv)
+        return appStoreCountryCodes_gv;
+    appStoreCountryCodes_gv = [[NSArray alloc] initWithObjects:
+                               @"DZ", @"AO", @"AI", @"AG", @"AR", @"AM", @"AU", @"AT", @"AZ", @"BS", @"BH", @"BB", @"BY", @"BE", @"BZ", @"BM", @"BO", @"BW",
+                               @"BR", @"BN", @"BG", @"CA", @"KY", @"CL", @"CN", @"CO", @"CR", @"HR", @"CY", @"CZ", @"DK", @"DM", @"DO", @"EC", @"EG", @"SV",
+                               @"EE", @"FI", @"FR", @"DE", @"GH", @"GR", @"GD", @"GT", @"GY", @"HN", @"HK", @"HU", @"IS", @"IN", @"ID", @"IE", @"IL", @"IT",
+                               @"JM", @"JP", @"JO", @"KZ", @"KE", @"KR", @"KW", @"LV", @"LB", @"LT", @"LU", @"MO", @"MK", @"MG", @"MY", @"ML", @"MT", @"MU",
+                               @"MX", @"MD", @"MS", @"NL", @"NZ", @"NI", @"NE", @"NG", @"NO", @"OM", @"PK", @"PA", @"PY", @"PE", @"PH", @"PL", @"PT", @"QA",
+                               @"RO", @"RU", @"KN", @"LC", @"VC", @"SA", @"SN", @"SG", @"SK", @"SI", @"ZA", @"ES", @"LK", @"SR", @"SE", @"CH", @"TW", @"TZ",
+                               @"TH", @"TT", @"TN", @"TR", @"TC", @"UG", @"AE", @"GB", @"US", @"UY", @"UZ", @"VE", @"VN", @"VG", @"YE",
+                               nil];
+    return appStoreCountryCodes_gv;
+}
+
+#pragma mark - Affiliate Codes Dictionary
+
+- (NSDictionary*)affiliateCodesDictionary
+{
+    if (affiliateCodesDictionary_gv)
+        return affiliateCodesDictionary_gv;
+    affiliateCodesDictionary_gv = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                   @"&partnerId=30&siteID=XcCW00SXEtY", @"US",
+                                   @"&partnerId=30&siteID=XcCW00SXEtY", @"CA",
+                                   @"&partnerId=30&siteID=XcCW00SXEtY", @"MX",
+                                   @"&partnerId=1002&affToken=64309", @"AU",
+                                   @"&partnerId=1002&affToken=64309", @"NZ",
+                                   @"&partnerId=2003&tduid=AT2037976", @"AT",
+                                   @"&partnerId=2003&tduid=BE2037978", @"BE",
+                                   @"&partnerId=2003&tduid=CH2037979", @"CH",
+                                   @"&partnerId=2003&tduid=DE2037980", @"DE",
+                                   @"&partnerId=2003&tduid=DK2037982", @"DK",
+                                   @"&partnerId=2003&tduid=ES2037985", @"ES",
+                                   @"&partnerId=2003&tduid=FI2037987", @"FI",
+                                   @"&partnerId=2003&tduid=FR2037988", @"FR",
+                                   @"&partnerId=2003&tduid=IE2037989", @"IE",
+                                   @"&partnerId=2003&tduid=IT2037991", @"IT",
+                                   @"&partnerId=2003&tduid=LT2037999", @"LT",
+                                   @"&partnerId=2003&tduid=NL2037993", @"NL",
+                                   @"&partnerId=2003&tduid=NO2037995", @"NO",
+                                   @"&partnerId=2003&tduid=PL2038001", @"PL",
+                                   @"&partnerId=2003&tduid=PT2038002", @"PT",
+                                   @"&partnerId=2003&tduid=SE2037997", @"SE",
+                                   @"&partnerId=2003&tduid=UK2031437", @"GB",
+                                   @"&partnerId=2003&tduid=BG2038003", @"BG",
+                                   @"&partnerId=2003&tduid=CY2038003", @"CY",
+                                   @"&partnerId=2003&tduid=CZ2038003", @"CZ",
+                                   @"&partnerId=2003&tduid=EE2038003", @"EE",
+                                   @"&partnerId=2003&tduid=GR2038003", @"GR",
+                                   @"&partnerId=2003&tduid=HU2038003", @"HU",
+                                   @"&partnerId=2003&tduid=LU2038003", @"LU",
+                                   @"&partnerId=2003&tduid=LV2038003", @"LV",
+                                   @"&partnerId=2003&tduid=MT2038003", @"MT",
+                                   @"&partnerId=2003&tduid=RO2038003", @"RO",
+                                   @"&partnerId=2003&tduid=SI2038003", @"SI",
+                                   @"&partnerId=2003&tduid=SK2038003", @"SK",
+                                   @"&partnerId=2003&tduid=BR2048953", @"BR",
+                                   nil];
+    return affiliateCodesDictionary_gv;
+}
+
+#pragma mark - Category Info
+
+- (NSArray*)categoriesInfo
+{
+    if (categoriesInfo_gv)
+        return categoriesInfo_gv;
+    categoriesInfo_gv = [[NSArray alloc] initWithObjects:
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Books", @"Books"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryBook], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Business", @"Business"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryBusiness], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Education", @"Education"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryEducation], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Entertainment", @"Entertainment"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryEntertainment], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Finance", @"Finance"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryFinance], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Games", @"Games"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryGames], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Health & Fitness", @"Health & Fitness"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryHealthcareAndFitness], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Lifestyle", @"Lifestyle"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryLifestyle], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Medical", @"Medical"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryMedical], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Music", @"Music"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryMusic], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Navigation", @"Navigation"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryNavigation], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"News", @"News"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryNews], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Newsstand", @"Newsstand"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryNewsstand], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Photo & Video", @"Photo & Video"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryPhotography], @"CategoryCode",
+                          nil],
+                         
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Productivity", @"Productivity"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryProductivity], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Reference", @"Reference"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryReference], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Social Networking", @"Social Networking"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategorySocialNetworking], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Sports", @"Sports"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategorySports], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Travel", @"Travel"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryTravel], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Utilities", @"Utilities"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryUtilities], @"CategoryCode",
+                          nil],
+                         
+                         [NSDictionary dictionaryWithObjectsAndKeys:
+                          NSLocalizedString(@"Weather", @"Weather"), @"CategoryName",
+                          [NSNumber numberWithInteger:STACategoryWeather], @"CategoryCode",
+                          nil],
+                         
+                         nil];
+    return categoriesInfo_gv;
+}
+
+- (NSArray*)gameCategoriesInfo
+{
+    if (gameCategoriesInfo_gv)
+        return gameCategoriesInfo_gv;
+    gameCategoriesInfo_gv = [[NSArray alloc] initWithObjects:
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"All Games", @"All Games"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGames], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Action", @"Action"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesAction], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Adventure", @"Adventure"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesAdventure], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Arcade", @"Arcade"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesArcade], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Board", @"Board"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesBoard], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Card", @"Card"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesCard], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Casino", @"Casino"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesCasino], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Dice", @"Dice"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesDice], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Educational", @"Educational"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesEducational], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Family", @"Family"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesFamily], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Kids", @"Kids"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesKids], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Music", @"Music"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesMusic], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Puzzle", @"Puzzle"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesPuzzle], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Racing", @"Racing"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesRacing], @"CategoryCode",
+                              nil],
+                             
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Role Playing", @"Role Playing"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesRolePlaying], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Simulation", @"Simulation"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesSimulation], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Sports", @"Sports"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesSports], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Strategy", @"Strategy"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesStrategy], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Trivia", @"Trivia"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesTrivia], @"CategoryCode",
+                              nil],
+                             
+                             [NSDictionary dictionaryWithObjectsAndKeys:
+                              NSLocalizedString(@"Word", @"Word"), @"CategoryName",
+                              [NSNumber numberWithInteger:STACategoryGamesWord], @"CategoryCode",
+                              nil],
+                             
+                             nil];
+    return gameCategoriesInfo_gv;
+}
+
+#pragma mark - View Controllers
+
+- (UINavigationController*)navigationController
+{
+    if (navigationController_gv)
+        return navigationController_gv;
+    navigationController_gv = [[UINavigationController alloc] initWithRootViewController:[self mainMenuViewController]];
+    [navigationController_gv setDelegate:self];
+    if ([[navigationController_gv navigationBar] respondsToSelector:@selector(setBackgroundImage:forBarMetrics:)])
+    {
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+            [[navigationController_gv navigationBar] setBackgroundImage:[UIImage imageNamed:@"STANavigationBarHD.png"] forBarMetrics:UIBarMetricsDefault];
+        else
+            [[navigationController_gv navigationBar] setBackgroundImage:[UIImage imageNamed:@"STANavigationBar.png"] forBarMetrics:UIBarMetricsDefault];
+    }
+    [[navigationController_gv navigationBar] setTintColor:[UIColor colorWithRed:0.89f green:0.66f blue:0.34f alpha:1.0f]];
+    return navigationController_gv;
+}
+
+- (SeeTheAppGalleryViewController*)galleryViewController
+{
+    if (galleryViewController_gv)
+        return galleryViewController_gv;
+    galleryViewController_gv = [[SeeTheAppGalleryViewController alloc] initWithDelegate:self];
+    return galleryViewController_gv;
+}
+
+- (SeeTheAppMainMenuViewController*)mainMenuViewController
+{
+    if (mainMenuViewController_gv)
+        return mainMenuViewController_gv;
+    mainMenuViewController_gv = [[SeeTheAppMainMenuViewController alloc] initWithDelegate:self];
+    return mainMenuViewController_gv;
+}
+
+- (SeeTheAppCategoriesMenuViewController*)categoriesMenuViewController
+{
+    if (categoriesMenuViewController_gv)
+        return categoriesMenuViewController_gv;
+    categoriesMenuViewController_gv = [[SeeTheAppCategoriesMenuViewController alloc] initWithDelegate:self];
+    return categoriesMenuViewController_gv;
+}
+
+- (SeeTheAppGamesSubcategoriesMenuViewController*)gamesSubcategoriesMenuViewController
+{
+    if (gamesSubcategoriesMenuViewController_gv)
+        return gamesSubcategoriesMenuViewController_gv;
+    gamesSubcategoriesMenuViewController_gv = [[SeeTheAppGamesSubcategoriesMenuViewController alloc] initWithDelegate:self];
+    return gamesSubcategoriesMenuViewController_gv;
+}
+
+- (SeeTheAppOptionsViewController*)optionsViewController
+{
+    if (optionsViewController_gv)
+        return optionsViewController_gv;
+    optionsViewController_gv = [[SeeTheAppOptionsViewController alloc] initWithDelegate:self];
+    return optionsViewController_gv;
 }
 
 #pragma mark - Property Synthesis
 
-@synthesize unorderedAppsArray;
-@synthesize viewController;
-@synthesize evaluationTimer;
+@synthesize downloadStarterTimer;
 @synthesize hasNetworkConnection;
 @synthesize reachability;
-
 @end

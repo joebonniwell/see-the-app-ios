@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Bitte bewerten Sie See the App";
+"Rate See the App" = "Bewerten See the App";
+"No thanks" = "Nein danke";
+"Maybe later" = "Vielleicht später";
+
+// Status strings
+"Unable to connect" = "Keine Verbindung herstellen";
+
+// Menu Titles
+"Menu" = "Menü";
+"Browse All Apps" = "Durchsuchen Alle Apps";
+"All Apps" = "Alle Apps";
+"Categories" = "Kategorien";
+"All" = "Alle";
+"Free" = "Kostenlos";
+"Options" = "Optionen";
+
+// Options Strings
+"Email us" = "Mailen Sie uns";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Wählen Sie die App Store zu durchsuchen und herunterladen apps aus.";
+"Please email us with questions or comments." = "Bitte mailen Sie uns mit Fragen oder Kommentaren.";
+
+// AppStore Button
+"Available on the" = "Erhältlich im";
+
+// Categories
+"Books" = "Bücher";
+"Business" = "Wirtschaft";
+"Education" = "Bildung";
+"Entertainment" = "Unterhaltung";
+"Finance" = "Finanzen";
+"Games" = "Spiele";
+"All Games" = "Alle Spiele";
+"Action" = "Action";
+"Adventure" = "Abenteuer";
+"Arcade" = "Spielhalle";
+"Board" = "Brettspiele";
+"Card" = "Karten";
+"Casino" = "Casino";
+"Dice" = "Würfel";
+"Educational" = "Bildung";
+"Family" = "Familie";
+"Kids" = "Kinder";
+"Music" = "Musik";
+"Puzzle" = "Puzzle";
+"Racing" = "Rennsport";
+"Role Playing" = "Rollenspiel";
+"Simulation" = "Simulation";
+"Sports" = "Sport";
+"Strategy" = "Strategie";
+"Trivia" = "Kleinigkeiten";
+"Word" = "Ausdruck";
+"Health & Fitness" = "Gesundheit und Fitness";
+"Lifestyle" = "Lifestyle";
+"Medical" = "Medizin";
+"Music" = "Musik";
+"Navigation" = "Navigation";
+"News" = "Nachrichten";
+"Newsstand" = "Zeitungskiosk";
+"Photo & Video" = "Foto und Video";
+"Productivity" = "Produktivität";
+"Reference" = "Referenz";
+"Social Networking" = "Soziale Netze";
+"Sports" = "Sport";
+"Travel" = "Reisen";
+"Utilities" = "Dienstprogramme";
+"Weather" = "Wetter";

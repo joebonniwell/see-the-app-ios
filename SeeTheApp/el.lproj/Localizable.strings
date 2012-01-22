@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Παρακαλώ αξιολογήστε See the App";
+"Rate See the App" = "Αξιολόγηση See the App";
+"No thanks" = "Όχι ευχαριστώ";
+"Maybe later" = "ίσως αργότερα";
+
+// Status strings
+"Unable to connect" = "Δεν είναι δυνατή η σύνδεση";
+
+// Menu Titles
+"Menu" = "μενού";
+"Browse All Apps" = "Περιήγηση σε όλα τα apps";
+"All Apps" = "Όλες οι apps";
+"Categories" = "Kατηγορίες";
+"All" = "όλα";
+"Free" = "δωρεάν";
+"Options" = "επιλογές";
+
+// Options Strings
+"Email us" = "Στείλτε μας ένα email";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Επιλέξτε το App Store για να περιηγηθείτε και να κατεβάσετε apps από.";
+"Please email us with questions or comments." = "Στείλτε μας email με ερωτήσεις ή σχόλια.";
+
+// AppStore Button
+"Available on the" = "Διατιθεται στο";
+
+// Categories
+"Books" = "βιβλία";
+"Business" = "επιχείρηση";
+"Education" = "εκπαίδευση";
+"Entertainment" = "ψυχαγωγία";
+"Finance" = "οικονομικά";
+"Games" = "παιχνίδια";
+"All Games" = "όλα τα παιχνίδια";
+"Action" = "δράση";
+"Adventure" = "περιπέτεια";
+"Arcade" = "στοά";
+"Board" = "επιτραπέζια";
+"Card" = "καρτών";
+"Casino" = "καζίνο";
+"Dice" = "ζάρια";
+"Educational" = "εκπαίδευση";
+"Family" = "οικογένεια";
+"Kids" = "παιδιά";
+"Music" = "μουσική";
+"Puzzle" = "παζλ";
+"Racing" = "ιπποδρομίες";
+"Role Playing" = "ρόλο που παίζει";
+"Simulation" = "προσομοίωση";
+"Sports" = "αθλητισμός";
+"Strategy" = "στρατηγική";
+"Trivia" = "ασήμαντα πράγματα";
+"Word" = "λέξη";
+"Health & Fitness" = "Ευεξία και αναζωογόνηση";
+"Lifestyle" = "τον τρόπο ζωής";
+"Medical" = "ιατρικών";
+"Music" = "μουσική";
+"Navigation" = "πλοήγηση";
+"News" = "ειδήσεις";
+"Newsstand" = "Κιόσκι";
+"Photo & Video" = "φωτογραφιών και βίντεο";
+"Productivity" = "παραγωγικότητα";
+"Reference" = "αναφορά";
+"Social Networking" = "κοινωνική δικτύωση";
+"Sports" = "αθλητισμός";
+"Travel" = "ταξίδι";
+"Utilities" = "χρησιμότητα";
+"Weather" = "καιρός";

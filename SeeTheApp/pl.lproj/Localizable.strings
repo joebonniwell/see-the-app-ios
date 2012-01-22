@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Proszę ocenić See the App";
+"Rate See the App" = "Oceń See the App";
+"No thanks" = "Nie, dziękuję";
+"Maybe later" = "Może później";
+
+// Status strings
+"Unable to connect" = "Nie można się połączyć";
+
+// Menu Titles
+"Menu" = "Menu";
+"Browse All Apps" = "Przeglądaj wszystkie aplikacje";
+"All Apps" = "Wszystkie aplikacje";
+"Categories" = "Kategorie";
+"All" = "Wszystko";
+"Free" = "Darmowy";
+"Options" = "Opcje";
+
+// Options Strings
+"Email us" = "Napisz do nas";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Wybierz App Store do przeglądania i pobierania aplikacji z.";
+"Please email us with questions or comments." = "Napisz do nas z pytaniami i uwagami.";
+
+// AppStore Button
+"Available on the" = "Dostępne w";
+
+// Categories
+"Books" = "Książek";
+"Business" = "Biznes";
+"Education" = "Edukacja";
+"Entertainment" = "Rozrywka";
+"Finance" = "Finanse";
+"Games" = "Gry";
+"All Games" = "Wszystkie Gry";
+"Action" = "Akcji";
+"Adventure" = "Przygodowe";
+"Arcade" = "Zręcznościowe";
+"Board" = "Planszowe";
+"Card" = "Karta";
+"Casino" = "Kasyno";
+"Dice" = "Kość";
+"Educational" = "Edukacja";
+"Family" = "Rodzinne";
+"Kids" = "Dzieci";
+"Music" = "Muzyka";
+"Puzzle" = "Logiczne";
+"Racing" = "Wyścigowe";
+"Role Playing" = "RPG";
+"Simulation" = "Symulacyjne";
+"Sports" = "Sportowych";
+"Strategy" = "Strategiczne";
+"Trivia" = "Ciekawostki";
+"Word" = "Słowne";
+"Health & Fitness" = "Zdrowie i Kondycję";
+"Lifestyle" = "Styl życia";
+"Medical" = "Medyczny";
+"Music" = "Muzyka";
+"Navigation" = "Nawigacja";
+"News" = "Aktualności";
+"Newsstand" = "Kiosk";
+"Photo & Video" = "Fotografia i Wideo";
+"Productivity" = "Wydajność";
+"Reference" = "Odniesienie";
+"Social Networking" = "Sieci Społecznej";
+"Sports" = "Sportowych";
+"Travel" = "Podróż";
+"Utilities" = "Użytkowe";
+"Weather" = "Pogoda";

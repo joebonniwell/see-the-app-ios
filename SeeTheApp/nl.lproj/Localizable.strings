@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Gelieve te evalueren See the App";
+"Rate See the App" = "Evalueer See the App";
+"No thanks" = "Nee, dank";
+"Maybe later" = "Misschien later";
+
+// Status strings
+"Unable to connect" = "Geen verbinding";
+
+// Menu Titles
+"Menu" = "Menu";
+"Browse All Apps" = "Blader door alle apps";
+"All Apps" = "Alle apps";
+"Categories" = "Categorieën";
+"All" = "Alle";
+"Free" = "Kosteloos";
+"Options" = "Opties";
+
+// Options Strings
+"Email us" = "Email ons";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Kies de App Store om te bladeren en apps downloaden.";
+"Please email us with questions or comments." = "Stuur ons een email met vragen of opmerkingen.";
+
+// AppStore Button
+"Available on the" = "Verkrijgbaar in de";
+
+// Categories
+"Books" = "Boeken";
+"Business" = "Zakelijk";
+"Education" = "Onderwijs";
+"Entertainment" = "Amusement";
+"Finance" = "Financiën";
+"Games" = "Games";
+"All Games" = "Alle Games";
+"Action" = "Actie";
+"Adventure" = "Avontuur";
+"Arcade" = "Arcade";
+"Board" = "Bord";
+"Card" = "Kaart";
+"Casino" = "Casino";
+"Dice" = "Dobbelstenen";
+"Educational" = "Onderwijs";
+"Family" = "Gezin";
+"Kids" = "Kinderen";
+"Music" = "Muziek";
+"Puzzle" = "Puzzel";
+"Racing" = "Racen";
+"Role Playing" = "Rollenspel";
+"Simulation" = "Simulatie";
+"Sports" = "Sport";
+"Strategy" = "Strategie";
+"Trivia" = "Trivia";
+"Word" = "Woorden";
+"Health & Fitness" = "Gezondheid en fitness";
+"Lifestyle" = "Lifestyle";
+"Medical" = "Geneeskunde";
+"Music" = "Nieuws";
+"Navigation" = "Navigatie";
+"News" = "News";
+"Newsstand" = "Kiosk";
+"Photo & Video" = "Foto en video";
+"Productivity" = "Productiviteit";
+"Reference" = "Naslagwerken";
+"Social Networking" = "Sociaal netwerken";
+"Sports" = "Sport";
+"Travel" = "Reizen";
+"Utilities" = "Diensten";
+"Weather" = "Het weer";

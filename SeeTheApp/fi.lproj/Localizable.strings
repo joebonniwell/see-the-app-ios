@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Arvioi See the App";
+"Rate See the App" = "Arvioi See the App";
+"No thanks" = "Ei kiitos";
+"Maybe later" = "Ehkä myöhemmin";
+
+// Status strings
+"Unable to connect" = "Voi muodostaa yhteyttä";
+
+// Menu Titles
+"Menu" = "Valikko";
+"Browse All Apps" = "Selaa kaikki sovellukset";
+"All Apps" = "Kaikki sovellukset";
+"Categories" = "Kategoriat";
+"All" = "Kaikki";
+"Free" = "Ilmaiseksi";
+"Options" = "Vaihtoehtoja";
+
+// Options Strings
+"Email us" = "Lähetä meille";
+"App Store" = "App Storesta";
+"Choose the App Store to browse and download apps from." = "Valitse App Storesta selata ja ladata ohjelmia vuodesta.";
+"Please email us with questions or comments." = "Lähetä meille sähköpostia, kysymyksiä tai kommentteja.";
+
+// AppStore Button
+"Available on the" = "Saatavilla";
+
+// Categories
+"Books" = "Kirjat";
+"Business" = "Liiketoiminta";
+"Education" = "Koulutus";
+"Entertainment" = "Viihde";
+"Finance" = "Rahoittaa";
+"Games" = "Pelit";
+"All Games" = "Kaikki pelit";
+"Action" = "Toimintapelit";
+"Adventure" = "Seikkailu";
+"Arcade" = "Arkadi";
+"Board" = "Lautapelit";
+"Card" = "Korttipelit";
+"Casino" = "Kasinopelit";
+"Dice" = "Noppapelit";
+"Educational" = "Koulutus";
+"Family" = "Perhe";
+"Kids" = "Kids";
+"Music" = "Musiikki";
+"Puzzle" = "Palapeli";
+"Racing" = "Ajopeleistä";
+"Role Playing" = "Roolipeleistä";
+"Simulation" = "Simulaatiopelit";
+"Sports" = "Urheilupelejä";
+"Strategy" = "Strategiapelit";
+"Trivia" = "Trivia";
+"Word" = "Sanapelit";
+"Health & Fitness" = "Terveys ja kuntoilu";
+"Lifestyle" = "Lifestyle";
+"Medical" = "Lääketiede";
+"Music" = "Musiikki";
+"Navigation" = "Navigointi";
+"News" = "Uutiset";
+"Newsstand" = "Lehtikioski";
+"Photo & Video" = "Valokuva ja video";
+"Productivity" = "Tuottavuus";
+"Reference" = "Viite";
+"Social Networking" = "Verkostoituminen";
+"Sports" = "Urheilu";
+"Travel" = "Matkustaa";
+"Utilities" = "Apuohjelmat";
+"Weather" = "Sää";

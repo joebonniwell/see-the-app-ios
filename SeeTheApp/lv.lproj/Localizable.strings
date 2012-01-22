@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Lūdzu novērtējiet See the App";
+"Rate See the App" = "Novērtēt See the App";
+"No thanks" = "Nē, paldies";
+"Maybe later" = "Varbūt vēlāk";
+
+// Status strings
+"Unable to connect" = "Nevar izveidot savienojumu";
+
+// Menu Titles
+"Menu" = "Menu";
+"Browse All Apps" = "Pārlūkot visas apps";
+"All Apps" = "Visās apps";
+"Categories" = "Kategorijas";
+"All" = "Visi";
+"Free" = "Bezmaksas";
+"Options" = "Opcijas";
+
+// Options Strings
+"Email us" = "Rakstiet mums";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Izvēlieties App Store pārlūkot un lejupielādēt apps no.";
+"Please email us with questions or comments." = "Lūdzu, rakstiet mums ar jautājumiem vai komentāriem.";
+
+// AppStore Button
+"Available on the" = "Pieejams";
+
+// Categories
+"Books" = "Grāmatas";
+"Business" = "Bizness";
+"Education" = "Izglītība";
+"Entertainment" = "Izklaide";
+"Finance" = "Finanses";
+"Games" = "Spēles";
+"All Games" = "Visas Spēles";
+"Action" = "Darbības";
+"Adventure" = "Piedzīvojumu";
+"Arcade" = "Pasāža";
+"Board" = "Galda";
+"Card" = "Kāršu";
+"Casino" = "Kazino";
+"Dice" = "Kauliņu";
+"Educational" = "Izglītība";
+"Family" = "Ģimene";
+"Kids" = "Kids";
+"Music" = "Mūzika";
+"Puzzle" = "Puzle";
+"Racing" = "Sacīkšu";
+"Role Playing" = "Lomu Spēles";
+"Simulation" = "Simulācija";
+"Sports" = "Sporta";
+"Strategy" = "Stratēģija";
+"Trivia" = "Nieki";
+"Word" = "Vārdu";
+"Health & Fitness" = "Veselību un Fizisko Stāvokli";
+"Lifestyle" = "Dzīvesveids";
+"Medical" = "Medicīniskās";
+"Music" = "Mūzika";
+"Navigation" = "Navigācija";
+"News" = "Jaunumi";
+"Newsstand" = "Newsstand";
+"Photo & Video" = "Foto un Video";
+"Productivity" = "Ražīgums";
+"Reference" = "Atsauces";
+"Social Networking" = "Sociālo Tīklu";
+"Sports" = "Sporta";
+"Travel" = "Ceļojumi";
+"Utilities" = "Lietderība";
+"Weather" = "Laika";

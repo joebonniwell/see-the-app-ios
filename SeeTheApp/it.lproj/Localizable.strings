@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Si prega di valutare See the App";
+"Rate See the App" = "Valutare See the App";
+"No thanks" = "No grazie";
+"Maybe later" = "Forse più tardi";
+
+// Status strings
+"Unable to connect" = "In grado di connettersi";
+
+// Menu Titles
+"Menu" = "Menu";
+"Browse All Apps" = "Scorri Tutte le Apps";
+"All Apps" = "Tutti Apps";
+"Categories" = "Categorie";
+"All" = "Tutti";
+"Free" = "Gratuito";
+"Options" = "Opzioni";
+
+// Options Strings
+"Email us" = "Via e-mail";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Scegliere il App Store per navigare e scaricare da apps.";
+"Please email us with questions or comments." = "Vi preghiamo di inviarci con domande o commenti.";
+
+// AppStore Button
+"Available on the" = "Disponibile su";
+
+// Categories
+"Books" = "Libri";
+"Business" = "Economia";
+"Education" = "Istruzione";
+"Entertainment" = "Intrattenimento";
+"Finance" = "Finanza";
+"Games" = "Giochi";
+"All Games" = "Tutti i Giochi";
+"Action" = "Azione";
+"Adventure" = "Avventura";
+"Arcade" = "Arcade";
+"Board" = "Giochi da tavolo";
+"Card" = "Carta";
+"Casino" = "Casinò";
+"Dice" = "Dadi";
+"Educational" = "Istruzione";
+"Family" = "Famiglia";
+"Kids" = "Ragazzi";
+"Music" = "Musica";
+"Puzzle" = "Rompicapo";
+"Racing" = "Corse";
+"Role Playing" = "Giochi di ruolo";
+"Simulation" = "Simulazione";
+"Sports" = "Sport";
+"Strategy" = "Strategia";
+"Trivia" = "Trivia";
+"Word" = "Giochi di parole";
+"Health & Fitness" = "Salute e benessere";
+"Lifestyle" = "Mode e tendenze";
+"Medical" = "Medicina";
+"Music" = "Musica";
+"Navigation" = "Navigazione";
+"News" = "News";
+"Newsstand" = "Edicola";
+"Photo & Video" = "Foto e video";
+"Productivity" = "Produttività";
+"Reference" = "Riferimento";
+"Social Networking" = "Social Network";
+"Sports" = "Sport";
+"Travel" = "Viaggi";
+"Utilities" = "Utility";
+"Weather" = "Meteorologia";

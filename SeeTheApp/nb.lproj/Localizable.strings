@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Vennligst evaluere See the App";
+"Rate See the App" = "Evaluere See the App";
+"No thanks" = "Nei takk";
+"Maybe later" = "Kanskje senere";
+
+// Status strings
+"Unable to connect" = "Kan ikke koble";
+
+// Menu Titles
+"Menu" = "Meny";
+"Browse All Apps" = "Bla gjennom alle apps";
+"All Apps" = "Alle apps";
+"Categories" = "Kategorier";
+"All" = "Alle";
+"Free" = "Gratis";
+"Options" = "Alternativer";
+
+// Options Strings
+"Email us" = "E-post";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Velg App Store for å bla gjennom og laste ned apps fra.";
+"Please email us with questions or comments." = "Vennligst kontakt oss med spørsmål eller kommentarer.";
+
+// AppStore Button
+"Available on the" = "Tilgjengelig i";
+
+// Categories
+"Books" = "Bøker";
+"Business" = "Virksomhet";
+"Education" = "Utdanning";
+"Entertainment" = "Underholdning";
+"Finance" = "Finans";
+"Games" = "Spill";
+"All Games" = "Alle Spill";
+"Action" = "Handling";
+"Adventure" = "Eventyrspill";
+"Arcade" = "Arkadespill";
+"Board" = "Brettspill";
+"Card" = "Kortspill";
+"Casino" = "Casino";
+"Dice" = "Terningspill";
+"Educational" = "Utdanning";
+"Family" = "Familiespill";
+"Kids" = "Kids";
+"Music" = "Musikk";
+"Puzzle" = "Puslespill";
+"Racing" = "Racing";
+"Role Playing" = "Rollespill";
+"Simulation" = "Simuleringsspill";
+"Sports" = "Sportsspill";
+"Strategy" = "Strategispill";
+"Trivia" = "Trivia";
+"Word" = "Ordspill";
+"Health & Fitness" = "Helse og Fitness";
+"Lifestyle" = "Livsstil";
+"Medical" = "Medisinske";
+"Music" = "Musikk";
+"Navigation" = "Navigasjon";
+"News" = "Nyheter";
+"Newsstand" = "Aviskiosk";
+"Photo & Video" = "Foto og Video";
+"Productivity" = "Produktiviteten";
+"Reference" = "Referanse";
+"Social Networking" = "Sosiale Nettverk";
+"Sports" = "Sport";
+"Travel" = "Reise";
+"Utilities" = "Verktøy";
+"Weather" = "Vær";

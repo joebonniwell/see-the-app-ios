@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>PreferenceSpecifiers</key>
+	<array>
+		<dict>
+			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>App Store</string>
+			<key>Key</key>
+			<string>AppStoreCountryKey</string>
+			<key>DefaultValue</key>
+			<string>None</string>
+			<key>Titles</key>
+			<array>
+				<string>الجزائر/Al-Jazā&apos;ir</string>
+				<string>Angola</string>
+				<string>Anguilla</string>
+				<string>Antigua and Barbuda</string>
+				<string>Argentina</string>
+				<string>Հայաստան/Hayastán</string>
+				<string>Australia</string>
+				<string>Österreich</string>
+				<string>Azərbaycan</string>
+				<string>Bahamas</string>
+				<string>البحرين/Al-Baḥrayn</string>
+				<string>Barbados</string>
+				<string>Belarus</string>
+				<string>België/Belgique</string>
+				<string>Belize</string>
+				<string>Bermuda</string>
+				<string>Bolivia</string>
+				<string>Botswana</string>
+				<string>Brasil</string>
+				<string>بروني/Brunei</string>
+				<string>България</string>
+				<string>Canada</string>
+				<string>Cayman Islands</string>
+				<string>Chile</string>
+				<string>中国</string>
+				<string>Colombia</string>
+				<string>Costa Rica</string>
+				<string>Hrvatska</string>
+				<string>Κύπρος</string>
+				<string>Česká republika</string>
+				<string>Danmark</string>
+				<string>Dominica</string>
+				<string>República Dominicana</string>
+				<string>Ecuador</string>
+				<string>مصر/Misr</string>
+				<string>El Salvador</string>
+				<string>Eesti</string>
+				<string>Suomi</string>
+				<string>France</string>
+				<string>Deutschland</string>
+				<string>Ghana</string>
+				<string>Ελλάς/Hellas</string>
+				<string>Grenada</string>
+				<string>Guatemala</string>
+				<string>Guyana</string>
+				<string>Honduras</string>
+				<string>Hong Kong/香港</string>
+				<string>Magyarország</string>
+				<string>Ísland</string>
+				<string>India</string>
+				<string>Indonesia</string>
+				<string>Ireland</string>
+				<string>Isrā&apos;īl/Yisrael/ישראל/إسرائيل</string>
+				<string>Italia</string>
+				<string>Jamaica</string>
+				<string>日本</string>
+				<string>الأردن/Al-’Urdun</string>
+				<string>Қазақстан</string>
+				<string>Kenya</string>
+				<string>대한민국</string>
+				<string>الكويت/Al-Kuwayt</string>
+				<string>Latvija</string>
+				<string>لبنان/Lubnān</string>
+				<string>Lietuva</string>
+				<string>Lëtzebuerg</string>
+				<string>Macau</string>
+				<string>Македонија</string>
+				<string>Madagasikara/Madagascar</string>
+				<string>Malaysia</string>
+				<string>Mali</string>
+				<string>Malta</string>
+				<string>Maurice</string>
+				<string>México</string>
+				<string>Moldova</string>
+				<string>Montserrat</string>
+				<string>Nederland</string>
+				<string>New Zealand</string>
+				<string>Nicaragua</string>
+				<string>Niger</string>
+				<string>Nigeria</string>
+				<string>Norge</string>
+				<string>عُمان/‘Umān</string>
+				<string>پاکستان/Pākistān</string>
+				<string>Panamá</string>
+				<string>Paraguay</string>
+				<string>Perú</string>
+				<string>Pilipinas/Philippines</string>
+				<string>Polska</string>
+				<string>Portugal</string>
+				<string>قطر/Qaṭar</string>
+				<string>România</string>
+				<string>Россия</string>
+				<string>Saint Kitts and Nevis</string>
+				<string>Saint Lucia</string>
+				<string>Saint Vincent and The Grenadines</string>
+				<string>المملكة العربية السعودية</string>
+				<string>Sénégal</string>
+				<string>Singapore/新加坡/சிங்கப்பூர்</string>
+				<string>Slovensko</string>
+				<string>Slovenija</string>
+				<string>South Africa/Suid-Afrika</string>
+				<string>España</string>
+				<string>Sri Lankā</string>
+				<string>Suriname</string>
+				<string>Sverige</string>
+				<string>Schweiz/Suisse</string>
+				<string>Táiwan/台湾</string>
+				<string>Tanzania</string>
+				<string>ไต้หวัน</string>
+				<string>Trinidad and Tobago</string>
+				<string>تونس/Tunis</string>
+				<string>Türkiye</string>
+				<string>Turks and Caicos Islands</string>
+				<string>Uganda</string>
+				<string>الإمارات العربيّة المتّحدة/UAE</string>
+				<string>United Kingdom</string>
+				<string>United States</string>
+				<string>República Oriental del Uruguay</string>
+				<string>O&apos;zbekiston</string>
+				<string>Venezuela</string>
+				<string>Việt Nam</string>
+				<string>British Virgin Islands</string>
+				<string>اليمن/Al-Yaman</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>DZ</string>
+				<string>AO</string>
+				<string>AI</string>
+				<string>AG</string>
+				<string>AR</string>
+				<string>AM</string>
+				<string>AU</string>
+				<string>AT</string>
+				<string>AZ</string>
+				<string>BS</string>
+				<string>BH</string>
+				<string>BB</string>
+				<string>BY</string>
+				<string>BE</string>
+				<string>BZ</string>
+				<string>BM</string>
+				<string>BO</string>
+				<string>BW</string>
+				<string>BR</string>
+				<string>BN</string>
+				<string>BG</string>
+				<string>CA</string>
+				<string>KY</string>
+				<string>CL</string>
+				<string>CN</string>
+				<string>CO</string>
+				<string>CR</string>
+				<string>HR</string>
+				<string>CY</string>
+				<string>CZ</string>
+				<string>DK</string>
+				<string>DM</string>
+				<string>DO</string>
+				<string>EC</string>
+				<string>EG</string>
+				<string>SV</string>
+				<string>EE</string>
+				<string>FI</string>
+				<string>FR</string>
+				<string>DE</string>
+				<string>GH</string>
+				<string>GR</string>
+				<string>GD</string>
+				<string>GT</string>
+				<string>GY</string>
+				<string>HN</string>
+				<string>HK</string>
+				<string>HU</string>
+				<string>IS</string>
+				<string>IN</string>
+				<string>ID</string>
+				<string>IE</string>
+				<string>IL</string>
+				<string>IT</string>
+				<string>JM</string>
+				<string>JP</string>
+				<string>JO</string>
+				<string>KZ</string>
+				<string>KE</string>
+				<string>KR</string>
+				<string>KW</string>
+				<string>LV</string>
+				<string>LB</string>
+				<string>LT</string>
+				<string>LU</string>
+				<string>MO</string>
+				<string>MK</string>
+				<string>MG</string>
+				<string>MY</string>
+				<string>ML</string>
+				<string>MT</string>
+				<string>MU</string>
+				<string>MX</string>
+				<string>MD</string>
+				<string>MS</string>
+				<string>NL</string>
+				<string>NZ</string>
+				<string>NI</string>
+				<string>NE</string>
+				<string>NG</string>
+				<string>NO</string>
+				<string>OM</string>
+				<string>PK</string>
+				<string>PA</string>
+				<string>PY</string>
+				<string>PE</string>
+				<string>PH</string>
+				<string>PL</string>
+				<string>PT</string>
+				<string>QA</string>
+				<string>RO</string>
+				<string>RU</string>
+				<string>KN</string>
+				<string>LC</string>
+				<string>VC</string>
+				<string>SA</string>
+				<string>SN</string>
+				<string>SG</string>
+				<string>SK</string>
+				<string>SI</string>
+				<string>ZA</string>
+				<string>ES</string>
+				<string>LK</string>
+				<string>SR</string>
+				<string>SE</string>
+				<string>CH</string>
+				<string>TW</string>
+				<string>TZ</string>
+				<string>TH</string>
+				<string>TT</string>
+				<string>TN</string>
+				<string>TR</string>
+				<string>TC</string>
+				<string>UG</string>
+				<string>AE</string>
+				<string>GB</string>
+				<string>US</string>
+				<string>UY</string>
+				<string>UZ</string>
+				<string>VE</string>
+				<string>VN</string>
+				<string>VG</string>
+				<string>YE</string>
+			</array>
+		</dict>
+	</array>
+	<key>StringsTable</key>
+	<string>Root</string>
+</dict>
+</plist>

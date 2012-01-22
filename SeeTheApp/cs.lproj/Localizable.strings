@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Ohodnoťte See the App";
+"Rate See the App" = "Vyhodnotit See the App";
+"No thanks" = "Ne, díky";
+"Maybe later" = "Možná později";
+
+// Status strings
+"Unable to connect" = "Nelze se připojit";
+
+// Menu Titles
+"Menu" = "Menu";
+"Browse All Apps" = "Procházet všechny aplikace";
+"All Apps" = "Všechny aplikace";
+"Categories" = "Kategorie";
+"All" = "Vše";
+"Free" = "Volný";
+"Options" = "Možnosti";
+
+// Options Strings
+"Email us" = "Napište nám";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Vyberte App Store prohlížet a stahovataplikace z.";
+"Please email us with questions or comments." = "Pošlete nám prosím email s dotazy či připomínky.";
+
+// AppStore Button
+"Available on the" = "K dispozici v";
+
+// Categories
+"Books" = "Knihy";
+"Business" = "Obchod";
+"Education" = "Vzdělání";
+"Entertainment" = "Zábava";
+"Finance" = "Finance";
+"Games" = "Hry";
+"All Games" = "Všechny Hry";
+"Action" = "Akční";
+"Adventure" = "Dobrodružné";
+"Arcade" = "Arkádové";
+"Board" = "Stolní";
+"Card" = "Karetní";
+"Casino" = "Casino";
+"Dice" = "Kostky";
+"Educational" = "Vzdělání";
+"Family" = "Rodinné";
+"Kids" = "Dětské";
+"Music" = "Hudba";
+"Puzzle" = "Hádanka";
+"Racing" = "Závody";
+"Role Playing" = "Hraním Rolí";
+"Simulation" = "Simulace";
+"Sports" = "Sportovní";
+"Strategy" = "Strategické";
+"Trivia" = "Maličkosti";
+"Word" = "Slovní";
+"Health & Fitness" = "Zdraví a Fitness";
+"Lifestyle" = "životní styl";
+"Medical" = "Zdravotní";
+"Music" = "Hudba";
+"Navigation" = "Navigace";
+"News" = "Zprávy";
+"Newsstand" = "Kiosek";
+"Photo & Video" = "Foto a Video";
+"Productivity" = "Produktivita";
+"Reference" = "Reference";
+"Social Networking" = "Sociální Sítě";
+"Sports" = "Sportovní";
+"Travel" = "Cestování";
+"Utilities" = "Utility";
+"Weather" = "Počasí";

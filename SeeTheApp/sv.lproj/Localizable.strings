@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Vänligen utvärdera See the App";
+"Rate See the App" = "Utvärdera See the App";
+"No thanks" = "Nej tack";
+"Maybe later" = "Kanske senare";
+
+// Status strings
+"Unable to connect" = "Kan inte ansluta";
+
+// Menu Titles
+"Menu" = "Meny";
+"Browse All Apps" = "Bläddra bland alla program";
+"All Apps" = "Alla program";
+"Categories" = "Kategorier";
+"All" = "Alla";
+"Free" = "Gratis";
+"Options" = "Alternativ";
+
+// Options Strings
+"Email us" = "Maila oss";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Välj App Store att bläddra och ladda ner program från.";
+"Please email us with questions or comments." = "Skicka ett mail till oss med frågor eller kommentarer.";
+
+// AppStore Button
+"Available on the" = "Finns i";
+
+// Categories
+"Books" = "Böcker";
+"Business" = "Företag";
+"Education" = "Utbildning";
+"Entertainment" = "Underhållning";
+"Finance" = "Finans";
+"Games" = "Spel";
+"All Games" = "Alla spel";
+"Action" = "Actionspel";
+"Adventure" = "Äventyrsspel";
+"Arcade" = "Arcade";
+"Board" = "Brädspel";
+"Card" = "Kortspel";
+"Casino" = "Kasinospel";
+"Dice" = "Dice";
+"Educational" = "Utbildning";
+"Family" = "Familj";
+"Kids" = "Barn";
+"Music" = "Musik";
+"Puzzle" = "Pusselspel";
+"Racing" = "Racing";
+"Role Playing" = "Rollspel";
+"Simulation" = "Simuleringsspel";
+"Sports" = "Sportspel";
+"Strategy" = "Strategispel";
+"Trivia" = "Trivia";
+"Word" = "Ordspel";
+"Health & Fitness" = "Hälsa och Fitness";
+"Lifestyle" = "Lifestyle";
+"Medical" = "Medicin";
+"Music" = "Musik";
+"Navigation" = "Navigering";
+"News" = "Nyheter";
+"Newsstand" = "Tidningskiosk";
+"Photo & Video" = "Foto och video";
+"Productivity" = "Produktivitet";
+"Reference" = "Referens";
+"Social Networking" = "Sociala nätverk";
+"Sports" = "Sport";
+"Travel" = "Resor";
+"Utilities" = "Verktyg";
+"Weather" = "Väder";

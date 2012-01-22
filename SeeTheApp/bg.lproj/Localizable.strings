@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Моля, оценка See the App";
+"Rate See the App" = "Оценка на See the App";
+"No thanks" = "Не, благодаря";
+"Maybe later" = "Може би по-късно";
+
+// Status strings
+"Unable to connect" = "Не може да се свърже";
+
+// Menu Titles
+"Menu" = "меню";
+"Browse All Apps" = "Преглед на всички приложения";
+"All Apps" = "всички приложения";
+"Categories" = "Категории";
+"All" = "всички";
+"Free" = "безплатно";
+"Options" = "Опции";
+
+// Options Strings
+"Email us" = "Email нас";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Изберете App Store да преглеждате и свалятеприложения от.";
+"Please email us with questions or comments." = "Моля, пишете ни с въпроси или коментари.";
+
+// AppStore Button
+"Available on the" = "Налични в";
+
+// Categories
+"Books" = "книги";
+"Business" = "бизнес";
+"Education" = "образование";
+"Entertainment" = "забавление";
+"Finance" = "финанси";
+"Games" = "игри";
+"All Games" = "всички игри";
+"Action" = "екшън";
+"Adventure" = "приключенски";
+"Arcade" = "аркадни";
+"Board" = "дъска";
+"Card" = "карти";
+"Casino" = "казино";
+"Dice" = "зарове";
+"Educational" = "образование";
+"Family" = "семейство";
+"Kids" = "детски";
+"Music" = "музика";
+"Puzzle" = "пъзели";
+"Racing" = "състезателен";
+"Role Playing" = "ролеви";
+"Simulation" = "симулация";
+"Sports" = "спортен";
+"Strategy" = "стратегически";
+"Trivia" = "Тривия";
+"Word" = "дума";
+"Health & Fitness" = "здраве и фитнес";
+"Lifestyle" = "начин на живот";
+"Medical" = "медицински";
+"Music" = "музика";
+"Navigation" = "навигация";
+"News" = "новини";
+"Newsstand" = "Newsstand";
+"Photo & Video" = "фото и видео";
+"Productivity" = "производителност";
+"Reference" = "справка";
+"Social Networking" = "социални мрежи";
+"Sports" = "спортен";
+"Travel" = "пътуване";
+"Utilities" = "полезни";
+"Weather" = "време";

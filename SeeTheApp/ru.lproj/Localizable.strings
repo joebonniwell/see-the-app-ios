@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Пожалуйста, оцените See the App";
+"Rate See the App" = "Оценка See the App";
+"No thanks" = "Нет, спасибо";
+"Maybe later" = "Может быть, позже";
+
+// Status strings
+"Unable to connect" = "Не удается подключиться";
+
+// Menu Titles
+"Menu" = "меню";
+"Browse All Apps" = "Вы можете просмотреть всеприложения";
+"All Apps" = "Все приложения";
+"Categories" = "Категории";
+"All" = "Bсе";
+"Free" = "беспла́тный";
+"Options" = "опции";
+
+// Options Strings
+"Email us" = "Пишите нам";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "Выберите App Store просматривать и загружатьприложения из.";
+"Please email us with questions or comments." = "Пожалуйста, напишите нам письмо с вопросами или комментариями.";
+
+// AppStore Button
+"Available on the" = "Доступно в";
+
+// Categories
+"Books" = "Книги";
+"Business" = "бизнес";
+"Education" = "образование";
+"Entertainment" = "развлечение";
+"Finance" = "финансы";
+"Games" = "игры";
+"All Games" = "Все игры";
+"Action" = "действие";
+"Adventure" = "приключение";
+"Arcade" = "аркада";
+"Board" = "Настольные";
+"Card" = "Карточные";
+"Casino" = "игры в казино";
+"Dice" = "кости";
+"Educational" = "образование";
+"Family" = "Семейные";
+"Kids" = "Детские";
+"Music" = "музыкальные";
+"Puzzle" = "головоломки";
+"Racing" = "гоночных";
+"Role Playing" = "ролевая";
+"Simulation" = "имитационные";
+"Sports" = "спортивные";
+"Strategy" = "стратегия";
+"Trivia" = "пустяков";
+"Word" = "игры в слова";
+"Health & Fitness" = "здоровья и фитнеса";
+"Lifestyle" = "стиль жизни";
+"Medical" = "медицинский";
+"Music" = "музыка";
+"Navigation" = "навигация";
+"News" = "новости";
+"Newsstand" = "Киоск";
+"Photo & Video" = "фото и видео";
+"Productivity" = "производительность";
+"Reference" = "ссылка";
+"Social Networking" = "социальные сети";
+"Sports" = "спортивный";
+"Travel" = "путешествие";
+"Utilities" = "утилита";
+"Weather" = "погода";

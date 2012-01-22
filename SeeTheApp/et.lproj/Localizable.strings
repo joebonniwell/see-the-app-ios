@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "Palun hinnake See the App";
+"Rate See the App" = "Hinnake See the App";
+"No thanks" = "Ei tänan";
+"Maybe later" = "Võib-olla hiljem";
+
+// Status strings
+"Unable to connect" = "Seost ei saa moodustada";
+
+// Menu Titles
+"Menu" = "Menüü";
+"Browse All Apps" = "Sirvi kõiki apps";
+"All Apps" = "Kõik apps";
+"Categories" = "Kategooriad";
+"All" = "Kõik";
+"Free" = "Vaba";
+"Options" = "Valikud";
+
+// Options Strings
+"Email us" = "Saada meile";
+"App Store" = "App Store’is";
+"Choose the App Store to browse and download apps from." = "Vali App Store’is sirvida ja alla laadida apps alates.";
+"Please email us with questions or comments." = "Palun saatke meile küsimusi või kommentaare.";
+
+// AppStore Button
+"Available on the" = "Saadaval";
+
+// Categories
+"Books" = "Raamatuid";
+"Business" = "Äri";
+"Education" = "Haridus";
+"Entertainment" = "Meelelahutus";
+"Finance" = "Rahandus";
+"Games" = "Mängud";
+"All Games" = "Kõik Mängud";
+"Action" = "Mänge";
+"Adventure" = "Seiklusmänge";
+"Arcade" = "Arcade";
+"Board" = "Lauamängud";
+"Card" = "Kaardimängud";
+"Casino" = "Kasiinomängud";
+"Dice" = "Noppapeli";
+"Educational" = "Haridus";
+"Family" = "Pere";
+"Kids" = "Lapsed";
+"Music" = "Muusika";
+"Puzzle" = "Mõistatus";
+"Racing" = "Racing";
+"Role Playing" = "Rollimänge";
+"Simulation" = "Simuleerimine";
+"Sports" = "Sport";
+"Strategy" = "Strateegia";
+"Trivia" = "Tühiasi";
+"Word" = "Sõnamängud";
+"Health & Fitness" = "Tervis ja Fitness";
+"Lifestyle" = "Elustiil";
+"Medical" = "Meditsiini";
+"Music" = "Muusika";
+"Navigation" = "Navigatsiooni";
+"News" = "Uudised";
+"Newsstand" = "Ajalehekiosk";
+"Photo & Video" = "Foto ja Video";
+"Productivity" = "Tootlikkus";
+"Reference" = "Viide";
+"Social Networking" = "Sotsiaalsete Võrgustike";
+"Sports" = "Sport";
+"Travel" = "Reisimine";
+"Utilities" = "Kasuliku";
+"Weather" = "Ilm";

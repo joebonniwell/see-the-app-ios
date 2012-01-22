@@ -25,6 +25,8 @@
 - (void)displayRow:(NSInteger)argRow animated:(BOOL)argAnimated
 {
     [self setContentOffset:CGPointMake(argRow * [self frame].size.width, 0.0f) animated:argAnimated];
+    NSInteger actualRow = floor(([self contentOffset].x + 0.5f * [self frame].size.width) / [self frame].size.width);
+    [self setCurrentRow:actualRow];
 }
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
@@ -57,7 +59,7 @@
             [cell removeFromSuperview];
         }
     }
-
+    
     [self layoutSubviews];
 }
 
@@ -79,6 +81,18 @@
 - (NSInteger)rowForOffset:(CGFloat)offset
 {    
     return offset / [self rowWidth];
+}
+
+- (NSArray*)visibleCells
+{
+    NSMutableArray *array = [NSMutableArray array];
+    NSArray *subviews = [self subviews];
+    for (UIView *view in subviews)
+    {
+        if ([view tag] == kGVGalleryViewCell)
+            [array addObject:(GVGalleryViewCell*)view];
+    }
+    return array;
 }
 
 - (NSArray*)rowsForVisibleCells
@@ -128,20 +142,6 @@
         }
         [rowToDisplay release];
         scanOffset += [self frame].size.width;
-    }
-    
-    // =========================================================================
-    // Cache next and previous cells
-    // =========================================================================
-    
-    if ([rowsToDisplay count])
-    {
-        NSInteger previousRow = [[rowsToDisplay objectAtIndex:0] integerValue] - 1;
-        if (previousRow >= 0)
-            [[self dataSource] performSelectorOnMainThread:@selector(cacheImageForRow:) withObject:[NSNumber numberWithInteger:previousRow] waitUntilDone:NO];
-        NSInteger nextRow = [[rowsToDisplay lastObject] integerValue] + 1;
-        if (nextRow < totalRows - 1)
-            [[self dataSource] performSelectorOnMainThread:@selector(cacheImageForRow:) withObject:[NSNumber numberWithInteger:nextRow] waitUntilDone:NO];
     }
     
     // =========================================================================
@@ -228,7 +228,8 @@
     if (actualRow >= 0 && actualRow != [self currentRow])
     {
         [self setCurrentRow:actualRow];
-        [[self delegate] didUpdateDisplayRow:[self currentRow]];
+        NSNotification *galleryViewDidChangeRowNotification = [NSNotification notificationWithName:@"GalleryViewRowDidChangeNotification" object:self];
+        [[NSNotificationQueue defaultQueue] enqueueNotification:galleryViewDidChangeRowNotification postingStyle:NSPostASAP coalesceMask:NSNotificationCoalescingOnName forModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];
     }
 }
 

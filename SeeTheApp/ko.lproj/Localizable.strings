@@ -1,0 +1,77 @@
+/* 
+  Localizable.strings
+  SeeTheApp
+
+  Created by goVertex on 11/16/11.
+  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+*/
+
+// Rate dialog strings
+"Please rate See the App" = "See the App 을 평가하십시오";
+"Rate See the App" = "See the App 을 평가";
+"No thanks" = "됐거든";
+"Maybe later" = "나중에";
+
+// Status strings
+"Unable to connect" = "에 연결할 수 없습니다";
+
+// Menu Titles
+"Menu" = "메뉴";
+"Browse All Apps" = "모든 애플 리케이션 찾아보기";
+"All Apps" = "모든 애플 리케이션";
+"Categories" = "카테고리";
+"All" = "모든";
+"Free" = "무료";
+"Options" = "옵션";
+
+// Options Strings
+"Email us" = "이메일을 보내";
+"App Store" = "App Store";
+"Choose the App Store to browse and download apps from." = "에서 애플 리케이션을 검색하고 다운로드 App Store을 선택합니다.";
+"Please email us with questions or comments." = "질문이나 의견 이메일을 보내주시기 바랍니다.";
+
+// AppStore Button
+"Available on the" = "에서 구할 수";
+
+// Categories
+"Books" = "도서";
+"Business" = "비즈니스";
+"Education" = "교육";
+"Entertainment" = "엔터테인먼트";
+"Finance" = "경제";
+"Games" = "게임";
+"All Games" = "모든 게임";
+"Action" = "액션";
+"Adventure" = "어드벤처";
+"Arcade" = "아케이드";
+"Board" = "보드";
+"Card" = "카드";
+"Casino" = "카지노";
+"Dice" = "주사위";
+"Educational" = "교육";
+"Family" = "가족";
+"Kids" = "어린이";
+"Music" = "음악";
+"Puzzle" = "퍼즐";
+"Racing" = "레이싱";
+"Role Playing" = "롤플레잉";
+"Simulation" = "시뮬레이션";
+"Sports" = "스포츠";
+"Strategy" = "전략";
+"Trivia" = "퀴즈";
+"Word" = "단어";
+"Health & Fitness" = "건강 및 피트니스";
+"Lifestyle" = "라이프 스타일";
+"Medical" = "의학";
+"Music" = "음악";
+"Navigation" = "내비게이션";
+"News" = "뉴스";
+"Newsstand" = "뉴스 가판대";
+"Photo & Video" = "사진 및 비디오";
+"Productivity" = "생산성";
+"Reference" = "참고";
+"Social Networking" = "소셜 네트워킹";
+"Sports" = "스포츠";
+"Travel" = "여행";
+"Utilities" = "유틸리티";
+"Weather" = "날씨";
