@@ -40,6 +40,9 @@
     CFMutableDictionaryRef currentListDownloadConnections_gv;
     NSMutableArray *pendingListDownloadConnections_gv;
     
+    // Search Download Connections
+    CFMutableDictionaryRef currentSearchDownloadConnection_gv;
+    
     // Image Download Connections
     CFMutableDictionaryRef currentImageDownloadConnections_gv;
     NSMutableArray *pendingImageDownloadConnections_gv;
@@ -80,6 +83,7 @@
 
 // Current Connections
 - (CFMutableDictionaryRef)currentListDownloadConnections;
+- (CFMutableDictionaryRef)currentSearchDownloadConnection;
 - (CFMutableDictionaryRef)currentImageDownloadConnections;
 
 // Download Starter Timer Methods
@@ -111,6 +115,8 @@
 - (NSURL*)applicationLibrarySTADirectory;
 
 - (NSInteger)lastPositionForCategory:(NSInteger)argCategory;
+
+- (void)updateNetworkActivityIndicator;
 
 // Update State Data Methods
 - (void)updateAppStoreCountry:(NSString*)argCountryCode;

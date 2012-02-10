@@ -20,12 +20,16 @@
         [self setDelegate:argDelegate];
                 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rowChanged) name:@"GalleryViewRowDidChangeNotification" object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(searchFailed:) name:STASearchErrorNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(searchHadNoResults:) name:STASearchNoResultsNotification object:nil];
+        
     }
     return self;
 }
 
 - (void)dealloc
-{
+{    
     [self setGalleryView:nil];
         
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -62,7 +66,7 @@
         tempView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 768.0, 960.0f)];
     else
         tempView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 320.0f, 416.0f)]; 
-    
+    [tempView setUserInteractionEnabled:YES];
     [tempView setBackgroundColor:[UIColor blackColor]];
     [self setView:tempView];
     [tempView release];
@@ -79,7 +83,7 @@
     GVGalleryView *tempGalleryView;
     
     if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-        tempGalleryView = [[GVGalleryView alloc] initWithFrame:CGRectMake(54.0f, 0.0f, 652.0f, 960.0f)];
+        tempGalleryView = [[GVGalleryView alloc] initWithFrame:CGRectMake(58.0f, 0.0f, 652.0f, 960.0f)];
     else
         tempGalleryView = [[GVGalleryView alloc] initWithFrame:CGRectMake(30.0f, 0.0f, 260.0f, 416.0f)];
     
@@ -138,88 +142,193 @@
     return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
 
-/*
+#pragma mark - Search Animations
+
+- (void)activeSearchAnimation
+{
+    CGPoint searchBottomToolbarCenter = CGPointMake(160.0f, 22.0f);
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        searchBottomToolbarCenter = CGPointMake(384.0f, 22.0f);
+    
+    [[self view] insertSubview:[self searchMaskView] belowSubview:[self searchBottomToolbar]];
+    [[self searchMaskView] setAlpha:0.0f];
+    [[self searchMaskView] setHidden:NO];
+    
+    [UIView animateWithDuration:0.2f animations:^{
+        [[self searchBottomToolbar] setCenter:searchBottomToolbarCenter];
+        [[self searchMaskView] setAlpha:1.0f];
+    }];
+}
+
+- (void)inactiveSearchAnimation
+{
+    CGPoint searchBottomToolbarCenter = CGPointMake(160.0f, -22.0f);
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        searchBottomToolbarCenter = CGPointMake(384.0f, -22.0f);
+    
+    [UIView animateWithDuration:0.2f animations:^{
+        [[self searchBottomToolbar] setCenter:searchBottomToolbarCenter];
+        [[self searchMaskView] setAlpha:0.0f];
+    } completion:^(BOOL finished){
+        [[self searchMaskView] setHidden:YES];
+    }];
+}
+
 #pragma mark - Search Methods
 
 - (void)searchPriceTierDidChange
 {
-    // I don't think we actually need to do anything here at the moment... because we can just grab the current value of it when we perform the search.....
+    if ([[self searchPriceTierControl] selectedSegmentIndex] == 0)
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STAPriceTierAll] forKey:STADefaultsLastSearchPriceTierKey];
+    else
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STAPriceTierFree] forKey:STADefaultsLastSearchPriceTierKey];
 }
 
 - (void)searchCancelButtonTapped
 {
-    [UIView animateWithDuration:0.2f animations:^{[[self searchBottomToolbar] setCenter:CGPointMake(160.0f, -22.0f)];}];
+    [self inactiveSearchAnimation];
     [[self searchBar] resignFirstResponder];
+    [[self searchBar] setText:[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchTermKey]];
 }
 
 - (BOOL)searchBarShouldBeginEditing:(UISearchBar*)argSearchBar
 {
-    [UIView animateWithDuration:0.2f animations:^{[[self searchBottomToolbar] setCenter:CGPointMake(160.0f, 22.0f)];}];
-    
+    [self activeSearchAnimation];
     return YES;
 }
 
 - (BOOL)searchBarShouldEndEditing:(UISearchBar*)argSearchBar
 {
-    //[argSearchBar setShowsScopeBar:NO];
-    //[argSearchBar sizeToFit];
-    
-    [argSearchBar setShowsCancelButton:NO animated:YES];
-    
-    [UIView animateWithDuration:0.2f animations:^{[[self searchBottomToolbar] setCenter:CGPointMake(160.0f, -22.0f)];}];
-    
+    [self inactiveSearchAnimation];
     return YES;
 }
 
-- (void)searchBarTextDidBeginEditing:(UISearchBar*)argSearchBar
-{
-    
-}
-
-- (void)searchBarTextDidEndEditing:(UISearchBar*)argSearchBar
-{
-    
-}
-
 - (void)searchBarSearchButtonClicked:(UISearchBar*)argSearchBar
-{
-    // Start the actual search....
-    
-    [UIView animateWithDuration:0.2f animations:^{[[self searchBottomToolbar] setCenter:CGPointMake(160.0f, -22.0f)];}];
+{    
+    [self inactiveSearchAnimation];
     [[self searchBar] resignFirstResponder];
     
-    NSLog(@"Searching for term: '%@'", [argSearchBar text]);
+    #ifdef LOG_SearchStatus
+        NSLog(@"Searching for term: '%@'", [argSearchBar text]);    
+    #endif
+    
+    NSString *countryCode = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsAppStoreCountryKey];
+    NSInteger searchPriceTier = 1;
+    if ([[self searchPriceTierControl] selectedSegmentIndex] == 1)
+        searchPriceTier = 0;
+    NSInteger searchCategory = 10000;
+    if ([[[self searchController] fetchedObjects] count] > 0)
+        searchCategory = [[[[[self searchController] fetchedObjects] lastObject] valueForKey:STASearchRecordAttributeSearchCategory] integerValue] + 1;
+    NSString *searchTerm = [argSearchBar text];
+    
+    NSManagedObject *newSearchRecord = [NSEntityDescription insertNewObjectForEntityForName:@"SearchRecord" inManagedObjectContext:[[self delegate] managedObjectContext]];
+    [newSearchRecord setValue:countryCode forKey:STASearchRecordAttributeCountry];
+    [newSearchRecord setValue:[NSNumber numberWithInteger:searchPriceTier] forKey:STASearchRecordAttributePriceTier];
+    [newSearchRecord setValue:[NSNumber numberWithInteger:searchCategory] forKey:STASearchRecordAttributeSearchCategory];
+    [newSearchRecord setValue:[NSDate date] forKey:STASearchRecordAttributeSearchDate];
+    [newSearchRecord setValue:searchTerm forKey:STASearchRecordAttributeSearchTerm];
+    [[[self delegate] managedObjectContext] save:nil];
+    
+    NSString *deviceString;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        deviceString = @"pad";
+    else
+        deviceString = @"phone";
+    
+    NSString *priceTier = @"all";
+    if (searchPriceTier == 0)
+        priceTier = @"free";
+    
+    NSString *escapedSearchTerm = (NSString*)CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)searchTerm, NULL, (CFStringRef)@"!*'\"();:@&=+$,/?%#[]% ", CFStringConvertNSStringEncodingToEncoding(NSUTF8StringEncoding));
+    
+    //NSString *escapedSearchTerm = [searchTerm stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    #ifdef LOG_SearchStatus
+        NSLog(@"Percent Encoded Search Term: %@", escapedSearchTerm);
+    #endif
+    NSString *searchURLString = [NSString stringWithFormat:@"http://search.seetheapp.com/search?country=%@&device=%@&price=%@&cat=%d&searchterm=%@", countryCode, deviceString, priceTier, searchCategory, escapedSearchTerm];
+    [[self delegate] startSearchResultsDownloadWithURLString:searchURLString searchCategory:searchCategory];
+    
+    CFRelease((CFStringRef)escapedSearchTerm);
+    #ifdef LOG_SearchStatus
+        NSLog(@"Performing search with URL: %@", searchURLString);
+    #endif
+    [[NSUserDefaults standardUserDefaults] setValue:searchTerm forKey:STADefaultsLastSearchTermKey];
+    [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STASearchStateInProgress] forKey:STADefaultsLastSearchStateKey];
+
+    [[self delegate] updateCategory:searchCategory];
+    
+    [self updateSearchingNotificationViewWithState:STASearchStateInProgress animated:YES];
 }
-*/
+
+#pragma mark - Search Notification Methods
+
+- (void)searchFailed:(NSNotification*)argNotification
+{    
+    NSInteger searchCategory = [[[argNotification userInfo] objectForKey:@"STASearchCategory"] integerValue];
+    
+    if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchCategoryKey] integerValue] == searchCategory)
+    {
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STASearchStateFailed] forKey:STADefaultsLastSearchStateKey];
+        [self updateSearchingNotificationViewWithState:STASearchStateFailed animated:YES];
+    }
+}
+
+- (void)searchHadNoResults:(NSNotification*)argNotification
+{
+    NSInteger searchCategory = [[[argNotification userInfo] objectForKey:@"STASearchCategory"] integerValue];
+    
+    if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchCategoryKey] integerValue] == searchCategory)
+    {
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STASearchStateNoResults] forKey:STADefaultsLastSearchStateKey];
+        [self updateSearchingNotificationViewWithState:STASearchStateNoResults animated:YES];
+    }
+}
+
 #pragma mark - NSFetchedResultsControllerDelegate Methods
 
 - (void)controller:(NSFetchedResultsController *)controller didChangeObject:(id)anObject atIndexPath:(NSIndexPath *)indexPath forChangeType:(NSFetchedResultsChangeType)type newIndexPath:(NSIndexPath *)newIndexPath
 {        
-    if ([self currentMode] == STADisplayModeList && [[self listPriceTierControl] selectedSegmentIndex] == 1)
+    if ([controller isEqual:[self searchController]])
     {
-        NSPredicate *pricePredicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"priceTier == 0"]];
-        NSArray *priceFilteredApps = [[[self resultsController] fetchedObjects] filteredArrayUsingPredicate:pricePredicate];
-        [self setAppsDisplayArray:priceFilteredApps];
-    }
-    else
-    {
-        [self setAppsDisplayArray:[[self resultsController] fetchedObjects]];
-    }
-    
-    NSManagedObject *changedObject = (NSManagedObject*)anObject;
-    NSInteger indexOfChangedObject = [[self appsDisplayArray] indexOfObject:changedObject];
-    
-    if (indexOfChangedObject != NSNotFound)
-    {        
-        NSInteger currentRow = [[self galleryView] currentRow];
-        NSInteger minimumVisibleRow = currentRow - 1;
-        NSInteger maximumVisibleRow = currentRow + 1;
+        // Updating the results of the search... not what
         
-        if (indexOfChangedObject >= minimumVisibleRow && indexOfChangedObject <= maximumVisibleRow)
-            [[self galleryView] reloadData];
+        //NSLog(@"Updating records for search controller");
     }
+    else // Results Controller
+    {
+        if ([self currentMode] == STADisplayModeList && [[self listPriceTierControl] selectedSegmentIndex] == 1)
+        {
+            NSPredicate *pricePredicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"priceTier == 0"]];
+            NSArray *priceFilteredApps = [[[self resultsController] fetchedObjects] filteredArrayUsingPredicate:pricePredicate];
+            [self setAppsDisplayArray:priceFilteredApps];
+        }
+        else
+        {
+            [self setAppsDisplayArray:[[self resultsController] fetchedObjects]];
+            if ([self currentMode] == STADisplayModeSearch)// and the search is the appropriate searchCategory....?
+            {
+                // make sure that 
+                [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STASearchStateHasResults] forKey:STADefaultsLastSearchStateKey];
+                [self updateSearchingNotificationViewWithState:STASearchStateHasResults animated:YES];
+            }
+                
+        }
+    
+        NSManagedObject *changedObject = (NSManagedObject*)anObject;
+        NSInteger indexOfChangedObject = [[self appsDisplayArray] indexOfObject:changedObject];
+    
+        if (indexOfChangedObject != NSNotFound)
+        {        
+            NSInteger currentRow = [[self galleryView] currentRow];
+            NSInteger minimumVisibleRow = currentRow - 1;
+            NSInteger maximumVisibleRow = currentRow + 1;
+        
+            if (indexOfChangedObject >= minimumVisibleRow && indexOfChangedObject <= maximumVisibleRow)
+                [[self galleryView] reloadData];
+        }
 
-    [self updateDownloads];
+        [self updateDownloads];
+    }
 }
 
 #pragma mark - Download Notification
@@ -255,42 +364,49 @@
 }
 
 - (void)updateDownloads
-{        
+{
+    [[self delegate] updateLastPosition:[self positionOfCurrentRow]];
+    if ([self currentMode] != STADisplayModeSearch)
+        [self updateListDownloads];
+    [self updateImageDownloads];
+}
+
+- (void)updateListDownloads
+{
     NSInteger currentRow = [[self galleryView] currentRow];
     
-    [[self delegate] updateLastPosition:[self positionOfCurrentRow]];
-        
+    // Gather data for new list download
     Size currentListDownloadsCount = CFDictionaryGetCount([[self delegate] currentListDownloadConnections]);
     CFTypeRef *listDownloadDictsArray = (CFTypeRef*)malloc(currentListDownloadsCount * sizeof(CFTypeRef));
     CFDictionaryGetKeysAndValues([[self delegate] currentListDownloadConnections], NULL, (const void**)listDownloadDictsArray);
     const void **listDownloadDicts = (const void **)listDownloadDictsArray;
-    
+        
     NSMutableArray *urlStringsOfCurrentlyDownloadingLists = [NSMutableArray array];
-    
+        
     for (int listIndex = 0; listIndex < currentListDownloadsCount; listIndex++)
     {
         NSDictionary *listDownloadDict = listDownloadDicts[listIndex];
         [urlStringsOfCurrentlyDownloadingLists addObject:[listDownloadDict objectForKey:STAConnectionURLStringKey]];
     }
-    
+        
     free(listDownloadDictsArray);
         
     NSString *storeCountryCode = [[NSUserDefaults standardUserDefaults] objectForKey:STADefaultsAppStoreCountryKey];
-    
+        
     enum STACategory category = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastCategoryKey] integerValue];
-    
+        
     NSString *deviceString;
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
         deviceString = @"pad";
     else
         deviceString = @"phone";
-    
+        
     NSString *priceTier;
     if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastListPriceTierKey] integerValue] == STAPriceTierAll)
         priceTier = @"all";
     else
         priceTier = @"free";
-    
+        
     NSString *listDownloadURLString = [NSString stringWithFormat:@"http://list.seetheapp.com/list?cat=%d&country=%@&price=%@&device=%@", category, storeCountryCode, priceTier, deviceString];
     
     NSInteger numberOfIndicies = [[self appsDisplayArray] count];
@@ -313,7 +429,15 @@
         if ([[self appsDisplayArray] count] == 0)
             return;
     }
+}
+
+- (void)updateImageDownloads
+{
     
+    //NSLog(@"Updating Image Downloads... Current Mode : %d", [self currentMode]);
+    
+    NSInteger currentRow = [[self galleryView] currentRow];
+
     NSMutableArray *newPendingImageDownloads = [NSMutableArray array];
     
     NSInteger nextBackwardIndex = -1;
@@ -333,7 +457,7 @@
     }
     
     free(imageDownloadDictsArray);
-        
+    
     for (int rowCounter = 0; rowCounter < 20; rowCounter++)
     {        
         if (rowCounter == 0)
@@ -380,7 +504,7 @@
             }
         }
     }
-        
+    
     [[[self delegate] pendingImageDownloadConnections] removeAllObjects];
     [[[self delegate] pendingImageDownloadConnections] addObjectsFromArray:newPendingImageDownloads];
     
@@ -388,7 +512,6 @@
         NSLog(@"Updated downloads - Pending Image Downloads: %d Pending List Downloads: %d", [[[self delegate] pendingImageDownloadConnections] count], [[[self delegate] pendingListDownloadConnections] count]);
     #endif
     
-    // tell the delegate to start connections after update (if no active, or less than threshold active, start a pending if it exists...) -> could do this via a notification
     [[self delegate] checkPendingConnections];
 }
 
@@ -396,6 +519,8 @@
 
 - (NSInteger)numberOfRowsInGalleryView:(GVGalleryView *)argGalleryView
 {    
+    if ([self currentMode] == STADisplayModeSearch)
+        return [[self appsDisplayArray] count];
     return [[self appsDisplayArray] count] + 1;
 }
 
@@ -455,16 +580,14 @@
             cell = [[[GVGalleryViewCell alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 260.0f, 416.0f)] autorelease];
         
         [cell setTag:kGVGalleryViewCell];
-        
+                
         // Background View
         
         UIImageView *backgroundImageView;
-        
         if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
             backgroundImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 652.0f, 960.0f)];
         else
             backgroundImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 260.0f, 416.0f)];
-        
         [backgroundImageView setImage:[self cellBackgroundImage]];
         [cell addSubview:backgroundImageView];
         [backgroundImageView release];
@@ -479,56 +602,67 @@
         // Screenshot Image View
         
         UIImageView *screenshotImageView;
-        
         if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
             screenshotImageView = [[UIImageView alloc] initWithFrame:CGRectMake(53.0f, 72.0f, 546.0f, 728.0f)];
         else
             screenshotImageView = [[UIImageView alloc] initWithFrame:CGRectMake(26.0f, 28.0f, 208.0f, 315.0f)];
-        
         [screenshotImageView setTag:STAScreenshotImageViewTag];
         [screenshotImageView setContentMode:UIViewContentModeScaleAspectFit];
+        [screenshotImageView setUserInteractionEnabled:YES];        
         [cell addSubview:screenshotImageView];
-        [screenshotImageView release];        
+        [screenshotImageView release];    
+        
+        UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(screenshotTapped:)];
+        [screenshotImageView addGestureRecognizer:tapGestureRecognizer];
+        [tapGestureRecognizer release];
         
         // Activity Indicator View
         
         UIActivityIndicatorView *activityIndicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-        
         if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-            [activityIndicatorView setCenter:CGPointMake(326.0f, 472.0f)];
+            [activityIndicatorView setCenter:CGPointMake(326.0f, 420.0f)];
         else
-            [activityIndicatorView setCenter:CGPointMake(138.0f, 176.0f)];
-        
+            [activityIndicatorView setCenter:CGPointMake(130.0f, 176.0f)];
         [activityIndicatorView setTag:STAActivityIndicatorViewTag];
         [cell addSubview:activityIndicatorView];
         [activityIndicatorView release];
         
+        // Error Icon Image View
+        
+        UIImageView *errorIconImageView;
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+            errorIconImageView = [[UIImageView alloc] initWithFrame:CGRectMake(307.0f, 400.0f, 38.0f, 38.0f)];
+        else
+            errorIconImageView = [[UIImageView alloc] initWithFrame:CGRectMake(111.0f, 157.0f, 38.0f, 38.0f)];
+        [errorIconImageView setImage:[self errorIconImage]];
+        [errorIconImageView setTag:STAErrorIconImageViewTag];
+        [cell addSubview:errorIconImageView];
+        [errorIconImageView release];
+        
         // No Connection Label
         
-        UILabel *noConnectionLabel;
-        
+        UILabel *statusLabel;
         if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-            noConnectionLabel = [[UILabel alloc] initWithFrame:CGRectMake(225.0f, 442.0f, 240.0f, 60.0f)];
+            statusLabel = [[UILabel alloc] initWithFrame:CGRectMake(60.0f, 442.0f, 532.0f, 40.0f)];
         else
-            noConnectionLabel = [[UILabel alloc] initWithFrame:CGRectMake(18.0f, 146.0f, 240.0f, 60.0f)];
-        
-        [noConnectionLabel setTag:STANoConnectionLabelTag];
-        [noConnectionLabel setBackgroundColor:[UIColor blackColor]];
-        [noConnectionLabel setTextColor:[UIColor whiteColor]];
-        [noConnectionLabel setFont:[UIFont systemFontOfSize:16.0f]];
-        [noConnectionLabel setTextAlignment:UITextAlignmentCenter];
-        [cell addSubview:noConnectionLabel];
-        [noConnectionLabel release];        
+            statusLabel = [[UILabel alloc] initWithFrame:CGRectMake(30.0f, 195.0f, 200.0f, 24.0f)];
+        [statusLabel setTag:STAStatusLabelTag];
+        [statusLabel setBackgroundColor:[UIColor clearColor]];
+        [statusLabel setOpaque:NO];
+        [statusLabel setTextColor:[UIColor whiteColor]];
+        [statusLabel setFont:[UIFont systemFontOfSize:16.0f]];
+        [statusLabel setAdjustsFontSizeToFitWidth:YES];
+        [statusLabel setTextAlignment:UITextAlignmentCenter];
+        [cell addSubview:statusLabel];
+        [statusLabel release];        
         
         // Pin Image View
         
         UIImageView *pinImageView;
-        
         if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
             pinImageView = [[UIImageView alloc] initWithFrame:CGRectMake(290.0, 12.0f, 72.0f, 72.0f)];
         else
             pinImageView = [[UIImageView alloc] initWithFrame:CGRectMake(111.5, 2.0f, 37.0f, 36.0f)];
-        
         [pinImageView setImage:[self pinImage]];
         [cell addSubview:pinImageView];
         [pinImageView release];
@@ -538,10 +672,12 @@
     
     UIImageView *screenshotImageView = (UIImageView*)[cell viewWithTag:STAScreenshotImageViewTag];
     
+    UIImageView *errorIconImageView = (UIImageView*)[cell viewWithTag:STAErrorIconImageViewTag];
+    
     UIActivityIndicatorView *activityIndicatorView = (UIActivityIndicatorView*)[cell viewWithTag:STAActivityIndicatorViewTag];
     
-    UILabel *noConnectionLabel = (UILabel*)[cell viewWithTag:STANoConnectionLabelTag];
-    [noConnectionLabel setText:NSLocalizedString(@"Unable to connect", @"Unable to connect")];
+    UILabel *statusLabel = (UILabel*)[cell viewWithTag:STAStatusLabelTag];
+    [statusLabel setText:@""];
     
     STAAppStoreButton *appStoreButton = (STAAppStoreButton*)[cell viewWithTag:STAAppStoreButtonTag];
     
@@ -560,7 +696,7 @@
     
     NSInteger lastRowIndex = [self numberOfRowsInGalleryView:argGalleryView] - 1;
     
-    if (argRow == lastRowIndex)
+    if (argRow == lastRowIndex && [self currentMode] != STADisplayModeSearch)
     {
         // Placeholder Row
         [screenshotImageView setImage:nil];
@@ -608,18 +744,23 @@
         if ([[self delegate] hasNetworkConnection])
         {
             [activityIndicatorView startAnimating];
-            [noConnectionLabel setHidden:YES];
+            [errorIconImageView setHidden:YES];
+            [statusLabel setHidden:NO];
+            [statusLabel setText:NSLocalizedString(@"Loading", @"Loading")];
         }
         else
         {
             [activityIndicatorView stopAnimating];
-            [noConnectionLabel setHidden:NO];
+            [errorIconImageView setHidden:NO];
+            [statusLabel setHidden:NO];
+            [statusLabel setText:NSLocalizedString(@"Unable to connect", @"Unable to connect")];
         }
     }
     else
     {
         [activityIndicatorView stopAnimating];
-        [noConnectionLabel setHidden:YES];
+        [errorIconImageView setHidden:YES];
+        [statusLabel setHidden:YES];
         [appStoreButton setEnabled:YES];
     }
     
@@ -667,18 +808,16 @@
 
 - (void)displayMode:(enum STADisplayMode)argDisplayMode
 {
-    if (argDisplayMode == STAGalleryViewModeBrowse)
+    if (argDisplayMode == STADisplayModeBrowse)
     {
         if (searchBottomToolbar_gv)
             [searchBottomToolbar_gv removeFromSuperview];
         [[self navigationItem] setRightBarButtonItem:nil];
-        //[[self navigationItem] setTitle:NSLocalizedString(@"Browse All", @"Browse All")];
-        //[self setTitle:NSLocalizedString(@"Browse All", @"Browse All")];
-        
+        [[self searchingNotificationView] setHidden:YES];
         return;
     }
 
-    if (argDisplayMode == STAGalleryViewModeList)
+    if (argDisplayMode == STADisplayModeList)
     {
         if (searchBottomToolbar_gv)
             [searchBottomToolbar_gv removeFromSuperview];
@@ -686,19 +825,50 @@
         [[self navigationItem] setRightBarButtonItem:listPriceControl];
         [[self listPriceTierControl] setSelectedSegmentIndex:0];
         [listPriceControl release];
+        [[self searchingNotificationView] setHidden:YES];
+        return;
+    }
+    
+    if (argDisplayMode == STADisplayModeSearch)
+    {
+        UIBarButtonItem *searchBar = [[UIBarButtonItem alloc] initWithCustomView:[self searchBar]];
+        [[self navigationItem] setRightBarButtonItem:searchBar];
+        [self setTitle:@""];
+        // set the center point of the searchbottom toolbar so it starts hidden...
+        [[self view] addSubview:[self searchBottomToolbar]];
+        
+        // Restore the state of the SearchPriceTier
+        if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchPriceTierKey] integerValue] == STAPriceTierAll)
+            [[self searchPriceTierControl] setSelectedSegmentIndex:0];
+        else
+            [[self searchPriceTierControl] setSelectedSegmentIndex:1];
+        
+        // Restore the state of the SearchBar
+        NSString *lastSearchTerm = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchTermKey];
+        if ([lastSearchTerm length] > 0)
+            [[self searchBar] setText:lastSearchTerm];
+         
+         //[[self view] insertSubview:<#(UIView *)#> belowSubview:<#(UIView *)#>]
+                
+        [searchBar release];
         return;
     }
 }
 
 - (void)displayCategory:(enum STACategory)argCategory forAppStoreCountryCode:(NSString*)argCountryCode
 {
+    //NSLog(@"Display Category: %d", argCategory);
+    
     if (argCategory == STACategoryBrowse)
         [self setCurrentMode:STADisplayModeBrowse];
+    else if (argCategory == STACategorySearchResult || argCategory >= 10000)
+        [self setCurrentMode:STADisplayModeSearch];
     else
         [self setCurrentMode:STADisplayModeList];
     
-    // Reset the results controller
+    // Reset the controllers
     [self setResultsController:nil];
+    [self setSearchController:nil];
     
     // Context
     NSManagedObjectContext *context = [[self delegate] managedObjectContext];
@@ -735,7 +905,7 @@
     
     if([[self resultsController] performFetch:&fetchError] == NO)
     {
-        NSLog(@"Fetch Error: %@", [fetchError localizedDescription]);
+        NSLog(@"Results Fetch Error: %@", [fetchError localizedDescription]);
         // Attempt a refetch.....?
         // log the error....
     }
@@ -743,12 +913,55 @@
     [self setAppsDisplayArray:[[self resultsController] fetchedObjects]];   
     
     [[self galleryView] reloadData];
+    
+    if ([self currentMode] == STADisplayModeSearch)
+    {
+        // Fetch Request
+        NSFetchRequest *searchRecordsFetchRequest = [[NSFetchRequest alloc] init];
+        
+        // Entity Description
+        NSEntityDescription *searchRecordEntityDescription = [NSEntityDescription entityForName:@"SearchRecord" inManagedObjectContext:context];
+        [searchRecordsFetchRequest setEntity:searchRecordEntityDescription];
+        
+        // Predicate
+        NSString *searchRecordsPredicateString = [NSString stringWithFormat:@"country like '%@'", argCountryCode];
+        NSPredicate *searchRecordsPredicate = [NSPredicate predicateWithFormat:searchRecordsPredicateString];
+        [searchRecordsFetchRequest setPredicate:searchRecordsPredicate];
+        
+        // Sort Descriptor
+        NSSortDescriptor *searchDateSortDescriptor = [[NSSortDescriptor alloc] initWithKey:STASearchRecordAttributeSearchCategory ascending:YES];
+        NSArray *searchRecordsSortDescriptorsArray = [NSArray arrayWithObject:searchDateSortDescriptor];
+        [searchRecordsFetchRequest setSortDescriptors:searchRecordsSortDescriptorsArray];
+        [searchDateSortDescriptor release];
+        
+        // Search Records Controller
+        NSFetchedResultsController *tempSearchRecordsController = [[NSFetchedResultsController alloc] initWithFetchRequest:searchRecordsFetchRequest managedObjectContext:context sectionNameKeyPath:nil cacheName:nil];
+        [self setSearchController:tempSearchRecordsController];
+        [[self searchController] setDelegate:self];
+        [searchRecordsFetchRequest release];
+        [tempSearchRecordsController release];
+        
+        NSError *searchFetchError = nil;
+        
+        if([[self searchController] performFetch:&searchFetchError] == NO)
+        {
+            NSLog(@"Search Fetch Error: %@", [searchFetchError localizedDescription]);
+            // Attempt a refetch.....?
+            // log the error....
+        }
+        
+        
+        enum STASearchState lastSearchState = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchStateKey] integerValue];
+        if (lastSearchState > STASearchStateNone)
+            [self updateSearchingNotificationViewWithState:lastSearchState animated:YES];
+        // TODO: Restore the last search position....
+    }
 }
 
 - (void)displayPosition:(NSInteger)argPosition forPriceTier:(enum STAPriceTier)argPriceTier
 {
     //NSLog(@"Display Position / PriceTier: Position: %d", argPosition);
-    if (argPriceTier == STAPriceTierFree)
+    if ([self currentMode] == STADisplayModeList && argPriceTier == STAPriceTierFree)
     {
         [[self listPriceTierControl] setSelectedSegmentIndex:1];
         
@@ -792,9 +1005,20 @@
             rowToDisplay = [[self appsDisplayArray] indexOfObject:appToShow];
         [[self galleryView] displayRow:rowToDisplay animated:NO];
     }
-    else
+    else if ([self currentMode] == STADisplayModeList || [self currentMode] == STADisplayModeBrowse)
     {
         [[self listPriceTierControl] setSelectedSegmentIndex:0];
+        [self setAppsDisplayArray:[[self resultsController] fetchedObjects]];
+        [[self galleryView] displayRow:argPosition animated:NO];
+    }
+    else
+    {
+        // Search....
+        if (argPriceTier == STAPriceTierAll)
+            [[self searchPriceTierControl] setSelectedSegmentIndex:0];
+        else
+            [[self searchPriceTierControl] setSelectedSegmentIndex:1];
+        
         [self setAppsDisplayArray:[[self resultsController] fetchedObjects]];
         [[self galleryView] displayRow:argPosition animated:NO];
     }
@@ -834,6 +1058,67 @@
     }
 }
 
+#pragma mark - Screenshot Tapped
+
+- (void)screenshotTapped:(id)argSender
+{    
+    UIGestureRecognizer *gestureRecognizer = (UIGestureRecognizer*)argSender;
+    UIImageView *screenshotImageView = (UIImageView*)[gestureRecognizer view];
+    GVGalleryViewCell *cell = (GVGalleryViewCell*)[screenshotImageView superview];
+    NSInteger row = [cell row];
+    
+    @try 
+    {
+        NSManagedObject *displayIndex = [[self appsDisplayArray] objectAtIndex:row];
+        if (displayIndex)
+        {
+            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"View on the App Store?", @"View on the App Store?") message:@"" delegate:self cancelButtonTitle:NSLocalizedString(@"Cancel", @"Cance;") otherButtonTitles:NSLocalizedString(@"Yes", @"Yes"), nil];
+            [alertView setTag:row];
+            [alertView show];
+            [alertView release];
+        }
+    }
+    @catch (NSException *exception) 
+    {
+        NSLog(@"Attempting to access an app not in fetched objects for row: %d", row);
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"AppSelectedNotInFetchedObjects" attributes:[NSDictionary dictionaryWithObject:[NSNumber numberWithInteger:row] forKey:@"Row"]];
+    }
+}
+
+#pragma mark - UIAlertView Methods
+
+- (void)alertView:(UIAlertView *)alertView willDismissWithButtonIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex == 1)
+    {
+        NSManagedObject *displayIndex = [[self appsDisplayArray] objectAtIndex:[alertView tag]];
+            
+        NSURL *appURL = [NSURL URLWithString:[displayIndex valueForKey:STADisplayIndexAttributeAppURL]];
+        NSString *appIDString = [NSString stringWithFormat:@"%d", [[displayIndex valueForKey:STADisplayIndexAttributeAppID] integerValue]];
+            
+        #ifdef LOG_SelectedAppDetails
+            NSLog(@"AppID: %@", appIDString);
+            NSLog(@"App URL: %@", appURL);
+        #endif
+            
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:appIDString];
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"ScreenshotTapAlertViewDismissed" attributes:[NSDictionary dictionaryWithObject:@"Viewed" forKey:@"Action"]];
+        [[UIApplication sharedApplication] openURL:appURL];
+    }
+    else
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"ScreenshotTapAlertViewDismissed" attributes:[NSDictionary dictionaryWithObject:@"Cancelled" forKey:@"Action"]];
+}
+
+#pragma mark - UIGestureRecognizerDelegate Methods
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
+{
+    [self inactiveSearchAnimation];
+    [[self searchBar] resignFirstResponder];
+    [[self searchBar] setText:[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchTermKey]];
+    return YES;
+}
+
 #pragma mark - Localization Methods
 
 - (void)resetText
@@ -846,28 +1131,8 @@
 
 - (void)updateResultsForPriceTier:(enum STAPriceTier)argPriceTier
 {
-    //NSLog(@"Starting Update for Price Tier");
     enum STAPriceTier currentPriceTier = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastListPriceTierKey] integerValue];
-    /*
-    if (currentPriceTier == STAPriceTierAll)
-        NSLog(@"Current Price Tier: All");
-    else
-        NSLog(@"Current Price Tier: Free");
-    
-    if (argPriceTier == STAPriceTierAll)
-        NSLog(@"Going to Price Tier: All");
-    else
-        NSLog(@"Going to Price Tier: Free");
-    
-    NSLog(@"Current Row: %d", [[self galleryView] currentRow]);
-    
-    if ([[[[self appsDisplayArray] objectAtIndex:[[self galleryView] currentRow]] valueForKey:STADisplayIndexAttributePriceTier] integerValue] == 0)
-        NSLog(@"App at Current Row is FREE");
-    else
-        NSLog(@"App at Current Row is PAID");
-    
-    NSLog(@"Position Index of App at Current Row: %d", [[[[self appsDisplayArray] objectAtIndex:[[self galleryView] currentRow]] valueForKey:STADisplayIndexAttributePositionIndex] integerValue]);
-    */
+ 
     NSArray *allListApps = [[self resultsController] fetchedObjects];
     if ([allListApps count] > 0)
     {
@@ -926,64 +1191,9 @@
             [self setAppsDisplayArray:allListApps];
         }
     }
-    /*
-    NSLog(@"Current Row: %d", [[self galleryView] currentRow]);
-    NSLog(@"Position Index of App at Current Row: %d", [[[[self appsDisplayArray] objectAtIndex:[[self galleryView] currentRow]] valueForKey:STADisplayIndexAttributePositionIndex] integerValue]);
-    if ([[[[self appsDisplayArray] objectAtIndex:[[self galleryView] currentRow]] valueForKey:STADisplayIndexAttributePriceTier] integerValue] == 0)
-        NSLog(@"App at current row is FREE");
-    else
-        NSLog(@"App at current row is PAID");
-     */
+
 }
-/*
-- (void)resetResultsControllerForCategory:(NSInteger)argCategory inCountry:(NSString*)argCountryCode
-{
-    if (resultsController_gv)
-    {
-        [resultsController_gv release];
-        resultsController_gv = nil;
-    }
-    
-    // Context
-    NSManagedObjectContext *context = [[self delegate] managedObjectContext];
-    if (!context)
-        return;
-    
-    // Fetch Request
-    NSFetchRequest *displayIndexesFetchRequest = [[NSFetchRequest alloc] init];
-    
-    // Entity Description
-    NSEntityDescription *displayIndexEntityDescription = [NSEntityDescription entityForName:@"DisplayIndex" inManagedObjectContext:context];
-    [displayIndexesFetchRequest setEntity:displayIndexEntityDescription];
-    
-    // Predicate
-    NSString *predicateString = [NSString stringWithFormat:@"positionIndex >= 0 AND category == %d AND country like '%@'", argCategory, argCountryCode];
-    
-    NSPredicate *displayIndexesForAllAppsCategory = [NSPredicate predicateWithFormat:predicateString];
-    [displayIndexesFetchRequest setPredicate:displayIndexesForAllAppsCategory];
-    
-    // Sort Descriptors
-    NSSortDescriptor *positionIndexSortDescriptor = [[NSSortDescriptor alloc] initWithKey:STADisplayIndexAttributePositionIndex ascending:YES];
-    NSArray *sortDescriptorsArray = [NSArray arrayWithObject:positionIndexSortDescriptor];
-    [displayIndexesFetchRequest setSortDescriptors:sortDescriptorsArray];
-    [positionIndexSortDescriptor release];
-    
-    // Fetched Results Controller
-    resultsController_gv = [[NSFetchedResultsController alloc] initWithFetchRequest:displayIndexesFetchRequest managedObjectContext:context sectionNameKeyPath:nil cacheName:nil];
-    [resultsController_gv setDelegate:self];
-    
-    NSError *fetchError = nil;
-    
-    if([resultsController_gv performFetch:&fetchError] == NO)
-    {
-        NSLog(@"Fetch Error: %@", [fetchError localizedDescription]);
-        // Attempt a refetch.....?
-        // log the error....
-    }
-    
-    [self setAppsDisplayArray:[resultsController_gv fetchedObjects]];    
-}
-*/
+
 #pragma mark - Cell Images
 
 - (UIImage*)cellBackgroundImage
@@ -1059,6 +1269,15 @@
     return appStoreButtonDisabledImage_gv;
 }
 
+- (UIImage*)errorIconImage
+{
+    if (errorIconImage_gv)
+        return errorIconImage_gv;
+    
+    errorIconImage_gv = [[UIImage imageNamed:@"STAErrorIcon"] retain];
+    return errorIconImage_gv;
+}
+
 #pragma mark - Image Cache
 
 - (void)cacheImage:(STAScreenshotImage*)argImage forURLString:(NSString*)argURLString
@@ -1129,7 +1348,10 @@
 {
     if (searchBar_gv)
         return searchBar_gv;
-    searchBar_gv = [[STASearchBar alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 240.0f, 44.0f)];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        searchBar_gv = [[STASearchBar alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 240.0f, 44.0f)];
+    else
+        searchBar_gv = [[STASearchBar alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 240.0f, 44.0f)];
     [searchBar_gv setDelegate:self];
     [searchBar_gv setPlaceholder:NSLocalizedString(@"Search", @"Search")];
     return searchBar_gv;
@@ -1139,13 +1361,26 @@
 {
     if (searchBottomToolbar_gv)
         return searchBottomToolbar_gv;
-    searchBottomToolbar_gv = [[UIToolbar alloc] initWithFrame:CGRectMake(0.0f, -44.0f, 320.0f, 44.0f)];
+    CGRect toolbarFrame;
+    float searchPriceControlWidth;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+    {
+        toolbarFrame = CGRectMake(0.0f, -44.0f, 768.0f, 44.0f);
+        searchPriceControlWidth = 240.0f;
+    }
+    else
+    {
+        toolbarFrame = CGRectMake(0.0f, -44.0f, 320.0f, 44.0f);
+        searchPriceControlWidth = 240.0f;
+    }
+    searchBottomToolbar_gv = [[UIToolbar alloc] initWithFrame:toolbarFrame];
+    [searchBottomToolbar_gv setTintColor:[UIColor colorWithRed:0.89f green:0.66f blue:0.34f alpha:1.0f]];
     // Create Items
     UIBarButtonItem *searchPriceControl = [[UIBarButtonItem alloc] initWithCustomView:[self searchPriceTierControl]];
-    [searchPriceControl setWidth:240.0f];
+    [searchPriceControl setWidth:searchPriceControlWidth];
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     UIBarButtonItem *searchCancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(searchCancelButtonTapped)];
-    NSArray *items = [NSArray arrayWithObjects:searchPriceControl, flexibleSpace, searchCancelButton, nil];
+    NSArray *items = [NSArray arrayWithObjects:flexibleSpace, searchPriceControl, searchCancelButton, nil];
     // Set Items
     [searchBottomToolbar_gv setItems:items];
     // Clean Up
@@ -1160,13 +1395,137 @@
 {
     if (searchPriceTierControl_gv)
         return searchPriceTierControl_gv;
-    NSArray *itemsArray = [NSArray arrayWithObjects:NSLocalizedString(@"All", @"All"), NSLocalizedString(@"Paid", @"Paid"), NSLocalizedString(@"Free", @"Free"), nil];
+    NSArray *itemsArray = [NSArray arrayWithObjects:NSLocalizedString(@"All", @"All"), NSLocalizedString(@"Free", @"Free"), nil];
     searchPriceTierControl_gv = [[UISegmentedControl alloc] initWithItems:itemsArray];
     [searchPriceTierControl_gv setSegmentedControlStyle:UISegmentedControlStyleBar];
     [searchPriceTierControl_gv addTarget:self action:@selector(searchPriceTierDidChange) forControlEvents:UIControlEventValueChanged];
     return searchPriceTierControl_gv;
 }
    
+#pragma mark - Searching Notification View
+
+- (void)updateSearchingNotificationViewWithState:(enum STASearchState)argState animated:(BOOL)argAnimated
+{
+    if (![self searchingNotificationView])
+    {
+        CGRect searchingNotificationViewFrame = CGRectMake(100.0f, 148.0f, 120.0f, 120.0f);
+        CGPoint iconCenterPoint = CGPointMake(60.0f, 50.0f);
+        CGRect searchStatusLabelFrame = CGRectMake(10.0f, 80.0f, 100.0f, 20.0f);
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        {
+            searchingNotificationViewFrame = CGRectMake(324.0f, 420.0f, 120.0f, 120.0f);
+        }
+        
+        UIView *tempSearchingNotificationView = [[UIView alloc] initWithFrame:searchingNotificationViewFrame];
+        [tempSearchingNotificationView setBackgroundColor:[UIColor colorWithRed:0.0f green:0.0f blue:0.0f alpha:0.5f]];
+        [tempSearchingNotificationView setOpaque:NO];
+        [[tempSearchingNotificationView layer] setCornerRadius:16.0f];
+        [self setSearchingNotificationView:tempSearchingNotificationView];
+        [tempSearchingNotificationView release];
+        
+        UIActivityIndicatorView *tempActivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        [tempActivityIndicator setTag:STANotificationViewActivityIcon];
+        [tempActivityIndicator setCenter:iconCenterPoint];
+        [tempSearchingNotificationView addSubview:tempActivityIndicator];
+        [tempActivityIndicator release];
+                      
+        UIImageView *tempErrorImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 38.0f, 38.0f)];
+        [tempErrorImageView setTag:STANotificationViewErrorIcon];
+        [tempErrorImageView setCenter:iconCenterPoint];
+        [tempErrorImageView setImage:[self errorIconImage]];
+        [tempErrorImageView setBackgroundColor:[UIColor clearColor]];
+        [tempErrorImageView setOpaque:NO];
+        [tempErrorImageView setHidden:YES];
+        [tempSearchingNotificationView addSubview:tempErrorImageView];
+        [tempErrorImageView release];
+        
+        UIImageView *tempNoResultsImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 38.0f, 38.0f)];
+        [tempNoResultsImageView setTag:STANotificationViewNoResultsIcon];
+        [tempNoResultsImageView setCenter:iconCenterPoint];
+        [tempNoResultsImageView setImage:[UIImage imageNamed:@"STANoResultsIcon.png"]];
+        [tempNoResultsImageView setBackgroundColor:[UIColor clearColor]];
+        [tempNoResultsImageView setOpaque:NO];
+        [tempNoResultsImageView setHidden:YES];
+        [tempSearchingNotificationView addSubview:tempNoResultsImageView];
+        [tempNoResultsImageView release];
+        
+        UILabel *tempSearchStatusLabel = [[UILabel alloc] initWithFrame:searchStatusLabelFrame];
+        [tempSearchStatusLabel setTag:STANotificationViewLabel];
+        [tempSearchStatusLabel setBackgroundColor:[UIColor clearColor]];
+        [tempSearchStatusLabel setOpaque:NO];
+        [tempSearchStatusLabel setTextColor:[UIColor whiteColor]];
+        [tempSearchStatusLabel setTextAlignment:UITextAlignmentCenter];
+        [tempSearchStatusLabel setAdjustsFontSizeToFitWidth:YES];        
+        [tempSearchingNotificationView addSubview:tempSearchStatusLabel];
+        [tempSearchStatusLabel release];
+        
+        [[self view] addSubview:[self searchingNotificationView]];
+    }
+    
+    UILabel *searchStatusLabel = (UILabel*)[[self searchingNotificationView] viewWithTag:STANotificationViewLabel];
+    UIActivityIndicatorView *activityIndicatorView = (UIActivityIndicatorView*)[[self searchingNotificationView] viewWithTag:STANotificationViewActivityIcon];
+    UIImageView *errorImageView = (UIImageView*)[[self searchingNotificationView] viewWithTag:STANotificationViewErrorIcon];
+    UIImageView *noResultsImageView = (UIImageView*)[[self searchingNotificationView] viewWithTag:STANotificationViewNoResultsIcon];
+    
+    switch (argState) 
+    {
+        case STASearchStateNone:
+            [[self searchingNotificationView] setHidden:YES];
+            [activityIndicatorView stopAnimating];
+            [errorImageView setHidden:YES];
+            [noResultsImageView setHidden:YES];
+            break;
+        case STASearchStateInProgress:
+            [[self searchingNotificationView] setHidden:NO];
+            [searchStatusLabel setText:NSLocalizedString(@"Searching", @"Searching")];
+            [activityIndicatorView startAnimating];
+            [errorImageView setHidden:YES];
+            [noResultsImageView setHidden:YES];
+            break;
+        case STASearchStateHasResults:
+            [[self searchingNotificationView] setHidden:YES];
+            [searchStatusLabel setText:@""];
+            [activityIndicatorView stopAnimating];
+            [errorImageView setHidden:YES];
+            [noResultsImageView setHidden:YES];
+            break;
+        case STASearchStateFailed:
+            [[self searchingNotificationView] setHidden:NO];
+            [searchStatusLabel setText:NSLocalizedString(@"Search Failed", @"Search Failed")];
+            [activityIndicatorView stopAnimating];
+            [errorImageView setHidden:NO];
+            [noResultsImageView setHidden:YES];
+            break;
+        case STASearchStateNoResults:
+            [[self searchingNotificationView] setHidden:NO];
+            [searchStatusLabel setText:NSLocalizedString(@"No Results", @"No Results")];
+            [activityIndicatorView stopAnimating];
+            [errorImageView setHidden:YES];
+            [noResultsImageView setHidden:NO];
+            break;
+        default:
+            break;
+    }
+}
+
+#pragma mark - Search Mask View
+
+- (UIView*)searchMaskView
+{
+    if (searchMaskView_gv)
+        return searchMaskView_gv;
+    searchMaskView_gv = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, 320.0f, 416.0f)];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        [searchMaskView_gv setFrame:CGRectMake(0.0f, 0.0f, 768.0f, 960.0f)];
+    [searchMaskView_gv setBackgroundColor:[UIColor colorWithRed:0.0f green:0.0f blue:0.0f alpha:0.5f]];
+    [searchMaskView_gv setOpaque:NO];
+    UIGestureRecognizer *allGesturesRecognizer = [[UIGestureRecognizer alloc] init];
+    [allGesturesRecognizer setDelegate:self];
+    [searchMaskView_gv addGestureRecognizer:allGesturesRecognizer];
+    [allGesturesRecognizer release];
+    return searchMaskView_gv;
+}
+
 #pragma mark - Title Override
 
 - (void)setTitle:(NSString*)argTitle
@@ -1194,5 +1553,7 @@
 @synthesize galleryView;
 @synthesize appsDisplayArray;
 @synthesize resultsController;
+@synthesize searchController;
 @synthesize currentMode;
+@synthesize searchingNotificationView;
 @end

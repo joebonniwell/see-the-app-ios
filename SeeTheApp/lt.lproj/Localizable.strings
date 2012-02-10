@@ -1,10 +1,10 @@
 /* 
-  Localizable.strings
-  SeeTheApp
-
-  Created by goVertex on 11/16/11.
-  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
-*/
+ Localizable.strings
+ SeeTheApp
+ 
+ Created by goVertex on 11/16/11.
+ Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+ */
 
 // Rate dialog strings
 "Please rate See the App" = "Prašome įvertinti See the App";
@@ -75,3 +75,13 @@
 "Travel" = "Keliauti";
 "Utilities" = "Naudingumo";
 "Weather" = "Oras";
+
+// Added in v120
+"Loading" = "Pakrovimas";
+"View on the App Store?" = "Žiūrėti App Store?";
+"Yes" = "Taip";
+"Cancel" = "Atšaukti";
+"Search" = "Paieška";
+"Searching" = "Paieška";
+"Search Failed" = "Paieška nepavyko";
+"No Results" = "Rezultatų nėra";

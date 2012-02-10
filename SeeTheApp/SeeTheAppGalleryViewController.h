@@ -12,6 +12,7 @@
 #import "STAScreenshotImage.h"
 #import "STASearchBar.h"
 #import "STAAppStoreButton.h"
+#import <QuartzCore/QuartzCore.h>
 
 @protocol SeeTheAppViewControllerDelegate <NSObject>
 
@@ -34,9 +35,15 @@
 - (CFMutableDictionaryRef)currentImageDownloadConnections;
 - (NSMutableArray*)pendingImageDownloadConnections;
 
+// Search Methods
+- (void)startSearchResultsDownloadWithURLString:(NSString*)argSearchResultsDownloadURLString searchCategory:(NSInteger)argSearchCategory;
+
+// Update Catgory
+- (void)updateCategory:(enum STACategory)argCategory;
+
 @end
 
-@interface SeeTheAppGalleryViewController : UIViewController <GVGalleryViewDelegate, GVGalleryViewDataSource, NSFetchedResultsControllerDelegate, UIScrollViewDelegate, UISearchBarDelegate>
+@interface SeeTheAppGalleryViewController : UIViewController <GVGalleryViewDelegate, GVGalleryViewDataSource, NSFetchedResultsControllerDelegate, UIScrollViewDelegate, UISearchBarDelegate, UIAlertViewDelegate, UIGestureRecognizerDelegate>
 {
     // Delegate
     id delegate;
@@ -50,8 +57,14 @@
     // Results Controller
     NSFetchedResultsController *resultsController;
     
+    // Search Controller
+    NSFetchedResultsController *searchController;
+    
     // Current Mode
     enum STADisplayMode currentMode;
+    
+    // Searching Notification View
+    UIView *searchingNotificationView;
     
     @private
         
@@ -61,6 +74,7 @@
     UIImage *appStoreButtonImage_gv;
     UIImage *appStoreButtonHighlightedImage_gv;
     UIImage *appStoreButtonDisabledImage_gv;
+    UIImage *errorIconImage_gv;
     
     // Image Cache
     NSMutableDictionary *imageCache_gv;
@@ -70,6 +84,9 @@
     STASearchBar *searchBar_gv;
     UIToolbar *searchBottomToolbar_gv;
     UISegmentedControl *searchPriceTierControl_gv;
+    
+    // Search Mask View
+    UIView *searchMaskView_gv;
 }
 
 // Delegate
@@ -90,6 +107,7 @@
 @property (nonatomic, retain, readonly) UIImage *appStoreButtonImage;
 @property (nonatomic, retain, readonly) UIImage *appStoreButtonHighlightedImage;
 @property (nonatomic, retain, readonly) UIImage *appStoreButtonDisabledImage;
+@property (nonatomic, retain, readonly) UIImage *errorIconImage;
 
 // Current Mode
 @property enum STADisplayMode currentMode;
@@ -100,14 +118,25 @@
 // Results Controller
 @property (nonatomic, retain) NSFetchedResultsController *resultsController;
 
+// Search Controller
+@property (nonatomic, retain) NSFetchedResultsController *searchController;
+
 // Image Cache
 @property (nonatomic, retain, readonly) NSMutableDictionary *imageCache;
+
+// Searching Notification View
+@property (nonatomic, retain) UIView *searchingNotificationView;
+
+// Search Mask View
+@property (nonatomic, retain, readonly) UIView *searchMaskView;
 
 // Methods
 - (id)initWithDelegate:(id)argDelegate;
 
 // Download Management
 - (void)updateDownloads;
+- (void)updateListDownloads;
+- (void)updateImageDownloads;
 - (void)screenshotDownloadCompleted:(NSString*)argScreenshotURLString;
 
 // Cache Methods
@@ -126,5 +155,12 @@
 
 // Localization
 - (void)resetText;
+
+// Searching Notification View Methods
+- (void)updateSearchingNotificationViewWithState:(enum STASearchState)argState animated:(BOOL)argAnimated;
+
+// Search Animation Methods
+- (void)activeSearchAnimation;
+- (void)inactiveSearchAnimation;
 
 @end

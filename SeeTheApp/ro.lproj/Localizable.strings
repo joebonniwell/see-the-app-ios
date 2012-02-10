@@ -75,3 +75,13 @@
 "Travel" = "Călătorie";
 "Utilities" = "Utilităţi";
 "Weather" = "Vreme";
+
+// Added in v120
+"Loading" = "încărcare";
+"View on the App Store?" = "Vezi pe App Store?";
+"Yes" = "Da";
+"Cancel" = "Anula";
+"Search" = "Căutare";
+"Searching" = "Căutare";
+"Search Failed" = "Căutare a eşuat";
+"No Results" = "Niciun rezultat";

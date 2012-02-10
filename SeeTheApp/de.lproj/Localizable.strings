@@ -1,10 +1,10 @@
 /* 
-  Localizable.strings
-  SeeTheApp
-
-  Created by goVertex on 11/16/11.
-  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
-*/
+ Localizable.strings
+ SeeTheApp
+ 
+ Created by goVertex on 11/16/11.
+ Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+ */
 
 // Rate dialog strings
 "Please rate See the App" = "Bitte bewerten Sie See the App";
@@ -75,3 +75,13 @@
 "Travel" = "Reisen";
 "Utilities" = "Dienstprogramme";
 "Weather" = "Wetter";
+
+// Added in v120
+"Loading" = "Laden";
+"View on the App Store?" = "Blick auf den App Store?";
+"Yes" = "Ja";
+"Cancel" = "Stornieren";
+"Search" = "Suche";
+"Searching" = "Suchen";
+"Search Failed" = "Suche Fehlgeschlagen";
+"No Results" = "Keine Ergebnisse";

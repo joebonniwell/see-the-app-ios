@@ -52,14 +52,20 @@
             [defaultSettingsDictionary setObject:settingDefaultValue forKey:settingKey];
         }
     }
-    
+    // Rate Defaults
     [defaultSettingsDictionary setObject:[NSNumber numberWithBool:YES] forKey:STADefaultsCanAskToRateKey];
     [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:0] forKey:STADefaultsNumberOfOpensKey];
     [defaultSettingsDictionary setObject:[NSDate distantPast] forKey:STADefaultsOpenValidationDateKey];
+    
+    // State Defaults
     [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:STACategoryNone] forKey:STADefaultsLastCategoryKey];
     [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:STAPriceTierAll] forKey:STADefaultsLastListPriceTierKey];
     [defaultSettingsDictionary setObject:[NSDictionary dictionary] forKey:STADefaultsLastPositionsDictionaryKey];
     [defaultSettingsDictionary setObject:@"None" forKey:STADefaultsLastAppStoreCountryKey];
+    [defaultSettingsDictionary setObject:[NSNumber numberWithBool:STAPriceTierAll] forKey:STADefaultsLastSearchPriceTierKey];
+    [defaultSettingsDictionary setObject:[NSString stringWithFormat:@""] forKey:STADefaultsLastSearchTermKey];
+    [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:0] forKey:STADefaultsLastSearchCategoryKey];
+    [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:STASearchStateNone] forKey:STADefaultsLastSearchStateKey];
     
     [[NSUserDefaults standardUserDefaults] registerDefaults:defaultSettingsDictionary];
 }
@@ -220,6 +226,16 @@
             [[self galleryViewController] displayMode:STADisplayModeBrowse];
             [[self galleryViewController] displayCategory:STACategoryBrowse forAppStoreCountryCode:currentCountryCode];
         }
+        else
+        {
+            [[self galleryViewController] displayMode:STADisplayModeSearch];
+            
+            NSInteger lastSearchCategory = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchCategoryKey] integerValue];
+            if (lastSearchCategory == 0)
+                [[self galleryViewController] displayCategory:STACategorySearchResult forAppStoreCountryCode:currentCountryCode];
+            else
+                [[self galleryViewController] displayCategory:lastSearchCategory forAppStoreCountryCode:currentCountryCode];
+        }
         
         [self performSelector:@selector(populateInitialAppsForCurrentCountry) withObject:nil afterDelay:0.1];
     }
@@ -349,9 +365,7 @@
             [[self navigationController] pushViewController:[self categoriesMenuViewController] animated:NO];
             if (lastCategory >= STACategoryGamesAction || lastCategory == STACategoryGames)
                 [[self navigationController] pushViewController:[self gamesSubcategoriesMenuViewController] animated:NO];
-
             enum STAPriceTier lastPriceTier = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastListPriceTierKey] integerValue];
-            
             [[self galleryViewController] view];
             [[self galleryViewController] displayMode:STADisplayModeList];
             [[self galleryViewController] displayCategory:lastCategory forAppStoreCountryCode:currentCountry];
@@ -370,6 +384,22 @@
         case STADisplayModeOptionsMenu:
             [[self navigationController] pushViewController:[self optionsViewController] animated:NO];
             break;
+        case STADisplayModeSearch:
+        {
+            [[self galleryViewController] view];
+            [[self galleryViewController] displayMode:STADisplayModeSearch];
+            
+            NSInteger lastSearchCategory = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchCategoryKey] integerValue];
+            if (lastSearchCategory == 0)
+                [[self galleryViewController] displayCategory:lastCategory forAppStoreCountryCode:currentCountry];
+            else
+                [[self galleryViewController] displayCategory:lastSearchCategory forAppStoreCountryCode:currentCountry];
+            
+            [[self navigationController] pushViewController:[self galleryViewController] animated:NO];
+            [[self galleryViewController] displayPosition:lastPosition forPriceTier:[[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchPriceTierKey] integerValue]];
+            [[self galleryViewController] updateDownloads];
+            break;
+        }
         default:
             break;
     }
@@ -377,7 +407,7 @@
 
 - (void)relocalizeText
 {
-    NSLog(@"Relocalizing text");
+    //NSLog(@"Relocalizing text");
     
     if (categoriesInfo_gv)
     {
@@ -407,7 +437,8 @@
     
     if (galleryViewController_gv)
     {
-        if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastModeKey] integerValue] == STADisplayModeList)
+        enum STADisplayMode lastDisplayMode = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastModeKey] integerValue];
+        if (lastDisplayMode == STADisplayModeList)
         {            
             enum STACategory currentCategory = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastCategoryKey] integerValue];
             
@@ -448,6 +479,8 @@
                 }
             }
         }
+        else if (lastDisplayMode == STADisplayModeSearch)
+            [[self galleryViewController] setTitle:@""];
         else
             [[self galleryViewController] setTitle:NSLocalizedString(@"All Apps", @"All Apps")];
         
@@ -733,8 +766,9 @@
 
 - (void)connection:(NSURLConnection*)argConnection didReceiveResponse:(NSURLResponse*)argResponse
 {    
-    NSMutableDictionary *connectionDictionary = CFDictionaryGetValue([self currentListDownloadConnections], argConnection);
+    [self updateNetworkActivityIndicator];
     
+    NSMutableDictionary *connectionDictionary = CFDictionaryGetValue([self currentListDownloadConnections], argConnection);
     if (connectionDictionary != NULL)
     {                
         [connectionDictionary setObject:[NSMutableData data] forKey:STAConnectionDataKey];
@@ -742,7 +776,13 @@
     }
     
     connectionDictionary = CFDictionaryGetValue([self currentImageDownloadConnections], argConnection);
+    if (connectionDictionary != NULL)
+    {
+        [connectionDictionary setObject:[NSMutableData data] forKey:STAConnectionDataKey];
+        return;
+    }
     
+    connectionDictionary = CFDictionaryGetValue([self currentSearchDownloadConnection], argConnection);
     if (connectionDictionary != NULL)
     {
         [connectionDictionary setObject:[NSMutableData data] forKey:STAConnectionDataKey];
@@ -755,8 +795,9 @@
 
 - (void)connection:(NSURLConnection*)argConnection didReceiveData:(NSData*)argData
 {
-    NSMutableDictionary *connectionDictionary = CFDictionaryGetValue([self currentListDownloadConnections], argConnection);
+    [self updateNetworkActivityIndicator];
     
+    NSMutableDictionary *connectionDictionary = CFDictionaryGetValue([self currentListDownloadConnections], argConnection);
     if (connectionDictionary != NULL)
     {
         NSMutableData *connectionData = [connectionDictionary objectForKey:STAConnectionDataKey];
@@ -765,7 +806,14 @@
     }
     
     connectionDictionary = CFDictionaryGetValue([self currentImageDownloadConnections], argConnection);
+    if (connectionDictionary != NULL)
+    {
+        NSMutableData *connectionData = [connectionDictionary objectForKey:STAConnectionDataKey];
+        [connectionData appendData:argData];
+        return;
+    }
     
+    connectionDictionary = CFDictionaryGetValue([self currentSearchDownloadConnection], argConnection);
     if (connectionDictionary != NULL)
     {
         NSMutableData *connectionData = [connectionDictionary objectForKey:STAConnectionDataKey];
@@ -780,7 +828,6 @@
 - (void)connectionDidFinishLoading:(NSURLConnection*)argConnection
 {    
     NSMutableDictionary *connectionDictionary = CFDictionaryGetValue([self currentListDownloadConnections], argConnection);
-    
     if (connectionDictionary != NULL)
     {
         NSMutableData *connectionData = [connectionDictionary objectForKey:STAConnectionDataKey];
@@ -826,9 +873,8 @@
             
             [[self pendingListDownloadConnections] removeObjectAtIndex:0];
         }
-        else if (CFDictionaryGetCount([self currentListDownloadConnections]) == 0 && CFDictionaryGetCount([self currentImageDownloadConnections]) == 0)
-            [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
         
+        [self updateNetworkActivityIndicator];
         return;
     }
     
@@ -870,12 +916,50 @@
             
             [[self pendingImageDownloadConnections] removeObjectAtIndex:0];
         }
-        else if (CFDictionaryGetCount([self currentListDownloadConnections]) == 0 && CFDictionaryGetCount([self currentImageDownloadConnections]) == 0)
-            [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
         
+        [self updateNetworkActivityIndicator];
         return;
     }
         
+    connectionDictionary = CFDictionaryGetValue([self currentSearchDownloadConnection], argConnection);
+    if (connectionDictionary != NULL)
+    {
+        NSNumber *searchCategory = [connectionDictionary objectForKey:STAConnectionSearchCategoryKey];
+        NSMutableData *connectionData = [connectionDictionary objectForKey:STAConnectionDataKey];
+        if (connectionData)
+        {
+            #ifdef LOG_DownloadActivity
+                NSString *dataString = [[NSString alloc] initWithData:connectionData encoding:NSUTF8StringEncoding];
+                NSLog(@"Search download completed with data: %@", dataString);
+                [dataString release];
+            #endif
+                                
+            NSString *jsonString = [[NSString alloc] initWithData:connectionData encoding:NSUTF8StringEncoding];
+            NSDictionary *appListDictionary = [jsonString JSONValue];
+            [jsonString release];
+                
+            if (appListDictionary)
+            {
+                if ([[appListDictionary valueForKey:@"resultCount"] integerValue] > 0)
+                    [self processNewAppsInDictionary:appListDictionary];
+                else
+                {
+                    [[NSNotificationCenter defaultCenter] postNotificationName:STASearchNoResultsNotification object:nil userInfo:[NSDictionary dictionaryWithObject:searchCategory forKey:@"STASearchCategory"]];
+                }
+            }
+            else
+            {
+                [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"InvalidJSONResponse" attributes:[NSDictionary dictionaryWithObject:[connectionDictionary objectForKey:STAConnectionURLStringKey] forKey:@"URL"]];
+                [[NSNotificationCenter defaultCenter] postNotificationName:STASearchErrorNotification object:nil userInfo:[NSDictionary dictionaryWithObject:searchCategory forKey:@"STASearchCategory"]];
+            }
+        }
+            
+        CFDictionaryRemoveValue([self currentSearchDownloadConnection], argConnection);
+            
+        [self updateNetworkActivityIndicator];
+        return;
+    }
+    
     NSLog(@"Ghost Connection in did finish loading");
 }
 
@@ -888,10 +972,27 @@
         [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"ListDownloadFailure" attributes:[NSDictionary dictionaryWithObject:[argError localizedDescription] forKey:@"Error"]];
         CFDictionaryRemoveValue([self currentListDownloadConnections], argConnection);
     }
+    else if (CFDictionaryContainsKey([self currentSearchDownloadConnection], argConnection))
+    {
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"SearchDownloadFailure" attributes:[NSDictionary dictionaryWithObject:[argError localizedDescription] forKey:@"Error"]];
+        
+        NSDictionary *searchConnectionDictionary = CFDictionaryGetValue([self currentSearchDownloadConnection], argConnection);
+        [[NSNotificationCenter defaultCenter] postNotificationName:STASearchErrorNotification object:nil userInfo:[NSDictionary dictionaryWithObject:[searchConnectionDictionary valueForKey:STAConnectionSearchCategoryKey] forKey:@"STASearchCategory"]];
+        CFDictionaryRemoveValue([self currentSearchDownloadConnection], argConnection);
+    }
     else
         CFDictionaryRemoveValue([self currentImageDownloadConnections], argConnection);
     
-    if (CFDictionaryGetCount([self currentListDownloadConnections]) == 0 && CFDictionaryGetCount([self currentImageDownloadConnections]) == 0)
+    [self updateNetworkActivityIndicator];
+}
+
+#pragma mark - Network Activity Indicator Methods
+
+- (void)updateNetworkActivityIndicator
+{
+    if (CFDictionaryGetCount([self currentListDownloadConnections]) > 0 || CFDictionaryGetCount([self currentImageDownloadConnections]) > 0 || CFDictionaryGetCount([self currentSearchDownloadConnection]) > 0)
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    else
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
 }
 
@@ -913,7 +1014,7 @@
 }
 
 - (void)updateLastPosition:(NSInteger)argLastPosition
-{
+{    
     NSMutableDictionary *lastPositionsDictionary = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastPositionsDictionaryKey] mutableCopy];
     NSString *appStoreCountryCode = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsAppStoreCountryKey];
     NSInteger currentCategory = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastCategoryKey] integerValue];
@@ -921,21 +1022,41 @@
     [lastPositionsDictionary setValue:[NSNumber numberWithInteger:argLastPosition] forKey:positionKey];
     [[NSUserDefaults standardUserDefaults] setValue:lastPositionsDictionary forKey:STADefaultsLastPositionsDictionaryKey];
     [lastPositionsDictionary release];
+    
+    #ifdef LOG_PositionSaves
+        NSLog(@"Updating Last Position: %d For Key: %@", argLastPosition, positionKey);
+    #endif
 }
 
 - (void)updateCategory:(enum STACategory)argCategory
 {
     [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:argCategory] forKey:STADefaultsLastCategoryKey];
+    if (argCategory >= 10000)
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:argCategory] forKey:STADefaultsLastSearchCategoryKey];
+    
     NSString *currentCountry = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsAppStoreCountryKey];
-    if (argCategory == STACategoryBrowse)
+    
+    enum STAPriceTier lastPriceTier = STAPriceTierAll;
+    
+    if (argCategory == STACategorySearchResult || argCategory >= 10000)
+    {
+        [[self galleryViewController] displayMode:STADisplayModeSearch];
+        if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchPriceTierKey] integerValue] == STAPriceTierFree)
+            lastPriceTier = STAPriceTierFree;
+    }
+    else if (argCategory == STACategoryBrowse)
+    {
         [[self galleryViewController] displayMode:STADisplayModeBrowse];
+    }
     else
+    {
         [[self galleryViewController] displayMode:STADisplayModeList];
+        if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastListPriceTierKey] integerValue] == STAPriceTierFree)
+            lastPriceTier = STAPriceTierFree;
+    }
+    
     [[self galleryViewController] displayCategory:argCategory forAppStoreCountryCode:currentCountry];
     NSInteger lastPosition = [self lastPositionForCategory:argCategory];
-    enum STAPriceTier lastPriceTier = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastListPriceTierKey] integerValue];
-    if (argCategory == STACategoryBrowse)
-        lastPriceTier = STAPriceTierAll;
     [[self galleryViewController] displayPosition:lastPosition forPriceTier:lastPriceTier];
 }
 
@@ -975,23 +1096,23 @@
 
 - (void)processNewAppsInDictionary:(NSDictionary*)argDictionary
 {
-    NSInteger listCategory = [[argDictionary valueForKey:@"cat"] integerValue];
-                
-    NSString *listCountry = [argDictionary valueForKey:@"country"];
-        
+    NSString *country = [argDictionary valueForKey:@"country"];
+    NSInteger category = [[argDictionary valueForKey:@"cat"] integerValue];
+    
     NSInteger nextPositionIndex = 0;
-        
-    NSFetchRequest *displayIndexFetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"DisplayIndex"];
-    NSPredicate *categoryAndCountryPredicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"category == %d AND country == '%@'", listCategory, listCountry]];
-    [displayIndexFetchRequest setPredicate:categoryAndCountryPredicate];
-    NSSortDescriptor *positionIndexSortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"positionIndex" ascending:NO];
-    [displayIndexFetchRequest setSortDescriptors:[NSArray arrayWithObject:positionIndexSortDescriptor]];
-        
-    NSArray *displayIndicies = [[self managedObjectContext] executeFetchRequest:displayIndexFetchRequest error:nil];
-    if ([displayIndicies count] > 0)
-        nextPositionIndex = [[[displayIndicies objectAtIndex:0] valueForKey:STADisplayIndexAttributePositionIndex] integerValue] + 1;
-        
-    [displayIndexFetchRequest release];
+    
+    if (category < 10000 && [[argDictionary allKeys] containsObject:@"searchterm"] == NO)
+    {
+        NSFetchRequest *displayIndexFetchRequest = [[NSFetchRequest alloc] initWithEntityName:@"DisplayIndex"];
+        NSPredicate *categoryAndCountryPredicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"category == %d AND country == '%@'", category, country]];
+        [displayIndexFetchRequest setPredicate:categoryAndCountryPredicate];
+        NSSortDescriptor *positionIndexSortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"positionIndex" ascending:NO];
+        [displayIndexFetchRequest setSortDescriptors:[NSArray arrayWithObject:positionIndexSortDescriptor]];
+        NSArray *displayIndicies = [[self managedObjectContext] executeFetchRequest:displayIndexFetchRequest error:nil];
+        if ([displayIndicies count] > 0)
+            nextPositionIndex = [[[displayIndicies objectAtIndex:0] valueForKey:STADisplayIndexAttributePositionIndex] integerValue] + 1;
+        [displayIndexFetchRequest release];
+    }
         
     NSArray *apps = [argDictionary objectForKey:@"results"];
         
@@ -1003,10 +1124,10 @@
         NSString *screenshotURL = [appDict valueForKey:@"ScreenshotURL"];
             
         NSManagedObject *newDisplayIndex = [NSEntityDescription insertNewObjectForEntityForName:@"DisplayIndex" inManagedObjectContext:[self managedObjectContext]];
-        [newDisplayIndex setValue:[NSNumber numberWithInteger:listCategory] forKey:STADisplayIndexAttributeCategory];
+        [newDisplayIndex setValue:[NSNumber numberWithInteger:category] forKey:STADisplayIndexAttributeCategory];
         [newDisplayIndex setValue:[NSNumber numberWithInteger:priceTier] forKey:STADisplayIndexAttributePriceTier];
         [newDisplayIndex setValue:[NSNumber numberWithInteger:nextPositionIndex] forKey:STADisplayIndexAttributePositionIndex];
-        [newDisplayIndex setValue:listCountry forKey:STADisplayIndexAttributeCountry];
+        [newDisplayIndex setValue:country forKey:STADisplayIndexAttributeCountry];
         [newDisplayIndex setValue:[NSNumber numberWithInteger:appID] forKey:STADisplayIndexAttributeAppID];
         [newDisplayIndex setValue:appURL forKey:STADisplayIndexAttributeAppURL];
         [newDisplayIndex setValue:screenshotURL forKey:STADisplayIndexAttributeScreenshotURL];
@@ -1065,6 +1186,10 @@
                 }
             }
         }
+        else if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastModeKey] integerValue] == STADisplayModeSearch)
+        {
+            [[self galleryViewController] setTitle:@""];
+        }
         else
             [[self galleryViewController] setTitle:NSLocalizedString(@"All Apps", @"All Apps")];
         
@@ -1117,7 +1242,7 @@
 
     switch (argRow) 
     {
-        case 0:
+        case 0: // Browse All Apps
         {
             [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STADisplayModeBrowse] forKey:STADefaultsLastModeKey];
             [[self galleryViewController] view];
@@ -1125,12 +1250,30 @@
             [[self navigationController] pushViewController:[self galleryViewController] animated:YES];
             break;
         }
-        case 1:
+        case 1: // Categories
+        {
             [[self navigationController] pushViewController:[self categoriesMenuViewController] animated:YES];
             break;
-        case 2:
+        }
+        case 2: // Search
+        {
+            [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STADisplayModeSearch] forKey:STADefaultsLastModeKey];         
+            [[self galleryViewController] view];
+            
+            NSInteger lastSearchCategory = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchCategoryKey] integerValue];
+            if (lastSearchCategory == 0)
+                [self updateCategory:STACategorySearchResult];
+            else
+                [self updateCategory:lastSearchCategory];
+            
+            [[self navigationController] pushViewController:[self galleryViewController] animated:YES];
+            break;
+        }
+        case 3: // Options
+        {
             [[self navigationController] pushViewController:[self optionsViewController] animated:YES];
             break;
+        }
         default:
             break;
     }
@@ -1235,7 +1378,12 @@
     NSError *error = nil;
     __persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
     
-    if (![__persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
+    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+                             [NSNumber numberWithBool:YES], NSMigratePersistentStoresAutomaticallyOption,
+                             [NSNumber numberWithBool:YES], NSInferMappingModelAutomaticallyOption,
+                             nil];
+    
+    if (![__persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:options error:&error])
     {
         [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"Error-PersistentStoreAddFail"];
         
@@ -1314,6 +1462,14 @@
     return pendingListDownloadConnections_gv;
 }
 
+- (CFMutableDictionaryRef)currentSearchDownloadConnection
+{
+    if (currentSearchDownloadConnection_gv)
+        return currentSearchDownloadConnection_gv;
+    currentSearchDownloadConnection_gv = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    return currentSearchDownloadConnection_gv;
+}
+
 - (CFMutableDictionaryRef)currentImageDownloadConnections
 {
     if (currentImageDownloadConnections_gv)
@@ -1328,6 +1484,54 @@
         return pendingImageDownloadConnections_gv;
     pendingImageDownloadConnections_gv = [[NSMutableArray alloc] init];
     return pendingImageDownloadConnections_gv;
+}
+
+- (void)startSearchResultsDownloadWithURLString:(NSString*)argSearchResultsDownloadURLString searchCategory:(NSInteger)argSearchCategory
+{
+    if (CFDictionaryGetCount([self currentSearchDownloadConnection]))
+    {
+        Size currentSearchDownloadsCount = CFDictionaryGetCount([self currentSearchDownloadConnection]);
+        CFTypeRef *searchDownloadConnectionsArray = (CFTypeRef*)malloc(currentSearchDownloadsCount * sizeof(CFTypeRef));
+        
+        CFDictionaryGetKeysAndValues([self currentSearchDownloadConnection], (const void**)searchDownloadConnectionsArray, NULL);
+        
+        const void **searchDownloadConnections = (const void **)searchDownloadConnectionsArray;
+        
+        NSMutableArray *currentSearchConnections = [NSMutableArray array];
+        
+        for (int searchIndex = 0; searchIndex < currentSearchDownloadsCount; searchIndex++)
+        {
+            NSURLConnection *searchConnection = searchDownloadConnections[searchIndex];
+            [currentSearchConnections addObject:searchConnection];
+        }
+        
+        free(searchDownloadConnectionsArray);
+        
+        for (NSURLConnection *searchConnection in currentSearchConnections)
+        {
+            [searchConnection cancel];
+            CFDictionaryRemoveValue([self currentSearchDownloadConnection], searchConnection);
+        }        
+    }
+        
+    NSURL *searchResultsURL = [NSURL URLWithString:argSearchResultsDownloadURLString];
+    NSMutableURLRequest *searchResultsURLRequest = [[NSMutableURLRequest alloc] init];
+    [searchResultsURLRequest setURL:searchResultsURL];
+    [searchResultsURLRequest setValue:@"STAClient" forHTTPHeaderField:@"User-Agent"];
+    
+    NSMutableDictionary *searchConnectionDictionary = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                                       argSearchResultsDownloadURLString, STAConnectionURLStringKey, 
+                                                       [NSMutableData data], STAConnectionDataKey,
+                                                       [NSNumber numberWithInteger:argSearchCategory], STAConnectionSearchCategoryKey,
+                                                       nil];
+    
+    NSURLConnection *searchResultsURLConnection = [NSURLConnection connectionWithRequest:searchResultsURLRequest delegate:self];
+    
+    CFDictionaryAddValue([self currentSearchDownloadConnection], searchResultsURLConnection, searchConnectionDictionary);
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];     
+    
+    [searchResultsURLRequest release];
 }
 
 #pragma mark - AppStore Country Codes
@@ -1639,6 +1843,9 @@
             [[navigationController_gv navigationBar] setBackgroundImage:[UIImage imageNamed:@"STANavigationBar.png"] forBarMetrics:UIBarMetricsDefault];
     }
     [[navigationController_gv navigationBar] setTintColor:[UIColor colorWithRed:0.89f green:0.66f blue:0.34f alpha:1.0f]];
+    [[[navigationController_gv view] layer] setCornerRadius:6.0f];
+    [[[navigationController_gv view] layer] setMasksToBounds:YES];
+    
     return navigationController_gv;
 }
 

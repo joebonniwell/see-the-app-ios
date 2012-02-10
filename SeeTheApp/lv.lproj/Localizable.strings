@@ -75,3 +75,13 @@
 "Travel" = "Ceļojumi";
 "Utilities" = "Lietderība";
 "Weather" = "Laika";
+
+// Added in v120
+"Loading" = "Iekraušana";
+"View on the App Store?" = "Apskatīt uz App Store?";
+"Yes" = "Jā";
+"Cancel" = "Atcelt";
+"Search" = "Meklēt";
+"Searching" = "Meklēšana";
+"Search Failed" = "Meklēšana neizdevās";
+"No Results" = "Nav rezultātu";

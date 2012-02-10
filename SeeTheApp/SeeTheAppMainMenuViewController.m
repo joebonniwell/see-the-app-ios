@@ -49,6 +49,7 @@
     [self setAllMenuItems:[NSArray arrayWithObjects:
                            NSLocalizedString(@"Browse All Apps", @"Browse All Apps"),
                            NSLocalizedString(@"Categories", @"Categories"),
+                           NSLocalizedString(@"Search", @"Search"),
                            NSLocalizedString(@"Options", @"Options"),
                            nil]];
     
@@ -99,6 +100,7 @@
     [self setAllMenuItems:[NSArray arrayWithObjects:
                            NSLocalizedString(@"Browse All Apps", @"Browse All Apps"),
                            NSLocalizedString(@"Categories", @"Categories"),
+                           NSLocalizedString(@"Search", @"Search"),
                            NSLocalizedString(@"Options", @"Options"),
                            nil]];
     [[self menuView] resetMenuTitles];

@@ -75,3 +75,13 @@
 "Travel" = "пътуване";
 "Utilities" = "полезни";
 "Weather" = "време";
+
+// Added in v120
+"Loading" = "товарене";
+"View on the App Store?" = "Виж на App Store?";
+"Yes" = "да";
+"Cancel" = "Отказ";
+"Search" = "Търсене";
+"Searching" = "търсене";
+"Search Failed" = "Неуспешно търсене";
+"No Results" = "Няма резултати";

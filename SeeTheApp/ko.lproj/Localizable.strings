@@ -75,3 +75,13 @@
 "Travel" = "여행";
 "Utilities" = "유틸리티";
 "Weather" = "날씨";
+
+// Added in v120
+"Loading" = "로드";
+"View on the App Store?" = "App Store에서보기?";
+"Yes" = "예";
+"Cancel" = "취소";
+"Search" = "검색";
+"Searching" = "수색";
+"Search Failed" = "검색 실패";
+"No Results" = "결과 없음";

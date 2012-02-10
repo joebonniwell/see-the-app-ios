@@ -75,3 +75,13 @@
 "Travel" = "Utazás";
 "Utilities" = "Segédprogram";
 "Weather" = "Időjárás";
+
+// Added in v120
+"Loading" = "Rakodás";
+"View on the App Store?" = "Kilátás a App Store?";
+"Yes" = "Igen";
+"Cancel" = "Mégse";
+"Search" = "Keresés";
+"Searching" = "Keresés";
+"Search Failed" = "Keresés sikertelen";
+"No Results" = "Nincs eredmény";

@@ -1,10 +1,10 @@
 /* 
-  Localizable.strings
-  SeeTheApp
-
-  Created by goVertex on 11/16/11.
-  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
-*/
+ Localizable.strings
+ SeeTheApp
+ 
+ Created by goVertex on 11/16/11.
+ Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+ */
 
 // Rate dialog strings
 "Please rate See the App" = "See the App の評価をお聞かせください";
@@ -75,3 +75,13 @@
 "Travel" = "旅行";
 "Utilities" = "ユーティリティ";
 "Weather" = "天気";
+
+// Added in v120
+"Loading" = "負荷";
+"View on the App Store?" = "App Storeで見る？";
+"Yes" = "はい";
+"Cancel" = "キャンセル";
+"Search" = "検索";
+"Searching" = "検索";
+"Search Failed" = "検索に失敗しました";
+"No Results" = "結果がありません";

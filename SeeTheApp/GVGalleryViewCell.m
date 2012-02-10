@@ -17,6 +17,7 @@
     if (self) 
     {
         // Initialization code
+        [self setUserInteractionEnabled:YES];
     }
     return self;
 }

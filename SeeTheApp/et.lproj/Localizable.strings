@@ -75,3 +75,13 @@
 "Travel" = "Reisimine";
 "Utilities" = "Kasuliku";
 "Weather" = "Ilm";
+
+// Added in v120
+"Loading" = "Laadimine";
+"View on the App Store?" = "Vaade App Store’is?";
+"Yes" = "Jah";
+"Cancel" = "Tühistama";
+"Search" = "Otsing";
+"Searching" = "Otsimine";
+"Search Failed" = "Otsing ebaõnnestus";
+"No Results" = "Ei kohteita";

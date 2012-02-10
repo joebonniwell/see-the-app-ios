@@ -75,3 +75,13 @@
 "Travel" = "Cestovanie";
 "Utilities" = "Obslužný";
 "Weather" = "Počasie";
+
+// Added in v120
+"Loading" = "Nakladanie";
+"View on the App Store?" = "Pohľad na App Store?";
+"Yes" = "áno";
+"Cancel" = "Zrušiť";
+"Search" = "Hľadať";
+"Searching" = "Vyhľadávanie";
+"Search Failed" = "Hľadanie sa nepodarilo";
+"No Results" = "žiadne výsledky";

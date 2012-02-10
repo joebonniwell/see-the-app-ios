@@ -15,11 +15,24 @@
 #endif
 
 //#define AnaylticsID                         @"e0729712e0939b192c7c7fe-618fa608-ebb0-11e0-21aa-00c25d050352" // Dev
-//#define AnaylticsID                         @"352f0f0b939709c6bf8827d-6ce92666-ebb0-11e0-21aa-00c25d050352" // Old Production
-#define AnaylticsID                         @"173a854c12034e94009cb75-d0b2977c-a4ff-11e0-01df-007f58cb3154" // New Production (110 and higher)
+#define AnaylticsID                         @"af42870d3275dd09a416db8-8a71c9c8-44ba-11e1-a5b1-008545fe83d2" // New Production
 
 #define AnalyticsEventAppStoreButtonTapped  @"AppStoreButtonTapped"
 #define AnalyticsEventError                 @"Error"
+
+// ---------------------------------------------------------------------------------------
+// STANotificationView Subviews
+
+#define STANotificationViewLabel                1
+#define STANotificationViewErrorIcon            2
+#define STANotificationViewNoResultsIcon        3
+#define STANotificationViewActivityIcon         4
+
+// ---------------------------------------------------------------------------------------
+// Search Notifications
+
+#define STASearchErrorNotification              @"SearchErrorNotification"
+#define STASearchNoResultsNotification          @"SearchNoResultsNotification"
 
 // ---------------------------------------------------------------------------------------
 // Caching Constants
@@ -55,24 +68,6 @@
 #define STAConstantAppStoreLabelHDHeight        54.0f
 
 // ---------------------------------------------------------------------------------------
-// STAGalleryView Modes
-
-enum STAGalleryViewMode
-{
-    STAGalleryViewModeBrowse = 1,
-    STAGalleryViewModeList = 2,
-    STAGalleryViewModeSearch = 3
-};
-
-// ---------------------------------------------------------------------------------------
-// App Store Categories
-
-enum AppStoreCategory
-{
-    AppStoreCategoryNews = 6014
-};
-
-// ---------------------------------------------------------------------------------------
 // STA Display Modes
 
 enum STADisplayMode
@@ -83,8 +78,8 @@ enum STADisplayMode
     STADisplayModeMainMenu = 3,
     STADisplayModeCategoriesMenu = 4,
     STADisplayModeGameCategoriesMenu = 5,
-    STADisplayModeOptionsMenu = 6
-    // Search
+    STADisplayModeOptionsMenu = 6,
+    STADisplayModeSearch = 7
     // Help & Settings
     // Favorites or whatever
 };
@@ -99,6 +94,18 @@ enum STAPriceTier
 };
 
 // ---------------------------------------------------------------------------------------
+// STA Search States
+
+enum STASearchState
+{
+    STASearchStateNone = 0,
+    STASearchStateInProgress = 1,
+    STASearchStateHasResults = 2,
+    STASearchStateNoResults = 3,
+    STASearchStateFailed = 4
+};
+
+// ---------------------------------------------------------------------------------------
 // STA GalleryView View Tags
 
 #define kGVGalleryViewHeaderView            -1
@@ -110,8 +117,9 @@ enum STAPriceTier
 
 #define STAScreenshotImageViewTag           3
 #define STAActivityIndicatorViewTag         4
-#define STANoConnectionLabelTag             5
+#define STAStatusLabelTag                   5
 #define STAAppStoreButtonTag                6
+#define STAErrorIconImageViewTag            7
 
 // ---------------------------------------------------------------------------------------
 // STA Defaults
@@ -121,6 +129,10 @@ enum STAPriceTier
 #define STADefaultsLastCategoryKey                  @"LastCategoryKey"
 #define STADefaultsLastListPriceTierKey             @"LastListPriceTierKey"
 #define STADefaultsLastPositionsDictionaryKey       @"LastPositionsDictionary"
+#define STADefaultsLastSearchPriceTierKey           @"LastSearchPriceTierKey"
+#define STADefaultsLastSearchTermKey                @"LastSearchTermKey"
+#define STADefaultsLastSearchCategoryKey            @"LastSearchCategoryKey"
+#define STADefaultsLastSearchStateKey               @"LastSearchStateKey"
 
 // Session Defaults
 #define STADefaultsPreviousVersionsKey              @"PreviousVersionsKey"
@@ -135,7 +147,7 @@ enum STAPriceTier
 #define STADefaultsLastAppStoreCountryKey           @"LastAppStoreCountryKey"
 
 // ---------------------------------------------------------------------------------------
-// STA Display Index Attributes
+// STA DisplayIndex Attributes
 
 #define STADisplayIndexAttributePositionIndex   @"positionIndex"
 #define STADisplayIndexAttributeCountry         @"country"
@@ -146,10 +158,20 @@ enum STAPriceTier
 #define STADisplayIndexAttributeScreenshotURL   @"screenshotURL"
 
 // ---------------------------------------------------------------------------------------
+// STA SearchRecord Attributes
+
+#define STASearchRecordAttributeCountry         @"country"
+#define STASearchRecordAttributePriceTier       @"priceTier"
+#define STASearchRecordAttributeSearchCategory  @"searchCategory"
+#define STASearchRecordAttributeSearchDate      @"searchDate"
+#define STASearchRecordAttributeSearchTerm      @"searchTerm"
+
+// ---------------------------------------------------------------------------------------
 // Connection Dictionary Keys
 
 #define STAConnectionURLStringKey               @"URLString"
 #define STAConnectionDataKey                    @"ConnectionData"
+#define STAConnectionSearchCategoryKey          @"SearchCategory"
 
 // ---------------------------------------------------------------------------------------
 // DEBUG
@@ -171,6 +193,8 @@ enum STAPriceTier
 //#define LOG_UpdateDownloadsResults          1
 //#define LOG_DownloadActivity                1
 //#define LOG_InMemoryCacheCounts             1
+//#define LOG_PositionSaves                   1
+//#define LOG_SearchStatus                    1
 
 // ---------------------------------------------------------------------------------------
 // STA Categories

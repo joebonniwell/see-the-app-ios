@@ -30,14 +30,14 @@
     }
     return self;
 }
-
+/*
 - (void)drawRect:(CGRect)rect
 {
-    NSLog(@"Drawing searchbar");
+    //NSLog(@"Drawing searchbar");
     
     NSLog(@"Subviews: %d", [[self subviews] count]);
 }
-
+*/
 - (void)applyTransparentBackground
 {
     [self setBarStyle:UIBarStyleDefault];

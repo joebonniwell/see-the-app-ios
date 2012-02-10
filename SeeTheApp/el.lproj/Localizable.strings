@@ -75,3 +75,13 @@
 "Travel" = "ταξίδι";
 "Utilities" = "χρησιμότητα";
 "Weather" = "καιρός";
+
+// Added in v120
+"Loading" = "φόρτωση";
+"View on the App Store?" = "Δείτε το App Store;";
+"Yes" = "ναί";
+"Cancel" = "Ακύρωση";
+"Search" = "Αναζήτηση";
+"Searching" = "Αναζήτηση";
+"Search Failed" = "Η αναζήτηση απέτυχε";
+"No Results" = "Δεν υπάρχουν αποτελέσματα";

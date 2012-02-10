@@ -75,3 +75,13 @@
 "Travel" = "Potovanja";
 "Utilities" = "Utilities";
 "Weather" = "Vreme";
+
+// Added in v120
+"Loading" = "Nalaganje";
+"View on the App Store?" = "Pogled na App Store?";
+"Yes" = "Da";
+"Cancel" = "Prekliči";
+"Search" = "Iskanje";
+"Searching" = "Iskanje";
+"Search Failed" = "Iskanje ni uspelo";
+"No Results" = "Ni zadetkov";

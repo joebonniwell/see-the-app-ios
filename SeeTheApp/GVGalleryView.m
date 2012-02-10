@@ -19,6 +19,8 @@
         [self setContentOffset:CGPointMake(0.0f, 0.0f)];
         //NSLog(@"Setting galleryView Row to 0");
         [self setUnusedCells:[NSMutableSet set]];
+        [self setUserInteractionEnabled:YES];
+        [self setCanCancelContentTouches:YES];
     }
     return self;
 }
