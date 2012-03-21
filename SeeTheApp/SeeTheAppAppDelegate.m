@@ -52,10 +52,6 @@
             [defaultSettingsDictionary setObject:settingDefaultValue forKey:settingKey];
         }
     }
-    // Rate Defaults
-    [defaultSettingsDictionary setObject:[NSNumber numberWithBool:YES] forKey:STADefaultsCanAskToRateKey];
-    [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:0] forKey:STADefaultsNumberOfOpensKey];
-    [defaultSettingsDictionary setObject:[NSDate distantPast] forKey:STADefaultsOpenValidationDateKey];
     
     // State Defaults
     [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:STACategoryNone] forKey:STADefaultsLastCategoryKey];
@@ -172,10 +168,6 @@
         
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kReachabilityChangedNotification object:nil];
     [tempReachability startNotifier];
-            
-    // Rate Alert View
-    if ([self shouldPresentRateAlert])
-        [self performSelector:@selector(presentRateAndFeedbackAlert) withObject:nil afterDelay:3.0 inModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];
     
     [[NSOperationQueue mainQueue] setMaxConcurrentOperationCount:1];
     
@@ -265,10 +257,6 @@
         [[self optionsViewController] refreshAppStoreCountryLabel];
     
     [self relocalizeText];
-
-    // Rate Alert View
-    if ([self shouldPresentRateAlert])
-        [self performSelector:@selector(presentRateAndFeedbackAlert) withObject:nil afterDelay:3.0 inModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application
@@ -516,79 +504,6 @@
 - (void)startXMLDownloads
 {
     // Should really keep track of failure... and only update the last updated date once we have successfully retreived the apps...
-}
-
-#pragma mark - Rate Dialog
-
-- (BOOL)shouldPresentRateAlert
-{
-    BOOL canAskToRate = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsCanAskToRateKey] boolValue];
-    if (canAskToRate == YES)
-    {
-        NSDate *validationDate = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsOpenValidationDateKey];
-        NSDate *currentDate = [NSDate date];
-        if ([currentDate timeIntervalSinceDate:validationDate] > 0)
-        {
-            NSInteger numberOfOpens = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsNumberOfOpensKey] integerValue];
-            numberOfOpens++;
-            [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:numberOfOpens] forKey:STADefaultsNumberOfOpensKey];
-            [[NSUserDefaults standardUserDefaults] synchronize];
-            if (numberOfOpens >= 5)
-                return YES;
-        }
-    }
-    return NO;
-}
-
-- (void)presentRateAndFeedbackAlert
-{
-    UIAlertView *rateAlertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Please rate See the App", nil) message:nil delegate:self cancelButtonTitle:NSLocalizedString(@"Maybe later", nil) otherButtonTitles:NSLocalizedString(@"Rate See the App", nil), NSLocalizedString(@"No thanks", nil), nil];
-        [rateAlertView setTag:5];
-        [rateAlertView show];
-        [rateAlertView release];
-}
-
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
-{
-    if (buttonIndex == [alertView cancelButtonIndex])
-    {
-        #ifdef LOG_AlertViewResponse
-            NSLog(@"AlertView: Maybe Later");
-        #endif
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:0] forKey:STADefaultsNumberOfOpensKey];
-        [[NSUserDefaults standardUserDefaults] setValue:[NSDate dateWithTimeIntervalSinceNow:259200] forKey:STADefaultsOpenValidationDateKey];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-    }
-    else if (buttonIndex == 1)  // Open Rate URL
-    {
-        #ifdef LOG_AlertViewResponse
-            NSLog(@"AlertView: Rate App");
-        #endif
-        
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsCanAskToRateKey];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-        
-        NSString *appStoreCountry = [[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsAppStoreCountryKey];
-        
-        NSString *affiliateString = @"";
-        
-        if ([[[self affiliateCodesDictionary] allKeys] containsObject:appStoreCountry])
-            affiliateString = [[self affiliateCodesDictionary] objectForKey:appStoreCountry];
-        
-        NSString *seeTheAppURLString = [NSString stringWithFormat:@"http://itunes.apple.com/%@/app/id470079430?mt=8&uo=4%@", appStoreCountry, affiliateString];
-
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:seeTheAppURLString]];
-    }
-    else if (buttonIndex == 2)
-    {
-        #ifdef LOG_AlertViewResponse
-            NSLog(@"AlertView: No Thanks");
-        #endif
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:STADefaultsCanAskToRateKey];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-    }
-    
-    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 #pragma mark - Download Starter Timed Evaluation

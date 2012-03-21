@@ -90,10 +90,6 @@
 - (void)startDownloadStarterTimer;
 - (void)stopDownloadStarterTimer;
 
-// Rating
-- (BOOL)shouldPresentRateAlert;
-- (void)presentRateAndFeedbackAlert;
-
 - (void)populateInitialAppsForCurrentCountry;
 
 - (NSString*)fileNameOfImageWithURLString:(NSString*)argURLString;

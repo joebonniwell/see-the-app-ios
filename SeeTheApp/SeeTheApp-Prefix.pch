@@ -140,11 +140,6 @@ enum STASearchState
 // Session Defaults
 #define STADefaultsPreviousVersionsKey              @"PreviousVersionsKey"
 
-// Rate Dialog Defaults
-#define STADefaultsCanAskToRateKey                  @"CanAskToRateKey"
-#define STADefaultsNumberOfOpensKey                 @"NumberOfOpensKey"
-#define STADefaultsOpenValidationDateKey            @"ValidationDateKey"
-
 // Country Defaults
 #define STADefaultsAppStoreCountryKey               @"AppStoreCountryKey"
 #define STADefaultsLastAppStoreCountryKey           @"LastAppStoreCountryKey"
