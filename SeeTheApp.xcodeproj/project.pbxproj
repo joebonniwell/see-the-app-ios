@@ -81,6 +81,8 @@
 		1FD02E0C14DB3629009E0FDB /* STANoResultsIcon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD02E0A14DB3629009E0FDB /* STANoResultsIcon@2x.png */; };
 		1FD02E1014DB3641009E0FDB /* STAErrorIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD02E0E14DB3641009E0FDB /* STAErrorIcon.png */; };
 		1FD02E1114DB3641009E0FDB /* STANoResultsIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FD02E0F14DB3641009E0FDB /* STANoResultsIcon.png */; };
+		1FDC0821151977100097175E /* STAApp.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FDC0820151977100097175E /* STAApp.m */; };
+		1FDC08241519771F0097175E /* STACategory.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FDC08231519771F0097175E /* STACategory.m */; };
 		1FE6B090147ABB0D0063946C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1FE6B092147ABB0D0063946C /* Localizable.strings */; };
 		1FEF9229143F5DF30086C92E /* LocalyticsDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FEF9223143F5DF30086C92E /* LocalyticsDatabase.m */; };
 		1FEF922A143F5DF30086C92E /* LocalyticsSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 1FEF9225143F5DF30086C92E /* LocalyticsSession.m */; };
@@ -204,6 +206,11 @@
 		1FD02E0A14DB3629009E0FDB /* STANoResultsIcon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "STANoResultsIcon@2x.png"; path = "../Standard/STANoResultsIcon@2x.png"; sourceTree = "<group>"; };
 		1FD02E0E14DB3641009E0FDB /* STAErrorIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = STAErrorIcon.png; sourceTree = "<group>"; };
 		1FD02E0F14DB3641009E0FDB /* STANoResultsIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = STANoResultsIcon.png; sourceTree = "<group>"; };
+		1FDC081C15196F2D0097175E /* SeeTheApp3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = SeeTheApp3.xcdatamodel; sourceTree = "<group>"; };
+		1FDC081F151977100097175E /* STAApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STAApp.h; sourceTree = "<group>"; };
+		1FDC0820151977100097175E /* STAApp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STAApp.m; sourceTree = "<group>"; };
+		1FDC08221519771F0097175E /* STACategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STACategory.h; sourceTree = "<group>"; };
+		1FDC08231519771F0097175E /* STACategory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STACategory.m; sourceTree = "<group>"; };
 		1FE6B091147ABB0D0063946C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1FE6B093147ABB160063946C /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1FE6B094147ABB160063946C /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -466,6 +473,17 @@
 			path = Standard;
 			sourceTree = "<group>";
 		};
+		1FDC081E151976EA0097175E /* Core Data Classes */ = {
+			isa = PBXGroup;
+			children = (
+				1FDC081F151977100097175E /* STAApp.h */,
+				1FDC0820151977100097175E /* STAApp.m */,
+				1FDC08221519771F0097175E /* STACategory.h */,
+				1FDC08231519771F0097175E /* STACategory.m */,
+			);
+			name = "Core Data Classes";
+			sourceTree = "<group>";
+		};
 		1FE850E5141F076B0078457C /* SBJSON */ = {
 			isa = PBXGroup;
 			children = (
@@ -537,6 +555,7 @@
 				1FF703521416805D00F99082 /* SeeTheAppAppDelegate.m */,
 				1FF703541416805D00F99082 /* SeeTheApp.xcdatamodeld */,
 				1F150DC9149697CC00D6AF38 /* View Controllers */,
+				1FDC081E151976EA0097175E /* Core Data Classes */,
 				1F89CEC214C896A100D780A8 /* SeeTheAppMenuView */,
 				1F836B2814C9011B001CB129 /* AppStoreButton */,
 				1FF703571416805D00F99082 /* iPhone */,
@@ -765,6 +784,8 @@
 				1F43D53B14BE62AC0019EAA4 /* SeeTheAppAppStoreSelectViewController.m in Sources */,
 				1F89CEC514C896EE00D780A8 /* SeeTheAppMenuView.m in Sources */,
 				1F836B2C14C90158001CB129 /* STAAppStoreButton.m in Sources */,
+				1FDC0821151977100097175E /* STAApp.m in Sources */,
+				1FDC08241519771F0097175E /* STACategory.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -953,10 +974,11 @@
 		1FF703541416805D00F99082 /* SeeTheApp.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				1FDC081C15196F2D0097175E /* SeeTheApp3.xcdatamodel */,
 				1F4ED0E614D3679F008FFAF7 /* SeeTheApp2.xcdatamodel */,
 				1FF703551416805D00F99082 /* SeeTheApp.xcdatamodel */,
 			);
-			currentVersion = 1F4ED0E614D3679F008FFAF7 /* SeeTheApp2.xcdatamodel */;
+			currentVersion = 1FDC081C15196F2D0097175E /* SeeTheApp3.xcdatamodel */;
 			path = SeeTheApp.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
