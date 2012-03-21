@@ -38,21 +38,21 @@
     
     // List Download Connections
     CFMutableDictionaryRef currentListDownloadConnections_gv;
-    NSMutableArray *pendingListDownloadConnections_gv;
+    NSMutableArray *pendingListDownloadURLStrings_gv;
     
     // XML Download Connections
     CFMutableDictionaryRef currentXMLDownloadConnections_gv;
-    NSMutableArray *pendingXMLDownloadConnections_gv;
+    NSMutableArray *pendingXMLDownloadURLStrings_gv;
     
     // JSON List Download Connections
     CFMutableDictionaryRef currentListJSONDownloadConnections_gv;
-    NSMutableArray *pendingListJSONDownloadConnections_gv;
+    NSMutableArray *pendingListJSONDownloadURLStrings_gv;
     
     // Search Download Connections
     CFMutableDictionaryRef currentSearchDownloadConnection_gv;
     // Image Download Connections
     CFMutableDictionaryRef currentImageDownloadConnections_gv;
-    NSMutableArray *pendingImageDownloadConnections_gv;
+    NSMutableArray *pendingImageDownloadURLStrings_gv;
     
     // Paths
     NSString *pathForImageDataDirectory_gv;
@@ -84,10 +84,10 @@
 @property (nonatomic, retain, readonly) NSPersistentStoreCoordinator *persistentStoreCoordinator;
 
 // Pending Connections
-@property (nonatomic, retain, readonly) NSMutableArray *pendingListDownloadConnections;
-@property (nonatomic, retain, readonly) NSMutableArray *pendingImageDownloadConnections;
-@property (nonatomic, retain, readonly) NSMutableArray *pendingXMLDownloadConnections;
-@property (nonatomic, retain, readonly) NSMutableArray *pendingListJSONDownloadConnections;
+@property (nonatomic, retain, readonly) NSMutableArray *pendingListDownloadURLStrings;
+@property (nonatomic, retain, readonly) NSMutableArray *pendingImageDownloadURLStrings;
+@property (nonatomic, retain, readonly) NSMutableArray *pendingXMLDownloadURLStrings;
+@property (nonatomic, retain, readonly) NSMutableArray *pendingListJSONDownloadURLStrings;
 
 // Current Connections
 - (CFMutableDictionaryRef)currentListDownloadConnections;

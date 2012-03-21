@@ -417,14 +417,14 @@
     {
         if ([urlStringsOfCurrentlyDownloadingLists containsObject:listDownloadURLString] == NO)
         {
-            if ([[[self delegate] pendingListDownloadConnections] containsObject:listDownloadURLString] == YES)
+            if ([[[self delegate] pendingListDownloadURLStrings] containsObject:listDownloadURLString] == YES)
             {
-                NSUInteger index = [[[self delegate] pendingListDownloadConnections] indexOfObject:listDownloadURLString];
+                NSUInteger index = [[[self delegate] pendingListDownloadURLStrings] indexOfObject:listDownloadURLString];
                 if (index > 0)
-                    [[[self delegate] pendingListDownloadConnections] exchangeObjectAtIndex:index withObjectAtIndex:0];
+                    [[[self delegate] pendingListDownloadURLStrings] exchangeObjectAtIndex:index withObjectAtIndex:0];
             }
             else
-                [[[self delegate] pendingListDownloadConnections] insertObject:listDownloadURLString atIndex:0];
+                [[[self delegate] pendingListDownloadURLStrings] insertObject:listDownloadURLString atIndex:0];
         }
         if ([[self appsDisplayArray] count] == 0)
             return;
@@ -505,11 +505,11 @@
         }
     }
     
-    [[[self delegate] pendingImageDownloadConnections] removeAllObjects];
-    [[[self delegate] pendingImageDownloadConnections] addObjectsFromArray:newPendingImageDownloads];
+    [[[self delegate] pendingImageDownloadURLStrings] removeAllObjects];
+    [[[self delegate] pendingImageDownloadURLStrings] addObjectsFromArray:newPendingImageDownloads];
     
     #ifdef LOG_UpdateDownloadsResults
-        NSLog(@"Updated downloads - Pending Image Downloads: %d Pending List Downloads: %d", [[[self delegate] pendingImageDownloadConnections] count], [[[self delegate] pendingListDownloadConnections] count]);
+        NSLog(@"Updated downloads - Pending Image Downloads: %d Pending List Downloads: %d", [[[self delegate] pendingImageDownloadURLStrings] count], [[[self delegate] pendingListDownloadConnections] count]);
     #endif
     
     [[self delegate] checkPendingConnections];

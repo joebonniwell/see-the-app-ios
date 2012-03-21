@@ -312,11 +312,19 @@
 {
     if (currentListDownloadConnections_gv)
         CFRelease(currentListDownloadConnections_gv);
-    [pendingListDownloadConnections_gv release];
+    [pendingListDownloadURLStrings_gv release];
     
     if (currentImageDownloadConnections_gv)
         CFRelease(currentImageDownloadConnections_gv);
-    [pendingImageDownloadConnections_gv release];
+    [pendingImageDownloadURLStrings_gv release];
+    
+    if (currentXMLDownloadConnections_gv)
+        CFRelease(currentXMLDownloadConnections_gv);
+    [pendingXMLDownloadURLStrings_gv release];
+    
+    if (currentListJSONDownloadConnections_gv)
+        CFRelease(currentListJSONDownloadConnections_gv);
+    [pendingListJSONDownloadURLStrings_gv release];
     
     [pathForImageDataDirectory_gv release];
     
@@ -502,6 +510,11 @@
 - (void)startXMLDownloads
 {
     // Should really keep track of failure... and only update the last updated date once we have successfully retreived the apps...
+    
+    // Clear any pending XML downloads
+    // Generate the pending XML download URLs
+    // Add the pending XML download URLs
+    // Check for currentXML Downloads and start as necessary
 }
 
 #pragma mark - Download Starter Timed Evaluation
@@ -554,7 +567,7 @@
 
 - (void)checkPendingConnections
 {    
-    if ([[self pendingListDownloadConnections] count] > 0)
+    if ([[self pendingListDownloadURLStrings] count] > 0)
     {
         if (CFDictionaryGetCount([self currentListDownloadConnections]) == 0)
         {
@@ -562,7 +575,7 @@
                 NSLog(@"List download starting");
             #endif
             
-            NSString *connectionURLStringToStart = [[self pendingListDownloadConnections] objectAtIndex:0];
+            NSString *connectionURLStringToStart = [[self pendingListDownloadURLStrings] objectAtIndex:0];
             NSURL *url = [NSURL URLWithString:connectionURLStringToStart];
             NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
             [request setURL:url];
@@ -578,25 +591,25 @@
             
             [request release];
             
-            [[self pendingListDownloadConnections] removeObjectAtIndex:0];
+            [[self pendingListDownloadURLStrings] removeObjectAtIndex:0];
         }
     }
     
-    if ([[self pendingImageDownloadConnections] count] > 0)
+    if ([[self pendingImageDownloadURLStrings] count] > 0)
     {
         NSInteger currentConnections = CFDictionaryGetCount([self currentImageDownloadConnections]);
         if (currentConnections < 3)
         {
             for (int connectionCounter = 0; connectionCounter < (3 - currentConnections); connectionCounter++)
             {
-                if ([[self pendingImageDownloadConnections] count] == 0)
+                if ([[self pendingImageDownloadURLStrings] count] == 0)
                     break;
                 
                 #ifdef LOG_DownloadActivity
                     NSLog(@"Image download starting");
                 #endif
                 
-                NSString *imageURLString = [[self pendingImageDownloadConnections] objectAtIndex:0];
+                NSString *imageURLString = [[self pendingImageDownloadURLStrings] objectAtIndex:0];
                 NSURL *imageURL = [NSURL URLWithString:imageURLString];
                 NSURLRequest *imageRequest = [NSURLRequest requestWithURL:imageURL];
                 
@@ -608,7 +621,7 @@
                 
                 [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
                 
-                [[self pendingImageDownloadConnections] removeObjectAtIndex:0];
+                [[self pendingImageDownloadURLStrings] removeObjectAtIndex:0];
             }
         }
     }
@@ -780,13 +793,13 @@
              
         CFDictionaryRemoveValue([self currentListDownloadConnections], argConnection);
         
-        if ([[self pendingListDownloadConnections] count] > 0)
+        if ([[self pendingListDownloadURLStrings] count] > 0)
         {
             #ifdef LOG_DownloadActivity
                 NSLog(@"List download starting");
             #endif
 
-            NSString *nextListURLString = [[self pendingListDownloadConnections] objectAtIndex:0];
+            NSString *nextListURLString = [[self pendingListDownloadURLStrings] objectAtIndex:0];
             
             NSMutableDictionary *connectionDictionaryToStart = [NSMutableDictionary dictionaryWithObjectsAndKeys:nextListURLString, STAConnectionURLStringKey, [NSMutableData data], STAConnectionDataKey, nil];
                                             
@@ -798,7 +811,7 @@
             
             CFDictionaryAddValue([self currentListDownloadConnections], listDownloadConnection, connectionDictionaryToStart);
             
-            [[self pendingListDownloadConnections] removeObjectAtIndex:0];
+            [[self pendingListDownloadURLStrings] removeObjectAtIndex:0];
         }
         
         [self updateNetworkActivityIndicator];
@@ -825,13 +838,13 @@
         
         CFDictionaryRemoveValue([self currentImageDownloadConnections], argConnection);
         
-        if ([[self pendingImageDownloadConnections] count] > 0)
+        if ([[self pendingImageDownloadURLStrings] count] > 0)
         {
             #ifdef LOG_DownloadActivity
                 NSLog(@"Image download starting");
             #endif
             
-            NSString *connectionURLString = [[self pendingImageDownloadConnections] objectAtIndex:0];
+            NSString *connectionURLString = [[self pendingImageDownloadURLStrings] objectAtIndex:0];
             
             NSMutableDictionary *connectionDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:connectionURLString, STAConnectionURLStringKey, [NSMutableData data], STAConnectionDataKey, nil];
                                     
@@ -841,7 +854,7 @@
            
             CFDictionaryAddValue([self currentImageDownloadConnections], imageDownloadConnection, connectionDict);
             
-            [[self pendingImageDownloadConnections] removeObjectAtIndex:0];
+            [[self pendingImageDownloadURLStrings] removeObjectAtIndex:0];
         }
         
         [self updateNetworkActivityIndicator];
@@ -1381,12 +1394,12 @@
     return currentListDownloadConnections_gv;
 }
 
-- (NSMutableArray*)pendingListDownloadConnections
+- (NSMutableArray*)pendingListDownloadURLStrings
 {
-    if (pendingListDownloadConnections_gv)
-        return pendingListDownloadConnections_gv;
-    pendingListDownloadConnections_gv = [[NSMutableArray alloc] init];
-    return pendingListDownloadConnections_gv;
+    if (pendingListDownloadURLStrings_gv)
+        return pendingListDownloadURLStrings_gv;
+    pendingListDownloadURLStrings_gv = [[NSMutableArray alloc] init];
+    return pendingListDownloadURLStrings_gv;
 }
 
 - (CFMutableDictionaryRef)currentSearchDownloadConnection
@@ -1405,12 +1418,12 @@
     return currentImageDownloadConnections_gv;
 }
 
-- (NSMutableArray*)pendingImageDownloadConnections
+- (NSMutableArray*)pendingImageDownloadURLStrings
 {
-    if (pendingImageDownloadConnections_gv)
-        return pendingImageDownloadConnections_gv;
-    pendingImageDownloadConnections_gv = [[NSMutableArray alloc] init];
-    return pendingImageDownloadConnections_gv;
+    if (pendingImageDownloadURLStrings_gv)
+        return pendingImageDownloadURLStrings_gv;
+    pendingImageDownloadURLStrings_gv = [[NSMutableArray alloc] init];
+    return pendingImageDownloadURLStrings_gv;
 }
 
 - (CFMutableDictionaryRef)currentXMLDownloadConnections
@@ -1421,12 +1434,12 @@
     return currentXMLDownloadConnections_gv;
 }
 
-- (NSMutableArray*)pendingXMLDownloadConnections
+- (NSMutableArray*)pendingXMLDownloadURLStrings
 {
-    if (pendingXMLDownloadConnections_gv)
-        return pendingXMLDownloadConnections_gv;
-    pendingXMLDownloadConnections_gv = [[NSMutableArray alloc] init];
-    return pendingXMLDownloadConnections_gv;
+    if (pendingXMLDownloadURLStrings_gv)
+        return pendingXMLDownloadURLStrings_gv;
+    pendingXMLDownloadURLStrings_gv = [[NSMutableArray alloc] init];
+    return pendingXMLDownloadURLStrings_gv;
 }
 
 - (CFMutableDictionaryRef)currentListJSONDownloadConnections
@@ -1437,12 +1450,12 @@
     return currentListJSONDownloadConnections_gv;
 }
 
-- (NSMutableArray*)pendingListJSONDownloadConnections
+- (NSMutableArray*)pendingListJSONDownloadURLStrings
 {
-    if (pendingListJSONDownloadConnections_gv)
-        return pendingListJSONDownloadConnections_gv;
-    pendingListJSONDownloadConnections_gv = [[NSMutableArray alloc] init];
-    return pendingListJSONDownloadConnections_gv;
+    if (pendingListJSONDownloadURLStrings_gv)
+        return pendingListJSONDownloadURLStrings_gv;
+    pendingListJSONDownloadURLStrings_gv = [[NSMutableArray alloc] init];
+    return pendingListJSONDownloadURLStrings_gv;
 }
 
 #pragma mark - Search Start Methods

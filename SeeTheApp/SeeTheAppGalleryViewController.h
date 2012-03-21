@@ -31,9 +31,9 @@
 
 // Current Downloads
 - (CFMutableDictionaryRef)currentListDownloadConnections;
-- (NSMutableArray*)pendingListDownloadConnections;
+- (NSMutableArray*)pendingListDownloadURLStrings;
 - (CFMutableDictionaryRef)currentImageDownloadConnections;
-- (NSMutableArray*)pendingImageDownloadConnections;
+- (NSMutableArray*)pendingImageDownloadURLStrings;
 
 // Search Methods
 - (void)startSearchResultsDownloadWithURLString:(NSString*)argSearchResultsDownloadURLString searchCategory:(NSInteger)argSearchCategory;
