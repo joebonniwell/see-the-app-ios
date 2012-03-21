@@ -134,6 +134,9 @@ enum STASearchState
 #define STADefaultsLastSearchCategoryKey            @"LastSearchCategoryKey"
 #define STADefaultsLastSearchStateKey               @"LastSearchStateKey"
 
+// Last XML Download
+#define STADefaultsLastXMLDownloadDateKey           @"LastXMLDownloadDateKey"
+
 // Session Defaults
 #define STADefaultsPreviousVersionsKey              @"PreviousVersionsKey"
 

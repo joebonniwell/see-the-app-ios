@@ -103,9 +103,11 @@
 
 - (void)restoreLastDisplayMode;
 
-//- (void)displayLastRow;
-//- (void)saveCurrentRow;
+// App Download Methods
+- (void)startXMLDownloads;
 
+
+// Other Methods
 - (void)relocalizeText;
 
 - (NSString*)pathForImageDataDirectory;

@@ -66,6 +66,7 @@
     [defaultSettingsDictionary setObject:[NSString stringWithFormat:@""] forKey:STADefaultsLastSearchTermKey];
     [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:0] forKey:STADefaultsLastSearchCategoryKey];
     [defaultSettingsDictionary setObject:[NSNumber numberWithInteger:STASearchStateNone] forKey:STADefaultsLastSearchStateKey];
+    [defaultSettingsDictionary setObject:[NSDate dateWithTimeIntervalSince1970:0] forKey:STADefaultsLastXMLDownloadDateKey];
     
     [[NSUserDefaults standardUserDefaults] registerDefaults:defaultSettingsDictionary];
 }
@@ -180,6 +181,9 @@
     
     [self startDownloadStarterTimer];
     
+    if ([[NSDate date] timeIntervalSinceDate:[defaults objectForKey:STADefaultsLastXMLDownloadDateKey]] > 14400)
+        [self startXMLDownloads];
+    
     [[NSNotificationCenter defaultCenter] addObserver:[self managedObjectContext] selector:@selector(mergeChangesFromContextDidSaveNotification:) name:NSManagedObjectContextDidSaveNotification object:nil];
     
     return YES;
@@ -253,6 +257,9 @@
         [self setHasNetworkConnection:NO];
     
     [self startDownloadStarterTimer];
+    
+    if ([[NSDate date] timeIntervalSinceDate:[[NSUserDefaults standardUserDefaults] objectForKey:STADefaultsLastXMLDownloadDateKey]] > 14400)
+        [self startXMLDownloads];
     
     if (optionsViewController_gv)
         [[self optionsViewController] refreshAppStoreCountryLabel];
@@ -502,6 +509,13 @@
             NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
         } 
     }
+}
+
+#pragma mark - App Download Methods
+
+- (void)startXMLDownloads
+{
+    // Should really keep track of failure... and only update the last updated date once we have successfully retreived the apps...
 }
 
 #pragma mark - Rate Dialog
