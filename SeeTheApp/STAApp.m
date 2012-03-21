@@ -10,4 +10,12 @@
 
 @implementation STAApp
 
+@dynamic appID;
+@dynamic appURLString;
+@dynamic country;
+@dynamic creationDate;
+@dynamic lastUpdatedDate;
+@dynamic priceTier;
+@dynamic screenshotURLString;
+
 @end

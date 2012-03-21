@@ -10,4 +10,7 @@
 
 @implementation STACategory
 
+@dynamic categoryCode;
+@dynamic categoryName;
+
 @end

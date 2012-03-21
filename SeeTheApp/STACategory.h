@@ -10,4 +10,7 @@
 
 @interface STACategory : NSManagedObject
 
+@property (nonatomic, retain) NSNumber *categoryCode;
+@property (nonatomic, retain) NSString *categoryName;
+
 @end
