@@ -40,22 +40,29 @@
     CFMutableDictionaryRef currentListDownloadConnections_gv;
     NSMutableArray *pendingListDownloadConnections_gv;
     
+    // XML Download Connections
+    CFMutableDictionaryRef currentXMLDownloadConnections_gv;
+    NSMutableArray *pendingXMLDownloadConnections_gv;
+    
+    // JSON List Download Connections
+    CFMutableDictionaryRef currentListJSONDownloadConnections_gv;
+    NSMutableArray *pendingListJSONDownloadConnections_gv;
+    
     // Search Download Connections
     CFMutableDictionaryRef currentSearchDownloadConnection_gv;
-    
     // Image Download Connections
     CFMutableDictionaryRef currentImageDownloadConnections_gv;
     NSMutableArray *pendingImageDownloadConnections_gv;
     
+    // Paths
     NSString *pathForImageDataDirectory_gv;
+    NSURL *applicationLibrarySTADirectory_gv;
     
     // Data
     NSArray *appStoreCountryCodes_gv;
     NSDictionary *affiliateCodesDictionary_gv;
     NSArray *categoriesInfo_gv;
     NSArray *gameCategoriesInfo_gv;
-    
-    NSURL *applicationLibrarySTADirectory_gv;
 }
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;
@@ -76,15 +83,20 @@
 @property (nonatomic, retain, readonly) NSManagedObjectModel *managedObjectModel;
 @property (nonatomic, retain, readonly) NSPersistentStoreCoordinator *persistentStoreCoordinator;
 
+// Pending Connections
 @property (nonatomic, retain, readonly) NSMutableArray *pendingListDownloadConnections;
 @property (nonatomic, retain, readonly) NSMutableArray *pendingImageDownloadConnections;
-
-- (void)saveContext;
+@property (nonatomic, retain, readonly) NSMutableArray *pendingXMLDownloadConnections;
+@property (nonatomic, retain, readonly) NSMutableArray *pendingListJSONDownloadConnections;
 
 // Current Connections
 - (CFMutableDictionaryRef)currentListDownloadConnections;
 - (CFMutableDictionaryRef)currentSearchDownloadConnection;
 - (CFMutableDictionaryRef)currentImageDownloadConnections;
+- (CFMutableDictionaryRef)currentXMLDownloadConnections;
+- (CFMutableDictionaryRef)currentListJSONDownloadConnections;
+
+- (void)saveContext;
 
 // Download Starter Timer Methods
 - (void)startDownloadStarterTimer;

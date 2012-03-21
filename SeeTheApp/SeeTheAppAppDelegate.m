@@ -168,9 +168,7 @@
         
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kReachabilityChangedNotification object:nil];
     [tempReachability startNotifier];
-    
-    [[NSOperationQueue mainQueue] setMaxConcurrentOperationCount:1];
-    
+        
     [self startDownloadStarterTimer];
     
     if ([[NSDate date] timeIntervalSinceDate:[defaults objectForKey:STADefaultsLastXMLDownloadDateKey]] > 14400)
@@ -1414,6 +1412,40 @@
     pendingImageDownloadConnections_gv = [[NSMutableArray alloc] init];
     return pendingImageDownloadConnections_gv;
 }
+
+- (CFMutableDictionaryRef)currentXMLDownloadConnections
+{
+    if (currentXMLDownloadConnections_gv)
+        return currentXMLDownloadConnections_gv;
+    currentXMLDownloadConnections_gv = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    return currentXMLDownloadConnections_gv;
+}
+
+- (NSMutableArray*)pendingXMLDownloadConnections
+{
+    if (pendingXMLDownloadConnections_gv)
+        return pendingXMLDownloadConnections_gv;
+    pendingXMLDownloadConnections_gv = [[NSMutableArray alloc] init];
+    return pendingXMLDownloadConnections_gv;
+}
+
+- (CFMutableDictionaryRef)currentListJSONDownloadConnections
+{
+    if (currentListJSONDownloadConnections_gv)
+        return currentListJSONDownloadConnections_gv;
+    currentListJSONDownloadConnections_gv = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    return currentListJSONDownloadConnections_gv;
+}
+
+- (NSMutableArray*)pendingListJSONDownloadConnections
+{
+    if (pendingListJSONDownloadConnections_gv)
+        return pendingListJSONDownloadConnections_gv;
+    pendingListJSONDownloadConnections_gv = [[NSMutableArray alloc] init];
+    return pendingListJSONDownloadConnections_gv;
+}
+
+#pragma mark - Search Start Methods
 
 - (void)startSearchResultsDownloadWithURLString:(NSString*)argSearchResultsDownloadURLString searchCategory:(NSInteger)argSearchCategory
 {
