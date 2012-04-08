@@ -17,5 +17,6 @@
 @dynamic lastUpdatedDate;
 @dynamic priceTier;
 @dynamic screenshotURLString;
+@dynamic categories;
 
 @end
