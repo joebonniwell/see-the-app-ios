@@ -18,6 +18,8 @@
 #import "SBJson.h"
 #import "STAApp.h"
 #import "STACategory.h"
+#import "STAXMLParseOperation.h"
+#import "STALocalAppImporter.h"
 
 @interface SeeTheAppAppDelegate : NSObject <UIApplicationDelegate, NSURLConnectionDelegate, NSURLConnectionDataDelegate, STAMainMenuDelegate, UINavigationControllerDelegate, SeeTheAppOptionsViewControllerDelegate, NSXMLParserDelegate> 
 {
@@ -37,10 +39,6 @@
     SeeTheAppCategoriesMenuViewController *categoriesMenuViewController_gv;
     SeeTheAppGamesSubcategoriesMenuViewController *gamesSubcategoriesMenuViewController_gv;
     SeeTheAppOptionsViewController *optionsViewController_gv;
-    
-    // List Download Connections
-    CFMutableDictionaryRef currentListDownloadConnections_gv;
-    NSMutableArray *pendingListDownloadURLStrings_gv;
     
     // XML Download Connections
     CFMutableDictionaryRef currentXMLDownloadConnections_gv;
@@ -87,16 +85,14 @@
 @property (nonatomic, retain, readonly) NSPersistentStoreCoordinator *persistentStoreCoordinator;
 
 // XML Parsing AppIDs Array
-@property (nonatomic, retain) NSMutableArray *appIDsArray;
+@property (atomic, retain) NSMutableSet *appIDsFromXML;
 
 // Pending Connections
-@property (nonatomic, retain, readonly) NSMutableArray *pendingListDownloadURLStrings;
 @property (nonatomic, retain, readonly) NSMutableArray *pendingImageDownloadURLStrings;
 @property (nonatomic, retain, readonly) NSMutableArray *pendingXMLDownloadURLStrings;
 @property (nonatomic, retain, readonly) NSMutableArray *pendingListJSONDownloadURLStrings;
 
 // Current Connections
-- (CFMutableDictionaryRef)currentListDownloadConnections;
 - (CFMutableDictionaryRef)currentSearchDownloadConnection;
 - (CFMutableDictionaryRef)currentImageDownloadConnections;
 - (CFMutableDictionaryRef)currentXMLDownloadConnections;
@@ -108,7 +104,7 @@
 - (void)startDownloadStarterTimer;
 - (void)stopDownloadStarterTimer;
 
-- (void)populateInitialAppsForCurrentCountry;
+//- (void)populateInitialAppsForCurrentCountry;
 
 - (NSString*)fileNameOfImageWithURLString:(NSString*)argURLString;
 - (NSString*)filePathOfImageDataForURLString:(NSString*)argURLString;
@@ -118,16 +114,17 @@
 - (void)restoreLastDisplayMode;
 
 // Categories
-- (STACategory*)categoryForCategoryCode:(NSNumber*)argCategoryCode;
+//- (STACategory*)categoryForCategoryCode:(NSNumber*)argCategoryCode;
 
 // App Download Methods
 - (void)startXMLDownloads;
 
 // Download Processing Methods
 - (void)processXMLDownloadData:(NSDictionary*)argXMLDownloadData;
-- (void)processListJSONDownloadData:(NSDictionary*)argListJSONDownloadData;
+//- (void)processListJSONDownloadData:(NSDictionary*)argListJSONDownloadData;
 - (void)processImageDownloadData:(NSDictionary*)argImageDownloadData;
-- (void)processSearchJSONDownloadData:(NSDictionary*)argSearchJSONDownloadData;
+//- (void)processSearchJSONDownloadData:(NSDictionary*)argSearchJSONDownloadData;
+- (void)processNewAppsInJSONData:(NSData*)argJSONData asSearchResults:(BOOL)argAsSearchResults forCountry:(NSString*)argCountry;
 
 // Start Next Download Methods
 - (void)startPendingXMLDownloads;
@@ -139,23 +136,22 @@
 
 - (NSString*)pathForImageDataDirectory;
 
-- (void)processNewAppsInDictionary:(NSDictionary*)argDictionary;
+//- (void)processNewAppsInDictionary:(NSDictionary*)argDictionary;
 
 - (NSURL*)applicationLibrarySTADirectory;
 
-- (NSInteger)lastPositionForCategory:(NSInteger)argCategory;
+- (NSDate*)lastPositionForCategory:(NSInteger)argCategory;
 
 - (void)updateNetworkActivityIndicator;
 
 // Update State Data Methods
 - (void)updateAppStoreCountry:(NSString*)argCountryCode;
-- (void)updateLastPosition:(NSInteger)argLastPosition;
-- (void)updateCategory:(enum STACategory)argCategory;
-- (void)updatePriceTier:(enum STAPriceTier)argPriceTier;
+- (void)updateLastPosition:(NSDate*)argLastPosition;
+- (void)updateCategory:(STACategoryCode)argCategory;
 
 // Information Arrays
 - (NSArray*)appStoreCountryCodes;
-- (NSDictionary*)affiliateCodesDictionary;
+//- (NSDictionary*)affiliateCodesDictionary;
 - (NSArray*)categoriesInfo;
 - (NSArray*)gameCategoriesInfo;
 @end

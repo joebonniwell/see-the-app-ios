@@ -14,7 +14,7 @@
 
 @interface GVGalleryView : UIScrollView 
 {    
-    id delegate;
+    id<GVGalleryViewDelegate, UIScrollViewDelegate> delegate;
     
     NSObject<GVGalleryViewDataSource> *dataSource;
     

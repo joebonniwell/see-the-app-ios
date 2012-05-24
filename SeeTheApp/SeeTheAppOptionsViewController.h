@@ -13,7 +13,7 @@
 @protocol SeeTheAppOptionsViewControllerDelegate <NSObject>
 
 - (void)updateAppStoreCountry:(NSString*)argCountryCode;
-- (void)populateInitialAppsForCurrentCountry;
+//- (void)populateInitialAppsForCurrentCountry;
 
 @end
 

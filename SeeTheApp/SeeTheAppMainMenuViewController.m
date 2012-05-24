@@ -16,7 +16,11 @@
     {
         [self setDelegate:argDelegate];
         
-        [[self navigationItem] setTitle:NSLocalizedString(@"Menu", @"Menu")];
+        [[self navigationItem] setTitle:NSLocalizedString(@"See the App", @"See the App")];
+        
+        UIBarButtonItem *customBackButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Menu", @"Menu") style:UIBarButtonItemStyleBordered target:nil action:nil];
+        [[self  navigationItem] setBackBarButtonItem:customBackButton];
+        [customBackButton release];
     }
     return self;
 }

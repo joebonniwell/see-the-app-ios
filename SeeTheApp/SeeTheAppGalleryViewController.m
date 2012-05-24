@@ -23,7 +23,7 @@
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(searchFailed:) name:STASearchErrorNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(searchHadNoResults:) name:STASearchNoResultsNotification object:nil];
-        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(searchCompleted:) name:STASearchCompleteNotification object:nil];
     }
     return self;
 }
@@ -229,23 +229,17 @@
     [newSearchRecord setValue:searchTerm forKey:STASearchRecordAttributeSearchTerm];
     [[[self delegate] managedObjectContext] save:nil];
     
-    NSString *deviceString;
+    NSString *entity;
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-        deviceString = @"pad";
+        entity = @"iPadSoftware";
     else
-        deviceString = @"phone";
+        entity = @"software";
     
-    NSString *priceTier = @"all";
-    if (searchPriceTier == 0)
-        priceTier = @"free";
-    
-    NSString *escapedSearchTerm = (NSString*)CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)searchTerm, NULL, (CFStringRef)@"!*'\"();:@&=+$,/?%#[]% ", CFStringConvertNSStringEncodingToEncoding(NSUTF8StringEncoding));
-    
-    //NSString *escapedSearchTerm = [searchTerm stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    NSString *escapedSearchTerm = (NSString*)CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef)searchTerm, NULL, (CFStringRef)@"!*'\"();:@&=+$,/?%#[]% ", CFStringConvertNSStringEncodingToEncoding(NSUTF8StringEncoding));    
     #ifdef LOG_SearchStatus
         NSLog(@"Percent Encoded Search Term: %@", escapedSearchTerm);
     #endif
-    NSString *searchURLString = [NSString stringWithFormat:@"http://search.seetheapp.com/search?country=%@&device=%@&price=%@&cat=%d&searchterm=%@", countryCode, deviceString, priceTier, searchCategory, escapedSearchTerm];
+    NSString *searchURLString = [NSString stringWithFormat:@"http://itunes.apple.com/search?country=%@&entity=%@&term=%@", countryCode, entity, escapedSearchTerm];
     [[self delegate] startSearchResultsDownloadWithURLString:searchURLString searchCategory:searchCategory];
     
     CFRelease((CFStringRef)escapedSearchTerm);
@@ -264,6 +258,9 @@
 
 - (void)searchFailed:(NSNotification*)argNotification
 {    
+    if ([[NSThread currentThread] isEqual:[NSThread mainThread]] == NO)
+        [self performSelectorOnMainThread:@selector(searchFailed:) withObject:argNotification waitUntilDone:YES];
+    
     NSInteger searchCategory = [[[argNotification userInfo] objectForKey:@"STASearchCategory"] integerValue];
     
     if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchCategoryKey] integerValue] == searchCategory)
@@ -275,6 +272,9 @@
 
 - (void)searchHadNoResults:(NSNotification*)argNotification
 {
+    if ([[NSThread currentThread] isEqual:[NSThread mainThread]] == NO)
+        [self performSelectorOnMainThread:@selector(searchHadNoResults:) withObject:argNotification waitUntilDone:YES];
+    
     NSInteger searchCategory = [[[argNotification userInfo] objectForKey:@"STASearchCategory"] integerValue];
     
     if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchCategoryKey] integerValue] == searchCategory)
@@ -282,6 +282,19 @@
         [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithInteger:STASearchStateNoResults] forKey:STADefaultsLastSearchStateKey];
         [self updateSearchingNotificationViewWithState:STASearchStateNoResults animated:YES];
     }
+}
+
+- (void)searchCompleted:(NSNotification*)argNotification
+{
+    if ([[NSThread currentThread] isEqual:[NSThread mainThread]] == NO)
+        [self performSelectorOnMainThread:@selector(searchCompleted:) withObject:argNotification waitUntilDone:YES];
+            
+    [self setAppsDisplayArray:[[self delegate] searchResultAppsForAppIDs:[argNotification object]]];
+    
+    [self updateSearchingNotificationViewWithState:STASearchStateHasResults animated:YES];
+        
+    [[self galleryView] reloadData];
+    [self updateDownloads];
 }
 
 #pragma mark - NSFetchedResultsControllerDelegate Methods
@@ -314,16 +327,16 @@
                 
         }
     
-        NSManagedObject *changedObject = (NSManagedObject*)anObject;
-        NSInteger indexOfChangedObject = [[self appsDisplayArray] indexOfObject:changedObject];
+        STAApp *changedApp = (STAApp*)anObject;
+        NSInteger indexOfChangedApp = [[self appsDisplayArray] indexOfObject:changedApp];
     
-        if (indexOfChangedObject != NSNotFound)
+        if (indexOfChangedApp != NSNotFound)
         {        
             NSInteger currentRow = [[self galleryView] currentRow];
             NSInteger minimumVisibleRow = currentRow - 1;
             NSInteger maximumVisibleRow = currentRow + 1;
         
-            if (indexOfChangedObject >= minimumVisibleRow && indexOfChangedObject <= maximumVisibleRow)
+            if (indexOfChangedApp >= minimumVisibleRow && indexOfChangedApp <= maximumVisibleRow)
                 [[self galleryView] reloadData];
         }
 
@@ -344,9 +357,8 @@
             UIImageView *screenshotImageView = (UIImageView*)[cell viewWithTag:STAScreenshotImageViewTag];
             if (![screenshotImageView image])
             {
-                //NSManagedObject *displayIndex = [[self resultsController] objectAtIndexPath:[NSIndexPath indexPathForRow:cellRow inSection:0]];
-                NSManagedObject *displayIndex = [[self appsDisplayArray] objectAtIndex:cellRow];
-                if ([argScreenshotURLString isEqualToString:[displayIndex valueForKey:STADisplayIndexAttributeScreenshotURL]])
+                STAApp *app = [[self appsDisplayArray] objectAtIndex:cellRow];
+                if ([argScreenshotURLString isEqualToString:[app screenshotURLString]])
                 {
                     [[self galleryView] reloadData];
                     break;
@@ -365,70 +377,9 @@
 
 - (void)updateDownloads
 {
+    //NSLog(@"Updating with current position: %@", [self positionOfCurrentRow]);
     [[self delegate] updateLastPosition:[self positionOfCurrentRow]];
-    if ([self currentMode] != STADisplayModeSearch)
-        [self updateListDownloads];
     [self updateImageDownloads];
-}
-
-- (void)updateListDownloads
-{
-    NSInteger currentRow = [[self galleryView] currentRow];
-    
-    // Gather data for new list download
-    Size currentListDownloadsCount = CFDictionaryGetCount([[self delegate] currentListDownloadConnections]);
-    CFTypeRef *listDownloadDictsArray = (CFTypeRef*)malloc(currentListDownloadsCount * sizeof(CFTypeRef));
-    CFDictionaryGetKeysAndValues([[self delegate] currentListDownloadConnections], NULL, (const void**)listDownloadDictsArray);
-    const void **listDownloadDicts = (const void **)listDownloadDictsArray;
-        
-    NSMutableArray *urlStringsOfCurrentlyDownloadingLists = [NSMutableArray array];
-        
-    for (int listIndex = 0; listIndex < currentListDownloadsCount; listIndex++)
-    {
-        NSDictionary *listDownloadDict = listDownloadDicts[listIndex];
-        [urlStringsOfCurrentlyDownloadingLists addObject:[listDownloadDict objectForKey:STAConnectionURLStringKey]];
-    }
-        
-    free(listDownloadDictsArray);
-        
-    NSString *storeCountryCode = [[NSUserDefaults standardUserDefaults] objectForKey:STADefaultsAppStoreCountryKey];
-        
-    enum STACategory category = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastCategoryKey] integerValue];
-        
-    NSString *deviceString;
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-        deviceString = @"pad";
-    else
-        deviceString = @"phone";
-        
-    NSString *priceTier;
-    if ([[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastListPriceTierKey] integerValue] == STAPriceTierAll)
-        priceTier = @"all";
-    else
-        priceTier = @"free";
-        
-    NSString *listDownloadURLString = [NSString stringWithFormat:@"http://list.seetheapp.com/list?cat=%d&country=%@&price=%@&device=%@", category, storeCountryCode, priceTier, deviceString];
-    
-    NSInteger numberOfIndicies = [[self appsDisplayArray] count];
-    
-    NSInteger maxIndexForListDownload = numberOfIndicies - 20;
-    
-    if (currentRow > maxIndexForListDownload || numberOfIndicies == 0)
-    {
-        if ([urlStringsOfCurrentlyDownloadingLists containsObject:listDownloadURLString] == NO)
-        {
-            if ([[[self delegate] pendingListDownloadURLStrings] containsObject:listDownloadURLString] == YES)
-            {
-                NSUInteger index = [[[self delegate] pendingListDownloadURLStrings] indexOfObject:listDownloadURLString];
-                if (index > 0)
-                    [[[self delegate] pendingListDownloadURLStrings] exchangeObjectAtIndex:index withObjectAtIndex:0];
-            }
-            else
-                [[[self delegate] pendingListDownloadURLStrings] insertObject:listDownloadURLString atIndex:0];
-        }
-        if ([[self appsDisplayArray] count] == 0)
-            return;
-    }
 }
 
 - (void)updateImageDownloads
@@ -464,9 +415,8 @@
         {
             if (currentRow < [[self appsDisplayArray] count])  // Do not attempt to create a download for the placeholder row
             {
-                //NSManagedObject *displayIndex = [[self resultsController] objectAtIndexPath:[NSIndexPath indexPathForRow:currentRow inSection:0]];
-                NSManagedObject *displayIndex = [[self appsDisplayArray] objectAtIndex:currentRow];
-                NSString *appScreenshotURLString = [displayIndex valueForKey:STADisplayIndexAttributeScreenshotURL];
+                STAApp *app = [[self appsDisplayArray] objectAtIndex:currentRow];
+                NSString *appScreenshotURLString = [app screenshotURLString];
                 
                 if ([[NSFileManager defaultManager] fileExistsAtPath:[[self delegate] filePathOfImageDataForURLString:appScreenshotURLString]] == NO)
                     if ([urlStringsOfCurrentlyDownloadingImages containsObject:appScreenshotURLString] == NO)
@@ -477,9 +427,8 @@
         {
             if ((currentRow + nextBackwardIndex) >= 0 && currentRow + (nextBackwardIndex) < [[self appsDisplayArray] count])
             {
-                //NSManagedObject *displayIndex = [[self resultsController] objectAtIndexPath:[NSIndexPath indexPathForRow:(currentRow + nextBackwardIndex) inSection:0]];
-                NSManagedObject *displayIndex = [[self appsDisplayArray] objectAtIndex:(currentRow + nextBackwardIndex)];
-                NSString *appScreenshotURLString = [displayIndex valueForKey:STADisplayIndexAttributeScreenshotURL];
+                STAApp *app = [[self appsDisplayArray] objectAtIndex:(currentRow + nextBackwardIndex)];
+                NSString *appScreenshotURLString = [app screenshotURLString];
                 
                 if ([[NSFileManager defaultManager] fileExistsAtPath:[[self delegate] filePathOfImageDataForURLString:appScreenshotURLString]] == NO)
                     if ([urlStringsOfCurrentlyDownloadingImages containsObject:appScreenshotURLString] == NO)
@@ -492,9 +441,8 @@
         {
             if ((currentRow + nextForwardIndex) < [[self appsDisplayArray] count])
             {
-                //NSManagedObject *displayIndex = [[self resultsController] objectAtIndexPath:[NSIndexPath indexPathForRow:(currentRow + nextForwardIndex) inSection:0]];
-                NSManagedObject *displayIndex = [[self appsDisplayArray] objectAtIndex:(currentRow + nextForwardIndex)];
-                NSString *appScreenshotURLString = [displayIndex valueForKey:STADisplayIndexAttributeScreenshotURL];
+                STAApp *app = [[self appsDisplayArray] objectAtIndex:(currentRow + nextForwardIndex)];
+                NSString *appScreenshotURLString = [app screenshotURLString];
                 
                 if ([[NSFileManager defaultManager] fileExistsAtPath:[[self delegate] filePathOfImageDataForURLString:appScreenshotURLString]] == NO)
                     if ([urlStringsOfCurrentlyDownloadingImages containsObject:appScreenshotURLString] == NO)
@@ -703,10 +651,10 @@
     }
     else
     {
-        NSManagedObject *displayIndex = [[self appsDisplayArray] objectAtIndex:argRow];
-        if (displayIndex)
+        STAApp *app = [[self appsDisplayArray] objectAtIndex:argRow];
+        if (app)
         {
-            NSString *screenshotURLString = [displayIndex valueForKey:STADisplayIndexAttributeScreenshotURL];
+            NSString *screenshotURLString = [app screenshotURLString];
             STAScreenshotImage *screenshotImage = [self cachedImageForURLString:screenshotURLString];
             if (!screenshotImage)
             {
@@ -791,22 +739,24 @@
 
 #pragma mark - Position
 
-- (NSInteger)positionOfCurrentRow
+- (NSDate*)positionOfCurrentRow
 {
+    
     if ([[self appsDisplayArray] count] == 0)
-        return 0;
+        return [NSDate dateWithTimeIntervalSince1970:0];
     NSInteger currentRow = [[self galleryView] currentRow];
-    NSManagedObject *currentObject;
     if (currentRow >= [[self appsDisplayArray] count])
-        currentObject = [[self appsDisplayArray] lastObject];
+        return [[[self appsDisplayArray] lastObject] creationDate];
     else
-        currentObject = [[self appsDisplayArray] objectAtIndex:[[self galleryView] currentRow]];
-    return [[currentObject valueForKey:STADisplayIndexAttributePositionIndex] integerValue];
+    {
+        STAApp *currentApp = [[self appsDisplayArray] objectAtIndex:currentRow];
+        return [currentApp creationDate];    
+    }
 }
 
 #pragma mark - Display Methods
 
-- (void)displayMode:(enum STADisplayMode)argDisplayMode
+- (void)setDisplayMode:(STADisplayMode)argDisplayMode
 {
     if (argDisplayMode == STADisplayModeBrowse)
     {
@@ -855,10 +805,8 @@
     }
 }
 
-- (void)displayCategory:(enum STACategory)argCategory forAppStoreCountryCode:(NSString*)argCountryCode
+- (void)displayCategory:(STACategoryCode)argCategory forAppStoreCountryCode:(NSString*)argCountryCode
 {
-    //NSLog(@"Display Category: %d", argCategory);
-    
     if (argCategory == STACategoryBrowse)
         [self setCurrentMode:STADisplayModeBrowse];
     else if (argCategory == STACategorySearchResult || argCategory >= 10000)
@@ -870,97 +818,112 @@
     [self setResultsController:nil];
     [self setSearchController:nil];
     
-    // Context
-    NSManagedObjectContext *context = [[self delegate] managedObjectContext];
-    if (!context)
-        return;
-    
-    // Fetch Request
-    NSFetchRequest *displayIndexesFetchRequest = [[NSFetchRequest alloc] init];
-    
-    // Entity Description
-    NSEntityDescription *displayIndexEntityDescription = [NSEntityDescription entityForName:@"DisplayIndex" inManagedObjectContext:context];
-    [displayIndexesFetchRequest setEntity:displayIndexEntityDescription];
-    
-    // Predicate
-    NSString *predicateString = [NSString stringWithFormat:@"positionIndex >= 0 AND category == %d AND country like '%@'", argCategory, argCountryCode];
-    
-    NSPredicate *displayIndexesForAllAppsCategory = [NSPredicate predicateWithFormat:predicateString];
-    [displayIndexesFetchRequest setPredicate:displayIndexesForAllAppsCategory];
-    
-    // Sort Descriptors
-    NSSortDescriptor *positionIndexSortDescriptor = [[NSSortDescriptor alloc] initWithKey:STADisplayIndexAttributePositionIndex ascending:YES];
-    NSArray *sortDescriptorsArray = [NSArray arrayWithObject:positionIndexSortDescriptor];
-    [displayIndexesFetchRequest setSortDescriptors:sortDescriptorsArray];
-    [positionIndexSortDescriptor release];
-    
-    // Fetched Results Controller
-    NSFetchedResultsController *tempFetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:displayIndexesFetchRequest managedObjectContext:context sectionNameKeyPath:nil cacheName:nil];
-    [self setResultsController:tempFetchedResultsController];
-    [[self resultsController] setDelegate:self];
-    [displayIndexesFetchRequest release];
-    [tempFetchedResultsController release];
-    
-    NSError *fetchError = nil;
-    
-    if([[self resultsController] performFetch:&fetchError] == NO)
+    if (argCategory != STACategorySearchResult)
     {
-        NSLog(@"Results Fetch Error: %@", [fetchError localizedDescription]);
-        // Attempt a refetch.....?
-        // log the error....
-    }
+        // Context
+        NSManagedObjectContext *context = [[self delegate] managedObjectContext];
+        if (!context)
+            return;
     
-    [self setAppsDisplayArray:[[self resultsController] fetchedObjects]];   
-    
-    [[self galleryView] reloadData];
-    
-    if ([self currentMode] == STADisplayModeSearch)
-    {
         // Fetch Request
-        NSFetchRequest *searchRecordsFetchRequest = [[NSFetchRequest alloc] init];
-        
+        NSFetchRequest *appsFetchRequest = [[NSFetchRequest alloc] init];
+    
         // Entity Description
-        NSEntityDescription *searchRecordEntityDescription = [NSEntityDescription entityForName:@"SearchRecord" inManagedObjectContext:context];
-        [searchRecordsFetchRequest setEntity:searchRecordEntityDescription];
-        
+        NSEntityDescription *appEntityDescription = [NSEntityDescription entityForName:@"App" inManagedObjectContext:context];
+        [appsFetchRequest setEntity:appEntityDescription];
+    
         // Predicate
-        NSString *searchRecordsPredicateString = [NSString stringWithFormat:@"country like '%@'", argCountryCode];
-        NSPredicate *searchRecordsPredicate = [NSPredicate predicateWithFormat:searchRecordsPredicateString];
-        [searchRecordsFetchRequest setPredicate:searchRecordsPredicate];
-        
-        // Sort Descriptor
-        NSSortDescriptor *searchDateSortDescriptor = [[NSSortDescriptor alloc] initWithKey:STASearchRecordAttributeSearchCategory ascending:YES];
-        NSArray *searchRecordsSortDescriptorsArray = [NSArray arrayWithObject:searchDateSortDescriptor];
-        [searchRecordsFetchRequest setSortDescriptors:searchRecordsSortDescriptorsArray];
-        [searchDateSortDescriptor release];
-        
-        // Search Records Controller
-        NSFetchedResultsController *tempSearchRecordsController = [[NSFetchedResultsController alloc] initWithFetchRequest:searchRecordsFetchRequest managedObjectContext:context sectionNameKeyPath:nil cacheName:nil];
-        [self setSearchController:tempSearchRecordsController];
-        [[self searchController] setDelegate:self];
-        [searchRecordsFetchRequest release];
-        [tempSearchRecordsController release];
-        
-        NSError *searchFetchError = nil;
-        
-        if([[self searchController] performFetch:&searchFetchError] == NO)
+        NSString *predicateString;
+        if (argCategory == STACategoryBrowse)
         {
-            NSLog(@"Search Fetch Error: %@", [searchFetchError localizedDescription]);
+            predicateString = [NSString stringWithFormat:@"country like '%@'", argCountryCode];
+        }
+        else 
+        {
+            predicateString = [NSString stringWithFormat:@"ANY categories.categoryCode == %d AND country like '%@'", argCategory, argCountryCode];
+        }
+    
+        NSPredicate *appsForAllAppsCategory = [NSPredicate predicateWithFormat:predicateString];
+        [appsFetchRequest setPredicate:appsForAllAppsCategory];
+    
+        // Sort Descriptors
+        NSSortDescriptor *creationDateSortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"creationDate" ascending:YES];
+        NSArray *sortDescriptorsArray = [NSArray arrayWithObject:creationDateSortDescriptor];
+        [appsFetchRequest setSortDescriptors:sortDescriptorsArray];
+        [creationDateSortDescriptor release];
+    
+        // Fetched Results Controller
+        NSFetchedResultsController *tempFetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:appsFetchRequest managedObjectContext:context sectionNameKeyPath:nil cacheName:nil];
+        [self setResultsController:tempFetchedResultsController];
+        [[self resultsController] setDelegate:self];
+        [appsFetchRequest release];
+        [tempFetchedResultsController release];
+    
+        NSError *fetchError = nil;
+    
+        if([[self resultsController] performFetch:&fetchError] == NO)
+        {
+            NSLog(@"Results Fetch Error: %@", [fetchError localizedDescription]);
             // Attempt a refetch.....?
             // log the error....
         }
         
-        
-        enum STASearchState lastSearchState = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastSearchStateKey] integerValue];
-        if (lastSearchState > STASearchStateNone)
-            [self updateSearchingNotificationViewWithState:lastSearchState animated:YES];
-        // TODO: Restore the last search position....
+        [self setAppsDisplayArray:[[self resultsController] fetchedObjects]];
     }
+    else // Search Results
+    {
+        NSArray *searchApps = nil;
+        NSArray *lastSearchAppIDs = [[NSUserDefaults standardUserDefaults] objectForKey:STADefaultsLastSearchAppIDsKey];
+        if ([lastSearchAppIDs count])
+            searchApps = [[self delegate] searchResultAppsForAppIDs:lastSearchAppIDs];
+
+        [self setAppsDisplayArray:searchApps];
+        
+        if ([searchApps count])
+            [self updateSearchingNotificationViewWithState:STASearchStateHasResults animated:YES];
+        else 
+            [self updateSearchingNotificationViewWithState:STASearchStateNone animated:YES];
+    }   
+    
+    [[self galleryView] reloadData];
 }
 
-- (void)displayPosition:(NSInteger)argPosition forPriceTier:(enum STAPriceTier)argPriceTier
+- (void)displayPosition:(NSDate*)argPosition forPriceTier:(STAPriceTier)argPriceTier
 {
-    //NSLog(@"Display Position / PriceTier: Position: %d", argPosition);
+    if ([self currentMode] == STADisplayModeSearch)
+    {
+        // Search....
+        if (argPriceTier == STAPriceTierAll)
+            [[self searchPriceTierControl] setSelectedSegmentIndex:0];
+        else
+            [[self searchPriceTierControl] setSelectedSegmentIndex:1];
+        
+        NSArray *lastSearchAppIDs = [[NSUserDefaults standardUserDefaults] objectForKey:STADefaultsLastSearchAppIDsKey];
+
+        [self setAppsDisplayArray:[[self delegate] searchResultAppsForAppIDs:lastSearchAppIDs]];
+        [[self galleryView] displayRow:0 animated:NO];
+        
+        return;
+    }
+    
+    NSUInteger indexOfApp;
+    if ([argPosition isEqualToDate:[NSDate dateWithTimeIntervalSince1970:0]])
+    {
+        indexOfApp = 0;
+    }
+    else 
+    {
+        indexOfApp = [[[self resultsController] fetchedObjects] indexOfObjectPassingTest:^BOOL(id object, NSUInteger index, BOOL *stop)
+                             {
+                                 if ([[object creationDate] isEqualToDate:argPosition])
+                                 {
+                                     *stop = YES;
+                                     return YES;
+                                 }
+                                 return NO;
+                             }];
+    }
+        
     if ([self currentMode] == STADisplayModeList && argPriceTier == STAPriceTierFree)
     {
         [[self listPriceTierControl] setSelectedSegmentIndex:1];
@@ -969,31 +932,31 @@
         NSArray *priceFilteredApps = [[[self resultsController] fetchedObjects] filteredArrayUsingPredicate:pricePredicate];
         [self setAppsDisplayArray:priceFilteredApps];
         
-        NSManagedObject *appToShow = nil;
+        STAApp *appToShow = nil;
         if ([[self appsDisplayArray] count] > 0)
         {
-            appToShow = [[[self resultsController] fetchedObjects] objectAtIndex:argPosition];
+            appToShow = [[[self resultsController] fetchedObjects] objectAtIndex:indexOfApp];
         
-            if ([[appToShow valueForKey:STADisplayIndexAttributePriceTier] integerValue] == 1)
+            if ([[appToShow priceTier] integerValue] == 1)
             {            
                 appToShow = nil;
-                NSInteger indexToTest = argPosition;
+                NSInteger indexToTest = indexOfApp;
                 while (!appToShow && indexToTest >= 0)
                 {
-                    NSManagedObject *objectToTest = [[[self resultsController] fetchedObjects] objectAtIndex:indexToTest];
-                    if ([[objectToTest valueForKey:STADisplayIndexAttributePriceTier] integerValue] == 0)
-                        appToShow = objectToTest;
+                    STAApp *appToTest = [[[self resultsController] fetchedObjects] objectAtIndex:indexToTest];
+                    if ([[appToTest priceTier] integerValue] == 0)
+                        appToShow = appToTest;
                     indexToTest--;
                 }
             
                 if (!appToShow)
                 {
-                    NSInteger forwardIndexToTest = argPosition + 1;
+                    NSInteger forwardIndexToTest = indexOfApp + 1;
                     while (!appToShow && forwardIndexToTest < [[[self resultsController] fetchedObjects] count])
                     {
-                        NSManagedObject *forwardObjectToTest = [[[self resultsController] fetchedObjects] objectAtIndex:forwardIndexToTest];
-                        if ([[forwardObjectToTest valueForKey:STADisplayIndexAttributePriceTier] integerValue] == 0)
-                            appToShow = forwardObjectToTest;
+                        STAApp *forwardAppToTest = [[[self resultsController] fetchedObjects] objectAtIndex:forwardIndexToTest];
+                        if ([[forwardAppToTest priceTier] integerValue] == 0)
+                            appToShow = forwardAppToTest;
                         forwardIndexToTest++;
                     }
                 }
@@ -1009,18 +972,7 @@
     {
         [[self listPriceTierControl] setSelectedSegmentIndex:0];
         [self setAppsDisplayArray:[[self resultsController] fetchedObjects]];
-        [[self galleryView] displayRow:argPosition animated:NO];
-    }
-    else
-    {
-        // Search....
-        if (argPriceTier == STAPriceTierAll)
-            [[self searchPriceTierControl] setSelectedSegmentIndex:0];
-        else
-            [[self searchPriceTierControl] setSelectedSegmentIndex:1];
-        
-        [self setAppsDisplayArray:[[self resultsController] fetchedObjects]];
-        [[self galleryView] displayRow:argPosition animated:NO];
+        [[self galleryView] displayRow:indexOfApp animated:NO];
     }
 }
 
@@ -1032,16 +984,15 @@
     GVGalleryViewCell *cell = (GVGalleryViewCell*)[appStoreButton superview];
     NSInteger row = [cell row];
     
-    NSURL *appURL = nil;
     NSString *appIDString = nil;
     
     @try 
     {
-        //NSManagedObject *displayIndex = [[self resultsController] objectAtIndexPath:[NSIndexPath indexPathForRow:row inSection:0]];
-        NSManagedObject *displayIndex = [[self appsDisplayArray] objectAtIndex:row];
+        STAApp *app = [[self appsDisplayArray] objectAtIndex:row];
         
-        appURL = [NSURL URLWithString:[displayIndex valueForKey:STADisplayIndexAttributeAppURL]];
-        appIDString = [NSString stringWithFormat:@"%d", [[displayIndex valueForKey:STADisplayIndexAttributeAppID] integerValue]];
+        NSURL *appURL = [NSURL URLWithString:[app appURLString]];
+        
+        appIDString = [NSString stringWithFormat:@"%d", [[app appID] integerValue]];
         
         #ifdef LOG_SelectedAppDetails
                 NSLog(@"AppID: %@", appIDString);
@@ -1069,8 +1020,8 @@
     
     @try 
     {
-        NSManagedObject *displayIndex = [[self appsDisplayArray] objectAtIndex:row];
-        if (displayIndex)
+        STAApp *app = [[self appsDisplayArray] objectAtIndex:row];
+        if (app)
         {
             UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"View on the App Store?", @"View on the App Store?") message:@"" delegate:self cancelButtonTitle:NSLocalizedString(@"Cancel", @"Cance;") otherButtonTitles:NSLocalizedString(@"Yes", @"Yes"), nil];
             [alertView setTag:row];
@@ -1091,10 +1042,10 @@
 {
     if (buttonIndex == 1)
     {
-        NSManagedObject *displayIndex = [[self appsDisplayArray] objectAtIndex:[alertView tag]];
+        STAApp *app = [[self appsDisplayArray] objectAtIndex:[alertView tag]];
             
-        NSURL *appURL = [NSURL URLWithString:[displayIndex valueForKey:STADisplayIndexAttributeAppURL]];
-        NSString *appIDString = [NSString stringWithFormat:@"%d", [[displayIndex valueForKey:STADisplayIndexAttributeAppID] integerValue]];
+        NSURL *appURL = [NSURL URLWithString:[app appURLString]];
+        NSString *appIDString = [NSString stringWithFormat:@"%d", [[app appID] integerValue]];
             
         #ifdef LOG_SelectedAppDetails
             NSLog(@"AppID: %@", appIDString);
@@ -1129,9 +1080,9 @@
 
 #pragma mark - Results
 
-- (void)updateResultsForPriceTier:(enum STAPriceTier)argPriceTier
+- (void)updateResultsForPriceTier:(STAPriceTier)argPriceTier
 {
-    enum STAPriceTier currentPriceTier = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastListPriceTierKey] integerValue];
+    STAPriceTier currentPriceTier = [[[NSUserDefaults standardUserDefaults] valueForKey:STADefaultsLastListPriceTierKey] integerValue];
  
     NSArray *allListApps = [[self resultsController] fetchedObjects];
     if ([allListApps count] > 0)
@@ -1139,13 +1090,13 @@
         //NSLog(@"ADJUSTING -------------------------");
         if (currentPriceTier == STAPriceTierAll && argPriceTier == STAPriceTierFree)
         {
-            NSManagedObject *freeApp = nil;
+            STAApp *freeApp = nil;
             NSInteger indexToTest = [[self galleryView] currentRow];
             while (!freeApp && indexToTest >= 0)
             {
-                NSManagedObject *objectToTest = [[self appsDisplayArray] objectAtIndex:indexToTest];
-                if ([[objectToTest valueForKey:STADisplayIndexAttributePriceTier] integerValue] == 0)
-                    freeApp = objectToTest;
+                STAApp *appToTest = [[self appsDisplayArray] objectAtIndex:indexToTest];
+                if ([[appToTest priceTier] integerValue] == 0)
+                    freeApp = appToTest;
                 indexToTest--;
             }
             if (!freeApp)
@@ -1153,9 +1104,9 @@
                 NSInteger forwardIndexToTest = [[self galleryView] currentRow] + 1;
                 while (!freeApp && forwardIndexToTest < [allListApps count])
                 {
-                    NSManagedObject *forwardObjectToTest = [allListApps objectAtIndex:forwardIndexToTest];
-                    if ([[forwardObjectToTest valueForKey:STADisplayIndexAttributePriceTier] integerValue] == 0)
-                        freeApp = forwardObjectToTest;
+                    STAApp *forwardAppToTest = [allListApps objectAtIndex:forwardIndexToTest];
+                    if ([[forwardAppToTest priceTier] integerValue] == 0)
+                        freeApp = forwardAppToTest;
                     forwardIndexToTest++;
                 }
             }
@@ -1176,9 +1127,11 @@
         }
         else if (currentPriceTier == STAPriceTierFree && argPriceTier == STAPriceTierAll)
         {
-            NSInteger position = [[[[self appsDisplayArray] objectAtIndex:[[self galleryView] currentRow]] valueForKey:STADisplayIndexAttributePositionIndex] integerValue];
+            STAApp *currentApp = [[self appsDisplayArray] objectAtIndex:[[self galleryView] currentRow]];
             [self setAppsDisplayArray:allListApps];
-            [[self galleryView] displayRow:position animated:NO];
+            NSInteger updatedRow = [[self appsDisplayArray] indexOfObject:currentApp];
+            
+            [[self galleryView] displayRow:updatedRow animated:NO];
         }
         else if (argPriceTier == STAPriceTierFree)
         {
@@ -1404,7 +1357,7 @@
    
 #pragma mark - Searching Notification View
 
-- (void)updateSearchingNotificationViewWithState:(enum STASearchState)argState animated:(BOOL)argAnimated
+- (void)updateSearchingNotificationViewWithState:(STASearchState)argState animated:(BOOL)argAnimated
 {
     if (![self searchingNotificationView])
     {
@@ -1506,6 +1459,9 @@
         default:
             break;
     }
+    
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInteger:argState] forKey:STADefaultsLastSearchStateKey];
+    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 #pragma mark - Search Mask View

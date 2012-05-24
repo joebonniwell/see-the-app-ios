@@ -133,16 +133,18 @@
     
     CGFloat scanOffset = floor(minimumVisibleOffset / [self frame].size.width) * [self frame].size.width;
     
+    if ([[NSThread currentThread] isEqual:[NSThread mainThread]] == NO)
+        NSLog(@"Not main thread");
+    
     NSMutableArray *rowsToDisplay = [[NSMutableArray alloc] init];
     
     while (scanOffset <= maximumVisibleOffset) 
     {
-        NSNumber *rowToDisplay = [[NSNumber alloc] initWithInteger:floor(scanOffset / [self frame].size.width)];
+        NSNumber *rowToDisplay = [NSNumber numberWithInteger:floor(scanOffset / [self frame].size.width)];
         if ([rowToDisplay integerValue] >= 0 && [rowToDisplay integerValue] <= totalRows - 1)
         {
             [rowsToDisplay addObject:rowToDisplay];
         }
-        [rowToDisplay release];
         scanOffset += [self frame].size.width;
     }
     

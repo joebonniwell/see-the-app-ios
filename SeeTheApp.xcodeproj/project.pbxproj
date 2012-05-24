@@ -101,6 +101,10 @@
 		1FF703641416805E00F99082 /* MainWindow_iPad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF703621416805E00F99082 /* MainWindow_iPad.xib */; };
 		1FF8B77E14329FA8007A9EB6 /* SeaquationsScreenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF8B77C14329FA8007A9EB6 /* SeaquationsScreenshot.png */; };
 		1FF8B77F14329FA8007A9EB6 /* SeaquationsScreenshotHD.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FF8B77D14329FA8007A9EB6 /* SeaquationsScreenshotHD.png */; };
+		D8C9C173155F54D00006F5F2 /* STALocalAppImporter.m in Sources */ = {isa = PBXBuildFile; fileRef = D8C9C172155F54D00006F5F2 /* STALocalAppImporter.m */; };
+		D8C9C17C156035920006F5F2 /* STAAppData.m in Sources */ = {isa = PBXBuildFile; fileRef = D8C9C17B156035920006F5F2 /* STAAppData.m */; };
+		D8C9C180156090610006F5F2 /* STAXMLParseOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = D8C9C17F156090610006F5F2 /* STAXMLParseOperation.m */; };
+		D8D6837D1556F25C00EFCBA3 /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D8D6837C1556F25C00EFCBA3 /* libxml2.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -263,6 +267,13 @@
 		1FF703631416805E00F99082 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = iPad/en.lproj/MainWindow_iPad.xib; sourceTree = "<group>"; };
 		1FF8B77C14329FA8007A9EB6 /* SeaquationsScreenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SeaquationsScreenshot.png; sourceTree = "<group>"; };
 		1FF8B77D14329FA8007A9EB6 /* SeaquationsScreenshotHD.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SeaquationsScreenshotHD.png; sourceTree = "<group>"; };
+		D8C9C171155F54D00006F5F2 /* STALocalAppImporter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STALocalAppImporter.h; sourceTree = "<group>"; };
+		D8C9C172155F54D00006F5F2 /* STALocalAppImporter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STALocalAppImporter.m; sourceTree = "<group>"; };
+		D8C9C17A156035920006F5F2 /* STAAppData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STAAppData.h; sourceTree = "<group>"; };
+		D8C9C17B156035920006F5F2 /* STAAppData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STAAppData.m; sourceTree = "<group>"; };
+		D8C9C17E156090610006F5F2 /* STAXMLParseOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STAXMLParseOperation.h; sourceTree = "<group>"; };
+		D8C9C17F156090610006F5F2 /* STAXMLParseOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STAXMLParseOperation.m; sourceTree = "<group>"; };
+		D8D6837C1556F25C00EFCBA3 /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -270,6 +281,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8D6837D1556F25C00EFCBA3 /* libxml2.dylib in Frameworks */,
 				1F43D53814BE5A5E0019EAA4 /* MessageUI.framework in Frameworks */,
 				1FCEA81C143CDA99000E5E1D /* libz.dylib in Frameworks */,
 				1FC78F091436762300A6B80D /* libsqlite3.dylib in Frameworks */,
@@ -287,18 +299,12 @@
 		1F150DC9149697CC00D6AF38 /* View Controllers */ = {
 			isa = PBXGroup;
 			children = (
-				1F73550F143A266A00C4C6A4 /* SeeTheAppGalleryViewController.h */,
-				1F735510143A266B00C4C6A4 /* SeeTheAppGalleryViewController.m */,
-				1F150DC6149697C100D6AF38 /* SeeTheAppMainMenuViewController.h */,
-				1F150DC7149697C100D6AF38 /* SeeTheAppMainMenuViewController.m */,
-				1F150DD21496C62500D6AF38 /* SeeTheAppCategoriesMenuViewController.h */,
-				1F150DD31496C62500D6AF38 /* SeeTheAppCategoriesMenuViewController.m */,
-				1F150DD51496C66600D6AF38 /* SeeTheAppGamesSubcategoriesMenuViewController.h */,
-				1F150DD61496C66600D6AF38 /* SeeTheAppGamesSubcategoriesMenuViewController.m */,
-				1FB2ECA514BCBA1C0046FBAD /* SeeTheAppOptionsViewController.h */,
-				1FB2ECA614BCBA1C0046FBAD /* SeeTheAppOptionsViewController.m */,
-				1F43D53914BE62AB0019EAA4 /* SeeTheAppAppStoreSelectViewController.h */,
-				1F43D53A14BE62AC0019EAA4 /* SeeTheAppAppStoreSelectViewController.m */,
+				D8D71543154DD089000E878A /* MainMenuViewController */,
+				D8D71541154DD078000E878A /* GalleryViewController */,
+				D8D71544154DED89000E878A /* CategoriesMenuViewController */,
+				D8D71545154DED98000E878A /* GamesSubcategoriesMenuViewController */,
+				D8D71546154DEDAD000E878A /* OptionsViewController */,
+				D8D71547154DEDBB000E878A /* AppStoreSelectViewController */,
 			);
 			name = "View Controllers";
 			sourceTree = "<group>";
@@ -536,6 +542,7 @@
 		1FF7033F1416805D00F99082 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D8D6837C1556F25C00EFCBA3 /* libxml2.dylib */,
 				1FCEA81B143CDA99000E5E1D /* libz.dylib */,
 				1FC78F081436762300A6B80D /* libsqlite3.dylib */,
 				1F43D53714BE5A5E0019EAA4 /* MessageUI.framework */,
@@ -555,9 +562,12 @@
 				1FF703521416805D00F99082 /* SeeTheAppAppDelegate.m */,
 				1FF703541416805D00F99082 /* SeeTheApp.xcdatamodeld */,
 				1F150DC9149697CC00D6AF38 /* View Controllers */,
+				D8C9C16F155F54AF0006F5F2 /* LocalAppImporter */,
 				1FDC081E151976EA0097175E /* Core Data Classes */,
 				1F89CEC214C896A100D780A8 /* SeeTheAppMenuView */,
 				1F836B2814C9011B001CB129 /* AppStoreButton */,
+				D8C9C17D1560903F0006F5F2 /* STAXMLParseOperation */,
+				D8C9C178156035800006F5F2 /* STAAppData */,
 				1FF703571416805D00F99082 /* iPhone */,
 				1FF7035E1416805E00F99082 /* iPad */,
 				1F358245141AC7CE002D50C3 /* GVGalleryView */,
@@ -614,6 +624,87 @@
 			name = SeaquationsScreenshots;
 			sourceTree = "<group>";
 		};
+		D8C9C16F155F54AF0006F5F2 /* LocalAppImporter */ = {
+			isa = PBXGroup;
+			children = (
+				D8C9C171155F54D00006F5F2 /* STALocalAppImporter.h */,
+				D8C9C172155F54D00006F5F2 /* STALocalAppImporter.m */,
+			);
+			name = LocalAppImporter;
+			sourceTree = "<group>";
+		};
+		D8C9C178156035800006F5F2 /* STAAppData */ = {
+			isa = PBXGroup;
+			children = (
+				D8C9C17A156035920006F5F2 /* STAAppData.h */,
+				D8C9C17B156035920006F5F2 /* STAAppData.m */,
+			);
+			name = STAAppData;
+			sourceTree = "<group>";
+		};
+		D8C9C17D1560903F0006F5F2 /* STAXMLParseOperation */ = {
+			isa = PBXGroup;
+			children = (
+				D8C9C17E156090610006F5F2 /* STAXMLParseOperation.h */,
+				D8C9C17F156090610006F5F2 /* STAXMLParseOperation.m */,
+			);
+			name = STAXMLParseOperation;
+			sourceTree = "<group>";
+		};
+		D8D71541154DD078000E878A /* GalleryViewController */ = {
+			isa = PBXGroup;
+			children = (
+				1F73550F143A266A00C4C6A4 /* SeeTheAppGalleryViewController.h */,
+				1F735510143A266B00C4C6A4 /* SeeTheAppGalleryViewController.m */,
+			);
+			name = GalleryViewController;
+			sourceTree = "<group>";
+		};
+		D8D71543154DD089000E878A /* MainMenuViewController */ = {
+			isa = PBXGroup;
+			children = (
+				1F150DC6149697C100D6AF38 /* SeeTheAppMainMenuViewController.h */,
+				1F150DC7149697C100D6AF38 /* SeeTheAppMainMenuViewController.m */,
+			);
+			name = MainMenuViewController;
+			sourceTree = "<group>";
+		};
+		D8D71544154DED89000E878A /* CategoriesMenuViewController */ = {
+			isa = PBXGroup;
+			children = (
+				1F150DD21496C62500D6AF38 /* SeeTheAppCategoriesMenuViewController.h */,
+				1F150DD31496C62500D6AF38 /* SeeTheAppCategoriesMenuViewController.m */,
+			);
+			name = CategoriesMenuViewController;
+			sourceTree = "<group>";
+		};
+		D8D71545154DED98000E878A /* GamesSubcategoriesMenuViewController */ = {
+			isa = PBXGroup;
+			children = (
+				1F150DD51496C66600D6AF38 /* SeeTheAppGamesSubcategoriesMenuViewController.h */,
+				1F150DD61496C66600D6AF38 /* SeeTheAppGamesSubcategoriesMenuViewController.m */,
+			);
+			name = GamesSubcategoriesMenuViewController;
+			sourceTree = "<group>";
+		};
+		D8D71546154DEDAD000E878A /* OptionsViewController */ = {
+			isa = PBXGroup;
+			children = (
+				1FB2ECA514BCBA1C0046FBAD /* SeeTheAppOptionsViewController.h */,
+				1FB2ECA614BCBA1C0046FBAD /* SeeTheAppOptionsViewController.m */,
+			);
+			name = OptionsViewController;
+			sourceTree = "<group>";
+		};
+		D8D71547154DEDBB000E878A /* AppStoreSelectViewController */ = {
+			isa = PBXGroup;
+			children = (
+				1F43D53914BE62AB0019EAA4 /* SeeTheAppAppStoreSelectViewController.h */,
+				1F43D53A14BE62AC0019EAA4 /* SeeTheAppAppStoreSelectViewController.m */,
+			);
+			name = AppStoreSelectViewController;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -640,7 +731,7 @@
 		1FF703331416805C00F99082 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0420;
+				LastUpgradeCheck = 0430;
 			};
 			buildConfigurationList = 1FF703361416805C00F99082 /* Build configuration list for PBXProject "SeeTheApp" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -786,6 +877,9 @@
 				1F836B2C14C90158001CB129 /* STAAppStoreButton.m in Sources */,
 				1FDC0821151977100097175E /* STAApp.m in Sources */,
 				1FDC08241519771F0097175E /* STACategory.m in Sources */,
+				D8C9C173155F54D00006F5F2 /* STALocalAppImporter.m in Sources */,
+				D8C9C17C156035920006F5F2 /* STAAppData.m in Sources */,
+				D8C9C180156090610006F5F2 /* STAXMLParseOperation.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -860,18 +954,20 @@
 					armv7,
 				);
 				CODE_SIGN_IDENTITY = "iPhone Developer: Joe Bonniwell (MLB2F766F7)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Joe Bonniwell (MLB2F766F7)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				"HEADER_SEARCH_PATHS[arch=*]" = /usr/include/libxml2;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
 				ONLY_ACTIVE_ARCH = NO;
-				PROVISIONING_PROFILE = "D67F0788-ADA2-4277-B8FD-06BDF75A8D44";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "D67F0788-ADA2-4277-B8FD-06BDF75A8D44";
+				"OTHER_LDFLAGS[arch=*]" = "-lxml2";
+				PROVISIONING_PROFILE = "FA4810E8-5552-47EF-BBE0-644A4570F0CC";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -884,17 +980,19 @@
 					armv6,
 					armv7,
 				);
-				CODE_SIGN_IDENTITY = "iPhone Distribution: goVertex LLC";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: goVertex LLC";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Joe Bonniwell (MLB2F766F7)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				"HEADER_SEARCH_PATHS[arch=*]" = /usr/include/libxml2;
 				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
-				PROVISIONING_PROFILE = "A1B2EC25-899F-423A-A282-158FB03A2268";
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "A1B2EC25-899F-423A-A282-158FB03A2268";
+				"OTHER_LDFLAGS[arch=*]" = "-lxml2";
+				PROVISIONING_PROFILE = "FA4810E8-5552-47EF-BBE0-644A4570F0CC";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -914,11 +1012,11 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SeeTheApp/SeeTheApp-Prefix.pch";
+				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = "SeeTheApp/SeeTheApp-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "D67F0788-ADA2-4277-B8FD-06BDF75A8D44";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -936,6 +1034,7 @@
 				COPY_PHASE_STRIP = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SeeTheApp/SeeTheApp-Prefix.pch";
+				GCC_THUMB_SUPPORT = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = "SeeTheApp/SeeTheApp-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 4.0;

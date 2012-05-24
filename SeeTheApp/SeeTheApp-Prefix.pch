@@ -29,10 +29,16 @@
 #define STANotificationViewActivityIcon         4
 
 // ---------------------------------------------------------------------------------------
+// Process Notifications
+
+#define STAXMLParsingCompleteNotification       @"STAXMLParsingCompleteNotification"
+
+// ---------------------------------------------------------------------------------------
 // Search Notifications
 
 #define STASearchErrorNotification              @"SearchErrorNotification"
 #define STASearchNoResultsNotification          @"SearchNoResultsNotification"
+#define STASearchCompleteNotification           @"SearchCompleteNotification"
 
 // ---------------------------------------------------------------------------------------
 // Caching Constants
@@ -70,7 +76,7 @@
 // ---------------------------------------------------------------------------------------
 // STA Display Modes
 
-enum STADisplayMode
+typedef enum 
 {
     STADisplayModeNone = 0,
     STADisplayModeBrowse = 1,
@@ -82,28 +88,28 @@ enum STADisplayMode
     STADisplayModeSearch = 7
     // Help & Settings
     // Favorites or whatever
-};
+} STADisplayMode;
 
 // ---------------------------------------------------------------------------------------
 // STA Price Tiers
 
-enum STAPriceTier
+typedef enum 
 {
     STAPriceTierFree = 0,
     STAPriceTierAll = 1
-};
+} STAPriceTier;
 
 // ---------------------------------------------------------------------------------------
 // STA Search States
 
-enum STASearchState
+typedef enum 
 {
     STASearchStateNone = 0,
     STASearchStateInProgress = 1,
     STASearchStateHasResults = 2,
     STASearchStateNoResults = 3,
     STASearchStateFailed = 4
-};
+} STASearchState;
 
 // ---------------------------------------------------------------------------------------
 // STA GalleryView View Tags
@@ -129,10 +135,14 @@ enum STASearchState
 #define STADefaultsLastCategoryKey                  @"LastCategoryKey"
 #define STADefaultsLastListPriceTierKey             @"LastListPriceTierKey"
 #define STADefaultsLastPositionsDictionaryKey       @"LastPositionsDictionary"
+#define STADefaultsLastPositionDatesDictionaryKey   @"LastPositionDatesDictionary"
+
+// Search Defaults
 #define STADefaultsLastSearchPriceTierKey           @"LastSearchPriceTierKey"
 #define STADefaultsLastSearchTermKey                @"LastSearchTermKey"
 #define STADefaultsLastSearchCategoryKey            @"LastSearchCategoryKey"
 #define STADefaultsLastSearchStateKey               @"LastSearchStateKey"
+#define STADefaultsLastSearchAppIDsKey              @"STADefaultsLastSearchAppIDsKey"
 
 // Last XML Download
 #define STADefaultsLastXMLDownloadDateKey           @"LastXMLDownloadDateKey"
@@ -143,6 +153,9 @@ enum STASearchState
 // Country Defaults
 #define STADefaultsAppStoreCountryKey               @"AppStoreCountryKey"
 #define STADefaultsLastAppStoreCountryKey           @"LastAppStoreCountryKey"
+
+// Conversion Defaults
+#define STADefaultsDisplayIndicesConverted          @"STADefaultsDisplayIndicesConverted"
 
 // ---------------------------------------------------------------------------------------
 // STA DisplayIndex Attributes
@@ -170,6 +183,7 @@ enum STASearchState
 #define STAConnectionURLStringKey               @"URLString"
 #define STAConnectionDataKey                    @"ConnectionData"
 #define STAConnectionSearchCategoryKey          @"SearchCategory"
+#define STAConnectionCountryKey                 @"Country"
 
 // ---------------------------------------------------------------------------------------
 // DEBUG
@@ -186,18 +200,19 @@ enum STASearchState
 //#define LOG_PrintContentOffset              1
 //#define LOG_HeaderFooterRequests            1
 //#define LOG_FooterLocation                  1
-//#define LOG_SelectedAppDetails              1
+#define LOG_SelectedAppDetails              1
 //#define LOG_AppStoreCountryChanges          1
 //#define LOG_UpdateDownloadsResults          1
 //#define LOG_DownloadActivity                1
 //#define LOG_InMemoryCacheCounts             1
 //#define LOG_PositionSaves                   1
 //#define LOG_SearchStatus                    1
+//#define LOG_XMLParingErrors                 1
 
 // ---------------------------------------------------------------------------------------
 // STA Categories
 
-enum STACategory
+typedef enum 
 {
     STACategoryNone = 0,
     STACategoryBrowse = 1000,
@@ -241,5 +256,6 @@ enum STACategory
     STACategoryEducation = 6017,
     STACategoryBook = 6018,
     STACategoryMedical = 6020,
-    STACategoryNewsstand = 6021
-};
+    STACategoryNewsstand = 6021,
+    STACategoryCatalogs = 6022
+} STACategoryCode;

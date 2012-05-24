@@ -13,6 +13,8 @@
 #import "STASearchBar.h"
 #import "STAAppStoreButton.h"
 #import <QuartzCore/QuartzCore.h>
+#import "STACategory.h"
+#import "STAApp.h"
 
 @protocol SeeTheAppViewControllerDelegate <NSObject>
 
@@ -27,11 +29,9 @@
 
 - (void)checkPendingConnections;
 
-- (void)updateLastPosition:(NSInteger)argLastPosition;
+- (void)updateLastPosition:(NSDate*)argLastPosition;
 
 // Current Downloads
-- (CFMutableDictionaryRef)currentListDownloadConnections;
-- (NSMutableArray*)pendingListDownloadURLStrings;
 - (CFMutableDictionaryRef)currentImageDownloadConnections;
 - (NSMutableArray*)pendingImageDownloadURLStrings;
 
@@ -39,7 +39,11 @@
 - (void)startSearchResultsDownloadWithURLString:(NSString*)argSearchResultsDownloadURLString searchCategory:(NSInteger)argSearchCategory;
 
 // Update Catgory
-- (void)updateCategory:(enum STACategory)argCategory;
+- (void)updateCategory:(STACategoryCode)argCategory;
+
+//- (STACategory*)categoryForCategoryCode:(NSNumber*)argCategoryCode;
+
+- (NSArray*)searchResultAppsForAppIDs:(NSArray*)searchAppIDs;
 
 @end
 
@@ -61,7 +65,7 @@
     NSFetchedResultsController *searchController;
     
     // Current Mode
-    enum STADisplayMode currentMode;
+    STADisplayMode currentMode;
     
     // Searching Notification View
     UIView *searchingNotificationView;
@@ -110,7 +114,7 @@
 @property (nonatomic, retain, readonly) UIImage *errorIconImage;
 
 // Current Mode
-@property enum STADisplayMode currentMode;
+@property STADisplayMode currentMode;
 
 // Gallery View
 @property (retain) GVGalleryView *galleryView;
@@ -135,7 +139,6 @@
 
 // Download Management
 - (void)updateDownloads;
-- (void)updateListDownloads;
 - (void)updateImageDownloads;
 - (void)screenshotDownloadCompleted:(NSString*)argScreenshotURLString;
 
@@ -143,21 +146,21 @@
 - (void)cacheImage:(STAScreenshotImage*)argImage forURLString:(NSString*)argURLString;
 - (STAScreenshotImage*)cachedImageForURLString:(NSString*)argURLString;
 
-- (void)updateResultsForPriceTier:(enum STAPriceTier)argPriceTier;
+- (void)updateResultsForPriceTier:(STAPriceTier)argPriceTier;
 
 // Display Methods
-- (void)displayMode:(enum STADisplayMode)argDisplayMode;
-- (void)displayCategory:(enum STACategory)argCategory forAppStoreCountryCode:(NSString*)argCountryCode;
-- (void)displayPosition:(NSInteger)argPosition forPriceTier:(enum STAPriceTier)argPriceTier;
+- (void)setDisplayMode:(STADisplayMode)argDisplayMode;
+- (void)displayCategory:(STACategoryCode)argCategory forAppStoreCountryCode:(NSString*)argCountryCode;
+- (void)displayPosition:(NSDate*)argPosition forPriceTier:(STAPriceTier)argPriceTier;
 
 // Position
-- (NSInteger)positionOfCurrentRow;
+- (NSDate*)positionOfCurrentRow;
 
 // Localization
 - (void)resetText;
 
 // Searching Notification View Methods
-- (void)updateSearchingNotificationViewWithState:(enum STASearchState)argState animated:(BOOL)argAnimated;
+- (void)updateSearchingNotificationViewWithState:(STASearchState)argState animated:(BOOL)argAnimated;
 
 // Search Animation Methods
 - (void)activeSearchAnimation;

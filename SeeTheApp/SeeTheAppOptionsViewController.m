@@ -244,6 +244,8 @@
     
     [self setEmailUsLabel:nil];
     [self setEmailUsButton:nil];
+    
+    [super dealloc];
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -302,7 +304,7 @@
 {
     [[self delegate] updateAppStoreCountry:argSelectedAppStore];
     [self dismissModalViewControllerAnimated:YES];
-    [[self delegate] populateInitialAppsForCurrentCountry];
+    //[[self delegate] populateInitialAppsForCurrentCountry];
 }
 
 #pragma mark - MailComposeViewControllerDelegate Methods
