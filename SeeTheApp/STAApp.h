@@ -17,5 +17,6 @@
 @property (nonatomic, retain) NSDate *lastUpdatedDate;
 @property (nonatomic, retain) NSNumber *priceTier;
 @property (nonatomic, retain) NSString *screenshotURLString;
+@property (nonatomic, retain) NSSet *categories;
 
 @end

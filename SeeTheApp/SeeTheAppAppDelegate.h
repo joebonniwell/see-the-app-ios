@@ -16,8 +16,10 @@
 #import "LocalyticsSession.h"
 #import "Reachability.h"
 #import "SBJson.h"
+#import "STAApp.h"
+#import "STACategory.h"
 
-@interface SeeTheAppAppDelegate : NSObject <UIApplicationDelegate, NSURLConnectionDelegate, NSURLConnectionDataDelegate, STAMainMenuDelegate, UINavigationControllerDelegate, SeeTheAppOptionsViewControllerDelegate> 
+@interface SeeTheAppAppDelegate : NSObject <UIApplicationDelegate, NSURLConnectionDelegate, NSURLConnectionDataDelegate, STAMainMenuDelegate, UINavigationControllerDelegate, SeeTheAppOptionsViewControllerDelegate, NSXMLParserDelegate> 
 {
     // Reachability
     BOOL hasNetworkConnection;
@@ -63,6 +65,7 @@
     NSDictionary *affiliateCodesDictionary_gv;
     NSArray *categoriesInfo_gv;
     NSArray *gameCategoriesInfo_gv;
+    NSDictionary *categories_gv;
 }
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;
@@ -82,6 +85,9 @@
 @property (nonatomic, retain, readonly) NSManagedObjectContext *managedObjectContext;
 @property (nonatomic, retain, readonly) NSManagedObjectModel *managedObjectModel;
 @property (nonatomic, retain, readonly) NSPersistentStoreCoordinator *persistentStoreCoordinator;
+
+// XML Parsing AppIDs Array
+@property (nonatomic, retain) NSMutableArray *appIDsArray;
 
 // Pending Connections
 @property (nonatomic, retain, readonly) NSMutableArray *pendingListDownloadURLStrings;
@@ -111,9 +117,22 @@
 
 - (void)restoreLastDisplayMode;
 
+// Categories
+- (STACategory*)categoryForCategoryCode:(NSNumber*)argCategoryCode;
+
 // App Download Methods
 - (void)startXMLDownloads;
 
+// Download Processing Methods
+- (void)processXMLDownloadData:(NSDictionary*)argXMLDownloadData;
+- (void)processListJSONDownloadData:(NSDictionary*)argListJSONDownloadData;
+- (void)processImageDownloadData:(NSDictionary*)argImageDownloadData;
+- (void)processSearchJSONDownloadData:(NSDictionary*)argSearchJSONDownloadData;
+
+// Start Next Download Methods
+- (void)startPendingXMLDownloads;
+- (void)startPendingListJSONDownloads;
+- (void)startPendingImageDownloads;
 
 // Other Methods
 - (void)relocalizeText;

@@ -333,6 +333,8 @@
     
     [applicationLibrarySTADirectory_gv release];
     
+    [categories_gv release];
+    
     [self setReachability:nil];
     
     [_window release];
@@ -511,10 +513,25 @@
 {
     // Should really keep track of failure... and only update the last updated date once we have successfully retreived the apps...
     
-    // Clear any pending XML downloads
-    // Generate the pending XML download URLs
+    [[self pendingXMLDownloadURLStrings] removeAllObjects];
+    // TODO: Generate the pending XML download URLs
+    
+    for (NSDictionary *categoryInfo in [self categoriesInfo])
+    {
+        
+    }
+    for (NSDictionary *gameCategoryInfo in [self gameCategoriesInfo])
+    {
+        // skip the all games category
+    }
+    
+    // for each category
+        // for each listtype
+            // construct xmlString
+            // add to pending downloads
+    
     // Add the pending XML download URLs
-    // Check for currentXML Downloads and start as necessary
+    [self startPendingXMLDownloads];
 }
 
 #pragma mark - Download Starter Timed Evaluation
@@ -818,45 +835,41 @@
         return;
     }
     
+    connectionDictionary = CFDictionaryGetValue([self currentXMLDownloadConnections], argConnection);
+    if (connectionDictionary != NULL)
+    {
+        #ifdef LOG_DownloadActivity 
+            NSLog(@"XML download completed"); 
+        #endif
+        [self processXMLDownloadData:connectionDictionary];
+        CFDictionaryRemoveValue([self currentXMLDownloadConnections], argConnection);
+        [self startPendingXMLDownloads];
+        [self updateNetworkActivityIndicator];
+        return;
+    }
+    
+    connectionDictionary = CFDictionaryGetValue([self currentListJSONDownloadConnections], argConnection);
+    if (connectionDictionary != NULL)
+    {
+        #ifdef LOG_DownloadActivity 
+            NSLog(@"List JSON download completed"); 
+        #endif
+        [self processListJSONDownloadData:connectionDictionary];
+        CFDictionaryRemoveValue([self currentListJSONDownloadConnections], argConnection);
+        [self startPendingListJSONDownloads];
+        [self updateNetworkActivityIndicator];
+        return;
+    }
+    
     connectionDictionary = CFDictionaryGetValue([self currentImageDownloadConnections], argConnection);
     if (connectionDictionary != NULL)
     {
-        #ifdef LOG_DownloadActivity
-            NSLog(@"Image download completed");
+        #ifdef LOG_DownloadActivity 
+            NSLog(@"Image download completed"); 
         #endif
-        
-        NSMutableData *connectionData = [connectionDictionary objectForKey:STAConnectionDataKey];
-        if (connectionData)
-        {
-            NSString *urlString = [connectionDictionary objectForKey:STAConnectionURLStringKey];
-            
-            NSString *imageFilePath = [self filePathOfImageDataForURLString:urlString];
-            
-            if([[NSFileManager defaultManager] createFileAtPath:imageFilePath contents:connectionData attributes:nil])
-                [[self galleryViewController] screenshotDownloadCompleted:urlString];
-        }
-        
+        [self processImageDownloadData:connectionDictionary];
         CFDictionaryRemoveValue([self currentImageDownloadConnections], argConnection);
-        
-        if ([[self pendingImageDownloadURLStrings] count] > 0)
-        {
-            #ifdef LOG_DownloadActivity
-                NSLog(@"Image download starting");
-            #endif
-            
-            NSString *connectionURLString = [[self pendingImageDownloadURLStrings] objectAtIndex:0];
-            
-            NSMutableDictionary *connectionDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:connectionURLString, STAConnectionURLStringKey, [NSMutableData data], STAConnectionDataKey, nil];
-                                    
-            NSURL *imageURL = [NSURL URLWithString:connectionURLString];
-            NSURLRequest *imageRequest = [NSURLRequest requestWithURL:imageURL];
-            NSURLConnection *imageDownloadConnection = [NSURLConnection connectionWithRequest:imageRequest delegate:self];
-           
-            CFDictionaryAddValue([self currentImageDownloadConnections], imageDownloadConnection, connectionDict);
-            
-            [[self pendingImageDownloadURLStrings] removeObjectAtIndex:0];
-        }
-        
+        [self startPendingImageDownloads];
         [self updateNetworkActivityIndicator];
         return;
     }
@@ -864,38 +877,8 @@
     connectionDictionary = CFDictionaryGetValue([self currentSearchDownloadConnection], argConnection);
     if (connectionDictionary != NULL)
     {
-        NSNumber *searchCategory = [connectionDictionary objectForKey:STAConnectionSearchCategoryKey];
-        NSMutableData *connectionData = [connectionDictionary objectForKey:STAConnectionDataKey];
-        if (connectionData)
-        {
-            #ifdef LOG_DownloadActivity
-                NSString *dataString = [[NSString alloc] initWithData:connectionData encoding:NSUTF8StringEncoding];
-                NSLog(@"Search download completed with data: %@", dataString);
-                [dataString release];
-            #endif
-                                
-            NSString *jsonString = [[NSString alloc] initWithData:connectionData encoding:NSUTF8StringEncoding];
-            NSDictionary *appListDictionary = [jsonString JSONValue];
-            [jsonString release];
-                
-            if (appListDictionary)
-            {
-                if ([[appListDictionary valueForKey:@"resultCount"] integerValue] > 0)
-                    [self processNewAppsInDictionary:appListDictionary];
-                else
-                {
-                    [[NSNotificationCenter defaultCenter] postNotificationName:STASearchNoResultsNotification object:nil userInfo:[NSDictionary dictionaryWithObject:searchCategory forKey:@"STASearchCategory"]];
-                }
-            }
-            else
-            {
-                [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"InvalidJSONResponse" attributes:[NSDictionary dictionaryWithObject:[connectionDictionary objectForKey:STAConnectionURLStringKey] forKey:@"URL"]];
-                [[NSNotificationCenter defaultCenter] postNotificationName:STASearchErrorNotification object:nil userInfo:[NSDictionary dictionaryWithObject:searchCategory forKey:@"STASearchCategory"]];
-            }
-        }
-            
+        [self processSearchJSONDownloadData:connectionDictionary];
         CFDictionaryRemoveValue([self currentSearchDownloadConnection], argConnection);
-            
         [self updateNetworkActivityIndicator];
         return;
     }
@@ -907,7 +890,19 @@
 {
     NSLog(@"Connection failed");
     
-    if (CFDictionaryContainsKey([self currentListDownloadConnections], argConnection))
+    if (CFDictionaryContainsKey([self currentXMLDownloadConnections], argConnection))
+    {
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"XMLDownloadFailure" attributes:[NSDictionary dictionaryWithObject:[argError localizedDescription] forKey:@"Error"]];
+        CFDictionaryRemoveValue([self currentXMLDownloadConnections], argConnection);
+        [self startPendingXMLDownloads];
+    }
+    else if (CFDictionaryContainsKey([self currentListJSONDownloadConnections], argConnection))
+    {
+        [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"ListJSONDownloadFailure" attributes:[NSDictionary dictionaryWithObject:[argError localizedDescription] forKey:@"Error"]];
+        CFDictionaryRemoveValue([self currentListJSONDownloadConnections], argConnection);
+        [self startPendingListJSONDownloads];
+    }
+    else if (CFDictionaryContainsKey([self currentListDownloadConnections], argConnection))
     {
         [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"ListDownloadFailure" attributes:[NSDictionary dictionaryWithObject:[argError localizedDescription] forKey:@"Error"]];
         CFDictionaryRemoveValue([self currentListDownloadConnections], argConnection);
@@ -921,9 +916,307 @@
         CFDictionaryRemoveValue([self currentSearchDownloadConnection], argConnection);
     }
     else
+    {
         CFDictionaryRemoveValue([self currentImageDownloadConnections], argConnection);
+        [self startPendingImageDownloads];
+    }
     
     [self updateNetworkActivityIndicator];
+}
+
+#pragma mark - Download Processing Methods
+
+- (void)processXMLDownloadData:(NSDictionary*)argXMLDownloadData
+{
+    NSMutableData *connectionData = [argXMLDownloadData objectForKey:STAConnectionDataKey];
+    if (connectionData)
+    {
+        NSXMLParser *parser = [[NSXMLParser alloc] initWithData:connectionData];
+        [parser setDelegate:self];
+        [self setAppIDsArray:[NSMutableArray array]];
+        if([parser parse])
+        {
+            // Potentially randomize array...
+            
+            NSMutableString *lookupURLString = [NSMutableString string];
+            NSInteger appIDsInLookupString = 0;
+            NSString *countryCode = [[NSUserDefaults standardUserDefaults] objectForKey:STADefaultsAppStoreCountryKey];
+            
+            for (NSNumber *appID in [self appIDsArray])
+            {
+                if (appIDsInLookupString == 20)
+                {
+                    [[self pendingListJSONDownloadURLStrings] addObject:[lookupURLString substringToIndex:([lookupURLString length] - 1)]];
+                    lookupURLString = [NSMutableString stringWithFormat:@"http://itunes.apple.com/lookup?country=%@id=", countryCode];
+                    appIDsInLookupString = 0;
+                }
+                [lookupURLString appendFormat:@"%d,", [appID integerValue]];
+                appIDsInLookupString++;
+            }
+            
+            if (appIDsInLookupString > 0)
+                [[self pendingListJSONDownloadURLStrings] addObject:[lookupURLString substringToIndex:([lookupURLString length] - 1)]];
+            
+            [self startPendingListJSONDownloads];
+        }
+        else
+            NSLog(@"XML Parsing Error: %@", [[parser parserError] localizedDescription]);
+        
+        [parser release];
+    }
+}
+
+- (void)processListJSONDownloadData:(NSDictionary*)argListJSONDownloadData
+{
+    NSData *listJSONData = [argListJSONDownloadData objectForKey:STAConnectionDataKey];
+
+    SBJsonParser *parser = [[SBJsonParser alloc] init];
+    
+    NSDictionary *listJSONResults = [parser objectWithData:listJSONData];
+    
+    [parser release];
+    
+    if (!listJSONResults)
+    {
+        NSLog(@"Error getting JSON Results from download data");
+        return;
+    }
+    
+    if ([[listJSONResults objectForKey:@"resultCount"] integerValue] > 0)
+    {
+        NSArray *results = [listJSONResults objectForKey:@"results"];
+        
+        NSMutableDictionary *refinedResults = [NSMutableDictionary dictionary];
+        
+        NSString *countryCode;
+        
+        for (NSDictionary *result in results)
+        {
+            NSString *screenshotArrayKey = @"screenshotUrls";
+            
+            if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+                screenshotArrayKey = @"iPadScreenshotUrls";
+            
+            NSArray *screenshots = [result objectForKey:screenshotArrayKey];
+            if ([screenshots count] > 0)
+            {
+                NSString *screenshotURLString = [screenshots objectAtIndex:0];
+            
+                NSNumber *priceTier = [NSNumber numberWithInteger:0];
+                if ([[result objectForKey:@"price"] floatValue] > 0.00)
+                    priceTier = [NSNumber numberWithInteger:1];
+                
+                NSNumber *appID = [result objectForKey:@"trackId"];
+            
+                // Categories...
+                
+                NSDictionary *refinedResult = [NSDictionary dictionaryWithObjectsAndKeys:
+                                               [result objectForKey:@"trackViewUrl"], @"AppURL",
+                                               screenshotURLString, @"AppScreenshotURLString",
+                                               priceTier, @"PriceTier",
+                                               // what about the country....
+                                               nil];
+                
+                [refinedResults setObject:refinedResult forKey:appID];
+            }
+        }
+        
+        if ([[refinedResults allKeys] count] == 0)
+            return;
+        
+        NSPredicate *existingAppsFromLookupPredicate = [NSPredicate predicateWithFormat:@"country like %@ AND appID IN %@", countryCode, [refinedResults allKeys]];
+        
+        NSFetchRequest *existingAppsFromLookupFetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"App"];
+        [existingAppsFromLookupFetchRequest setPredicate:existingAppsFromLookupPredicate];
+        
+        NSError *fetchError;
+        
+        NSArray *existingAppsFromLookup = [[self managedObjectContext] executeFetchRequest:existingAppsFromLookupFetchRequest error:&fetchError];
+        
+        if (!existingAppsFromLookup)
+        {
+            NSLog(@"Existing Apps fetch error: %@", [fetchError localizedDescription]);
+            return;
+        }
+        
+        NSMutableArray *keysToRemove = [NSMutableArray array];
+        
+        for (STAApp *existingApp in existingAppsFromLookup)
+        {
+            NSNumber *appID = [existingApp appID];
+            
+            NSDictionary *appInfo = [refinedResults objectForKey:appID];
+            
+            [keysToRemove addObject:appID];
+            
+            [existingApp setAppURLString:[appInfo objectForKey:@"AppURL"]];
+            [existingApp setPriceTier:[appInfo objectForKey:@"PriceTier"]];
+            [existingApp setScreenshotURLString:[appInfo objectForKey:@"AppScreenshotURLString"]];
+            
+            NSMutableSet *categories = [NSMutableSet set];
+            
+            for (NSNumber *categoryCode in [appInfo objectForKey:@"Categories"])
+            {
+                STACategory *category = [self categoryForCategoryCode:categoryCode];
+                if (category)
+                    [categories addObject:category];
+            }
+            
+            [existingApp setCategories:categories];
+        }
+        
+        [refinedResults removeObjectsForKeys:keysToRemove];
+        
+        for (NSNumber *appID in [refinedResults allKeys])
+        {
+            NSDictionary *appInfo = [refinedResults objectForKey:appID];
+            
+            STAApp *newApp = [NSEntityDescription insertNewObjectForEntityForName:@"App" inManagedObjectContext:[self managedObjectContext]];
+            
+            [newApp setAppID:appID];
+            [newApp setAppURLString:[appInfo objectForKey:@"AppURL"]];
+            [newApp setPriceTier:[appInfo objectForKey:@"PriceTier"]];
+            [newApp setScreenshotURLString:[appInfo objectForKey:@"AppScreenshotURLString"]];
+                        
+            NSMutableSet *categories = [NSMutableSet set];
+            
+            for (NSNumber *categoryCode in [appInfo objectForKey:@"Categories"])
+            {
+                STACategory *theCategory = [self categoryForCategoryCode:categoryCode];
+                if (theCategory)
+                    [categories addObject:theCategory];
+            }
+            [newApp setCategories:categories];
+        }
+        
+        [[self managedObjectContext] save:nil];
+    }
+}
+
+- (void)processImageDownloadData:(NSDictionary*)argImageDownloadData
+{
+    NSMutableData *connectionData = [argImageDownloadData objectForKey:STAConnectionDataKey];
+    if (connectionData)
+    {
+        NSString *urlString = [argImageDownloadData objectForKey:STAConnectionURLStringKey];
+        
+        NSString *imageFilePath = [self filePathOfImageDataForURLString:urlString];
+        
+        if([[NSFileManager defaultManager] createFileAtPath:imageFilePath contents:connectionData attributes:nil])
+            [[self galleryViewController] screenshotDownloadCompleted:urlString];
+    }
+}
+
+- (void)processSearchJSONDownloadData:(NSDictionary*)argSearchJSONDownloadData
+{
+    NSNumber *searchCategory = [argSearchJSONDownloadData objectForKey:STAConnectionSearchCategoryKey];
+    NSMutableData *connectionData = [argSearchJSONDownloadData objectForKey:STAConnectionDataKey];
+    if (connectionData)
+    {
+        #ifdef LOG_DownloadActivity
+            NSString *dataString = [[NSString alloc] initWithData:connectionData encoding:NSUTF8StringEncoding];
+            NSLog(@"Search download completed with data: %@", dataString);
+            [dataString release];
+        #endif
+        
+        NSString *jsonString = [[NSString alloc] initWithData:connectionData encoding:NSUTF8StringEncoding];
+        NSDictionary *appListDictionary = [jsonString JSONValue];
+        [jsonString release];
+        
+        if (appListDictionary)
+        {
+            if ([[appListDictionary valueForKey:@"resultCount"] integerValue] > 0)
+                [self processNewAppsInDictionary:appListDictionary];
+            else
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:STASearchNoResultsNotification object:nil userInfo:[NSDictionary dictionaryWithObject:searchCategory forKey:@"STASearchCategory"]];
+            }
+        }
+        else
+        {
+            [[LocalyticsSession sharedLocalyticsSession] tagEvent:@"InvalidJSONResponse" attributes:[NSDictionary dictionaryWithObject:[argSearchJSONDownloadData objectForKey:STAConnectionURLStringKey] forKey:@"URL"]];
+            [[NSNotificationCenter defaultCenter] postNotificationName:STASearchErrorNotification object:nil userInfo:[NSDictionary dictionaryWithObject:searchCategory forKey:@"STASearchCategory"]];
+        }
+    }
+}
+
+#pragma mark - NSXMLParser Delegate Methods
+
+- (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName attributes:(NSDictionary *)attributeDict
+{
+    if ([elementName isEqualToString:@"id"])
+    {
+        if ([[attributeDict allKeys] containsObject:@"im:id"])
+        {
+            NSInteger appID = [[attributeDict objectForKey:@"im:id"] integerValue];
+            [[self appIDsArray] addObject:[NSNumber numberWithInteger:appID]];
+        }
+    }
+}
+
+#pragma mark - Start Next Download Methods
+
+- (void)startPendingXMLDownloads
+{
+    while ([[self pendingXMLDownloadURLStrings] count] > 0 && CFDictionaryGetCount([self currentXMLDownloadConnections]) <= 2)
+    {
+        #ifdef LOG_DownloadActivity
+            NSLog(@"XML download starting");
+        #endif
+        
+        NSString *connectionURLString = [[self pendingXMLDownloadURLStrings] objectAtIndex:0];
+        NSMutableDictionary *connectionDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                               connectionURLString, STAConnectionURLStringKey, 
+                                               [NSMutableData data], STAConnectionDataKey, 
+                                               nil];
+        NSURL *xmlURL = [NSURL URLWithString:connectionURLString];
+        NSURLRequest *xmlRequest = [NSURLRequest requestWithURL:xmlURL];
+        NSURLConnection *xmlDownloadConnection = [NSURLConnection connectionWithRequest:xmlRequest delegate:self];
+        CFDictionaryAddValue([self currentXMLDownloadConnections], xmlDownloadConnection, connectionDict);
+        [[self pendingXMLDownloadURLStrings] removeObjectAtIndex:0];
+    }
+}
+
+- (void)startPendingListJSONDownloads
+{
+    while ([[self pendingListJSONDownloadURLStrings] count] > 0 && CFDictionaryGetCount([self currentListJSONDownloadConnections]) <= 2)
+    {
+        #ifdef LOG_DownloadActivity
+            NSLog(@"List JSON download starting");
+        #endif
+        
+        NSString *connectionURLString = [[self pendingXMLDownloadURLStrings] objectAtIndex:0];
+        NSMutableDictionary *connectionDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                               connectionURLString, STAConnectionURLStringKey, 
+                                               [NSMutableData data], STAConnectionDataKey, 
+                                               nil];
+        NSURL *listJSONURL = [NSURL URLWithString:connectionURLString];
+        NSURLRequest *listJSONRequest = [NSURLRequest requestWithURL:listJSONURL];
+        NSURLConnection *listJSONDownloadConnection = [NSURLConnection connectionWithRequest:listJSONRequest delegate:self];
+        CFDictionaryAddValue([self currentListJSONDownloadConnections], listJSONDownloadConnection, connectionDict);
+        [[self pendingListJSONDownloadURLStrings] removeObjectAtIndex:0];
+    }
+}
+
+- (void)startPendingImageDownloads
+{
+    while ([[self pendingImageDownloadURLStrings] count] > 0 && CFDictionaryGetCount([self currentImageDownloadConnections]) <= 3)
+    {
+        #ifdef LOG_DownloadActivity
+            NSLog(@"Image download starting");
+        #endif
+            
+        NSString *connectionURLString = [[self pendingImageDownloadURLStrings] objectAtIndex:0];
+        NSMutableDictionary *connectionDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                                connectionURLString, STAConnectionURLStringKey, 
+                                                [NSMutableData data], STAConnectionDataKey, 
+                                                nil];
+        NSURL *imageURL = [NSURL URLWithString:connectionURLString];
+        NSURLRequest *imageRequest = [NSURLRequest requestWithURL:imageURL];
+        NSURLConnection *imageDownloadConnection = [NSURLConnection connectionWithRequest:imageRequest delegate:self];
+        CFDictionaryAddValue([self currentImageDownloadConnections], imageDownloadConnection, connectionDict);
+        [[self pendingImageDownloadURLStrings] removeObjectAtIndex:0];
+    }
 }
 
 #pragma mark - Network Activity Indicator Methods
@@ -1572,7 +1865,54 @@
     return affiliateCodesDictionary_gv;
 }
 
+#pragma mark - XML Feed Types
+
+- (NSArray*)XMLFeedTypes
+{
+    /*
+    if (XMLFeedTypes_gv)
+        return XMLFeedTypes_gv;
+    XMLFeedTypes_gv = [[NSArray alloc] initWithObjects:
+                       @"topfreeapplications",
+                       @"toppaidapplications",
+                       @"topgrossingapplications",
+                       nil]
+     */
+    return nil;
+}
+
 #pragma mark - Category Info
+
+- (STACategory*)categoryForCategoryCode:(NSNumber*)argCategoryCode
+{
+    if (!categories_gv)
+    {
+        NSFetchRequest *allCategoriesFetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Category"];
+        NSError *fetchError;
+        NSArray *categories = [[self managedObjectContext] executeFetchRequest:allCategoriesFetchRequest error:&fetchError];
+        
+        if (!categories)
+        {
+            NSLog(@"Categories Fetch Error: %@", [fetchError localizedDescription]);
+            return nil;
+        }
+        
+        NSMutableDictionary *tempCategories = [[NSMutableDictionary alloc] init];
+        
+        for (STACategory *category in categories)
+        {
+            [tempCategories setObject:category forKey:[category categoryCode]];
+        }
+        
+        categories_gv = tempCategories;
+    }
+  
+    if ([[categories_gv allKeys] containsObject:argCategoryCode])
+        return [categories_gv objectForKey:argCategoryCode];
+    
+    NSLog(@"Missing category code: %@", [argCategoryCode description]);
+    return nil;
+}
 
 - (NSArray*)categoriesInfo
 {
@@ -1865,6 +2205,7 @@
 
 #pragma mark - Property Synthesis
 
+@synthesize appIDsArray;
 @synthesize downloadStarterTimer;
 @synthesize hasNetworkConnection;
 @synthesize reachability;
